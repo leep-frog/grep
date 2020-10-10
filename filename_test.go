@@ -11,71 +11,68 @@ import (
 
 func TestFilenameGrep(t *testing.T) {
 	for _, test := range []struct {
-		name     string
-		args     []string
-		stubDir  string
-		wantResp *commands.ExecutorResponse
+		name       string
+		args       []string
+		stubDir    string
+		wantOK     bool
+		wantResp   *commands.ExecutorResponse
+		wantStdout []string
+		wantStderr []string
 	}{
 		{
-			name: "returns all files",
-			wantResp: &commands.ExecutorResponse{
-				Stdout: []string{
-					"testing",
-					filepath.Join("testing", "other"),
-					filepath.Join("testing", "other", "other.txt"),
-					filepath.Join("testing", "that.py"),
-					filepath.Join("testing", "this.txt"),
-				},
+			name:     "returns all files",
+			wantOK:   true,
+			wantResp: &commands.ExecutorResponse{},
+			wantStdout: []string{
+				"testing",
+				filepath.Join("testing", "other"),
+				filepath.Join("testing", "other", "other.txt"),
+				filepath.Join("testing", "that.py"),
+				filepath.Join("testing", "this.txt"),
 			},
 		},
 		{
 			name:    "errors on walk error",
 			stubDir: "does-not-exist",
-			wantResp: &commands.ExecutorResponse{
-				Stderr: []string{
-					`error when walking through file system: failed to access path "does-not-exist": CreateFile does-not-exist: The system cannot find the file specified.`,
-				},
+			wantStderr: []string{
+				`error when walking through file system: failed to access path "does-not-exist": CreateFile does-not-exist: The system cannot find the file specified.`,
 			},
 		},
 		{
 			name: "errors on invalid regex filter",
 			args: []string{":)"},
-			wantResp: &commands.ExecutorResponse{
-				Stderr: []string{
-					"invalid regex: error parsing regexp: unexpected ): `:)`",
-				},
+			wantStderr: []string{
+				"invalid regex: error parsing regexp: unexpected ): `:)`",
 			},
 		},
 		{
-			name: "filters out files",
-			args: []string{".*.txt"},
-			wantResp: &commands.ExecutorResponse{
-				Stdout: []string{
-					filepath.Join("testing", "other", "other.txt"),
-					filepath.Join("testing", "this.txt"),
-				},
+			name:     "filters out files",
+			args:     []string{".*.txt"},
+			wantOK:   true,
+			wantResp: &commands.ExecutorResponse{},
+			wantStdout: []string{
+				filepath.Join("testing", "other", "other.txt"),
+				filepath.Join("testing", "this.txt"),
 			},
 		},
 		{
-			name: "invert filter",
-			args: []string{"-v", ".*.go"},
-			wantResp: &commands.ExecutorResponse{
-				Stdout: []string{
-					"testing",
-					filepath.Join("testing", "other"),
-					filepath.Join("testing", "other", "other.txt"),
-					filepath.Join("testing", "that.py"),
-					filepath.Join("testing", "this.txt"),
-				},
+			name:     "invert filter",
+			args:     []string{"-v", ".*.go"},
+			wantOK:   true,
+			wantResp: &commands.ExecutorResponse{},
+			wantStdout: []string{
+				"testing",
+				filepath.Join("testing", "other"),
+				filepath.Join("testing", "other", "other.txt"),
+				filepath.Join("testing", "that.py"),
+				filepath.Join("testing", "this.txt"),
 			},
 		},
 		{
 			name: "errors on invalid invert filter",
 			args: []string{"-v", ":)"},
-			wantResp: &commands.ExecutorResponse{
-				Stderr: []string{
-					"invalid invert regex: error parsing regexp: unexpected ): `:)`",
-				},
+			wantStderr: []string{
+				"invalid invert regex: error parsing regexp: unexpected ): `:)`",
 			},
 		},
 	} {
@@ -90,14 +87,21 @@ func TestFilenameGrep(t *testing.T) {
 			defer func() { startDir = oldStart }()
 
 			// run test
+			tcos := &commands.TestCommandOS{}
 			c := FilenameGrep()
-			got, err := cli.Execute(c, test.args)
-			if err != nil {
-				t.Fatalf("FilenameGrep: Execute(%v, %v) returned error (%v); want nil", c, test.args, err)
+			got, ok := cli.Execute(tcos, c, test.args)
+			if ok != test.wantOK {
+				t.Fatalf("FilenameGrep: commands.Execute(%v) returned %v for ok; want %v", test.args, ok, test.wantOK)
 			}
-
 			if diff := cmp.Diff(test.wantResp, got); diff != "" {
 				t.Fatalf("FilenameGrep: Execute(%v, %v) produced response diff (-want, +got):\n%s", c, test.args, diff)
+			}
+
+			if diff := cmp.Diff(test.wantStdout, tcos.GetStdout()); diff != "" {
+				t.Errorf("FilenameGrep: command.Execute(%v) produced stdout diff (-want, +got):\n%s", test.args, diff)
+			}
+			if diff := cmp.Diff(test.wantStderr, tcos.GetStderr()); diff != "" {
+				t.Errorf("FilenameGrep: command.Execute(%v) produced stderr diff (-want, +got):\n%s", test.args, diff)
 			}
 
 			if c.Changed() {

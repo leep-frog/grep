@@ -1,7 +1,6 @@
 package grep
 
 import (
-	"fmt"
 	"regexp"
 
 	"github.com/leep-frog/cli/commands"
@@ -19,7 +18,7 @@ type filterFunc func(string) bool
 type inputSource interface {
 	Name() string
 	Alias() string
-	Process(args, flags map[string]*commands.Value, filter filterFunc) ([]string, error)
+	Process(cos commands.CommandOS, args, flags map[string]*commands.Value, filter filterFunc) (*commands.ExecutorResponse, bool)
 	Flags() []commands.Flag
 }
 
@@ -39,7 +38,7 @@ func (g *grep) Alias() string {
 	return g.inputSource.Alias()
 }
 
-func (g *grep) execute(args, flags map[string]*commands.Value) (*commands.ExecutorResponse, error) {
+func (g *grep) execute(cos commands.CommandOS, args, flags map[string]*commands.Value) (*commands.ExecutorResponse, bool) {
 	var filterFuncs []func(string) bool
 
 	// TODO: case flag, boolean flag
@@ -49,9 +48,8 @@ func (g *grep) execute(args, flags map[string]*commands.Value) (*commands.Execut
 		for _, pattern := range *patterns {
 			r, err := regexp.Compile(pattern)
 			if err != nil {
-				return &commands.ExecutorResponse{
-					Stderr: []string{fmt.Sprintf("invalid regex: %v", err)},
-				}, nil
+				cos.Stderr("invalid regex: %v", err)
+				return nil, false
 			}
 			filterFuncs = append(filterFuncs, r.MatchString)
 		}
@@ -61,9 +59,8 @@ func (g *grep) execute(args, flags map[string]*commands.Value) (*commands.Execut
 		for _, pattern := range *inverts {
 			r, err := regexp.Compile(pattern)
 			if err != nil {
-				return &commands.ExecutorResponse{
-					Stderr: []string{fmt.Sprintf("invalid invert regex: %v", err)},
-				}, nil
+				cos.Stderr("invalid invert regex: %v", err)
+				return nil, false
 			}
 			filterFuncs = append(filterFuncs, func(s string) bool { return !r.MatchString(s) })
 		}
@@ -78,15 +75,7 @@ func (g *grep) execute(args, flags map[string]*commands.Value) (*commands.Execut
 		return true
 	}
 
-	results, err := g.inputSource.Process(args, flags, filterFunc)
-	if err != nil {
-		return &commands.ExecutorResponse{
-			Stderr: []string{err.Error()},
-		}, nil
-	}
-	return &commands.ExecutorResponse{
-		Stdout: results,
-	}, nil
+	return g.inputSource.Process(cos, args, flags, filterFunc)
 }
 
 func (g *grep) Command() commands.Command {

@@ -1,7 +1,6 @@
 package grep
 
 import (
-	"fmt"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -26,15 +25,15 @@ type history struct{}
 func (*history) Name() string           { return "history-grep" }
 func (*history) Alias() string          { return "hp" }
 func (*history) Flags() []commands.Flag { return nil }
-func (*history) Process(args, flags map[string]*commands.Value, ff filterFunc) ([]string, error) {
+func (*history) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, ff filterFunc) (*commands.ExecutorResponse, bool) {
 	if goos() == "windows" {
-		return execute("doskey", []string{"/history"}, ff)
+		return execute(cos, "doskey", []string{"/history"}, ff)
 	}
-	return execute("history", nil, ff)
+	return execute(cos, "history", nil, ff)
 }
 
 // separate function so it can be stubbed out for tests
-func execute(command string, args []string, ff filterFunc) ([]string, error) {
+func execute(cos commands.CommandOS, command string, args []string, ff filterFunc) (*commands.ExecutorResponse, bool) {
 	stdout := &strings.Builder{}
 	cmd := &exec.Cmd{
 		Path:   command,
@@ -42,17 +41,17 @@ func execute(command string, args []string, ff filterFunc) ([]string, error) {
 		Stdout: stdout,
 	}
 	if err := cmdRun(cmd); err != nil {
-		return nil, fmt.Errorf("failed to run history command: %v", err)
+		cos.Stderr("failed to run history command: %v", err)
+		return nil, false
 	}
 
 	ss := strings.Split(stdout.String(), "\n")
-	lines := make([]string, 0, len(ss))
 	for _, s := range ss {
 		if ff(s) {
-			lines = append(lines, s)
+			cos.Stdout(s)
 		}
 	}
-	return lines, nil
+	return &commands.ExecutorResponse{}, true
 }
 
 func internalCmdRun(cmd *exec.Cmd) error {

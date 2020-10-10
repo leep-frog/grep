@@ -46,35 +46,38 @@ func TestHistoryGrep(t *testing.T) {
 		cmdRunErr   error
 		stdout      string
 		goos        string
+		wantOK      bool
 		wantResp    *commands.ExecutorResponse
 		wantCommand string
 		wantArgs    []string
+		wantStdout  []string
+		wantStderr  []string
 	}{
 		{
 			name:        "returns history",
 			goos:        "windows",
 			stdout:      "alpha\nbeta\ndelta",
+			wantOK:      true,
 			wantCommand: "doskey",
 			wantArgs:    []string{"/history"},
-			wantResp: &commands.ExecutorResponse{
-				Stdout: []string{
-					"alpha",
-					"beta",
-					"delta",
-				},
+			wantResp:    &commands.ExecutorResponse{},
+			wantStdout: []string{
+				"alpha",
+				"beta",
+				"delta",
 			},
 		},
 		{
 			name:        "returns history on linux",
 			goos:        "linux",
 			stdout:      "alpha\nbeta\ndelta",
+			wantOK:      true,
 			wantCommand: "history",
-			wantResp: &commands.ExecutorResponse{
-				Stdout: []string{
-					"alpha",
-					"beta",
-					"delta",
-				},
+			wantResp:    &commands.ExecutorResponse{},
+			wantStdout: []string{
+				"alpha",
+				"beta",
+				"delta",
 			},
 		},
 		{
@@ -82,13 +85,13 @@ func TestHistoryGrep(t *testing.T) {
 			args:        []string{"^.e"},
 			goos:        "windows",
 			stdout:      "alpha\nbeta\ndelta",
+			wantOK:      true,
 			wantCommand: "doskey",
 			wantArgs:    []string{"/history"},
-			wantResp: &commands.ExecutorResponse{
-				Stdout: []string{
-					"beta",
-					"delta",
-				},
+			wantResp:    &commands.ExecutorResponse{},
+			wantStdout: []string{
+				"beta",
+				"delta",
 			},
 		},
 		{
@@ -97,10 +100,8 @@ func TestHistoryGrep(t *testing.T) {
 			goos:        "windows",
 			wantCommand: "doskey",
 			wantArgs:    []string{"/history"},
-			wantResp: &commands.ExecutorResponse{
-				Stderr: []string{
-					"failed to run history command: darn",
-				},
+			wantStderr: []string{
+				"failed to run history command: darn",
 			},
 		},
 	} {
@@ -128,21 +129,29 @@ func TestHistoryGrep(t *testing.T) {
 			}
 
 			// Run test
+			tcos := &commands.TestCommandOS{}
 			c := HistoryGrep()
-
-			got, err := cli.Execute(c, test.args)
-			if err != nil {
-				t.Fatalf("RecursiveGrep: Execute(%v, %v) returned error (%v); want nil", c, test.args, err)
+			got, ok := cli.Execute(tcos, c, test.args)
+			if ok != test.wantOK {
+				t.Fatalf("HistoryGrep: commands.Execute(%v) returned %v for ok; want %v", test.args, ok, test.wantOK)
 			}
 			if diff := cmp.Diff(test.wantResp, got); diff != "" {
-				t.Fatalf("RecursiveGrep: Execute(%v, %v) produced response diff (-want, +got):\n%s", c, test.args, diff)
+				t.Fatalf("HistoryGrep: Execute(%v, %v) produced response diff (-want, +got):\n%s", c, test.args, diff)
 			}
+
+			if diff := cmp.Diff(test.wantStdout, tcos.GetStdout()); diff != "" {
+				t.Errorf("HistoryGrep: command.Execute(%v) produced stdout diff (-want, +got):\n%s", test.args, diff)
+			}
+			if diff := cmp.Diff(test.wantStderr, tcos.GetStderr()); diff != "" {
+				t.Errorf("HistoryGrep: command.Execute(%v) produced stderr diff (-want, +got):\n%s", test.args, diff)
+			}
+
 			if c.Changed() {
-				t.Fatalf("RecursiveGrep: Execute(%v, %v) marked Changed as true; want false", c, test.args)
+				t.Fatalf("HistoryGrep: Execute(%v, %v) marked Changed as true; want false", c, test.args)
 			}
 
 			if gotCommand != test.wantCommand {
-				t.Fatalf("RecursiveGrep: Execute(%v, %v) ran command %q; want %q", c, test.args, gotCommand, test.wantCommand)
+				t.Fatalf("HistoryGrep: Execute(%v, %v) ran command %q; want %q", c, test.args, gotCommand, test.wantCommand)
 			}
 
 			if diff := cmp.Diff(test.wantArgs, gotArgs); diff != "" {

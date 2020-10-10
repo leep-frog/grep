@@ -34,16 +34,16 @@ func (*recursive) Flags() []commands.Flag {
 		// TODO: only filename
 	}
 }
-func (*recursive) Process(args, flags map[string]*commands.Value, ff filterFunc) ([]string, error) {
+func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, ff filterFunc) (*commands.ExecutorResponse, bool) {
 	var fr *regexp.Regexp
 	if fileRegex := flags["file"].String(); fileRegex != nil {
 		var err error
 		if fr, err = regexp.Compile(*fileRegex); err != nil {
-			return nil, fmt.Errorf("invalid filename regex: %v", err)
+			cos.Stderr("invalid filename regex: %v", err)
+			return nil, false
 		}
 	}
 
-	var lines []string
 	err := filepath.Walk(startDir, func(path string, fi os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to access path %q: %v", path, err)
@@ -65,14 +65,15 @@ func (*recursive) Process(args, flags map[string]*commands.Value, ff filterFunc)
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
 			if ff(scanner.Text()) {
-				lines = append(lines, fmt.Sprintf("%s:%s", path, scanner.Text()))
+				cos.Stdout("%s:%s", path, scanner.Text())
 			}
 		}
 
 		return nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error when walking through file system: %v", err)
+		cos.Stderr("error when walking through file system: %v", err)
+		return nil, false
 	}
-	return lines, nil
+	return &commands.ExecutorResponse{}, true
 }
