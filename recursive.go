@@ -3,21 +3,21 @@ package grep
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 
-	"github.com/leep-frog/cli/cli"
-	"github.com/leep-frog/cli/commands"
+	"github.com/leep-frog/commands/commands"
 )
 
 var (
 	startDir = "."
-	osOpen   = os.Open
+	osOpen func(s string) (io.Reader, error)  = func(s string) (io.Reader, error) { return os.Open(s) }
 )
 
-func RecursiveGrep() cli.CLI {
-	return &grep{
+func RecursiveGrep() *Grep {
+	return &Grep{
 		inputSource: &recursive{},
 	}
 }
@@ -26,6 +26,7 @@ type recursive struct{}
 
 func (*recursive) Name() string  { return "recursive-grep" }
 func (*recursive) Alias() string { return "rp" }
+func (*recursive) Option() *commands.Option { return nil }
 func (*recursive) Flags() []commands.Flag {
 	return []commands.Flag{
 		commands.StringFlag("file", 'f', nil),
@@ -34,7 +35,7 @@ func (*recursive) Flags() []commands.Flag {
 		// TODO: only filename
 	}
 }
-func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, ff filterFunc) (*commands.ExecutorResponse, bool) {
+func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, _ *commands.OptionInfo, ff filterFunc) (*commands.ExecutorResponse, bool) {
 	var fr *regexp.Regexp
 	if fileRegex := flags["file"].String(); fileRegex != nil {
 		var err error

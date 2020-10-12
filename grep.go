@@ -3,7 +3,7 @@ package grep
 import (
 	"regexp"
 
-	"github.com/leep-frog/cli/commands"
+	"github.com/leep-frog/commands/commands"
 )
 
 var (
@@ -18,27 +18,32 @@ type filterFunc func(string) bool
 type inputSource interface {
 	Name() string
 	Alias() string
-	Process(cos commands.CommandOS, args, flags map[string]*commands.Value, filter filterFunc) (*commands.ExecutorResponse, bool)
+	Process(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo, filter filterFunc) (*commands.ExecutorResponse, bool)
 	Flags() []commands.Flag
+	Option() *commands.Option
 }
 
-type grep struct {
+type Grep struct {
 	caseSensitive bool
 	inputSource   inputSource
 }
 
-func (*grep) Load(jsn string) error { return nil }
-func (*grep) Changed() bool         { return false }
+func (*Grep) Load(jsn string) error { return nil }
+func (*Grep) Changed() bool         { return false }
 
-func (g *grep) Name() string {
+func (g *Grep) Name() string {
 	return g.inputSource.Name()
 }
 
-func (g *grep) Alias() string {
+func (g *Grep) Alias() string {
 	return g.inputSource.Alias()
 }
 
-func (g *grep) execute(cos commands.CommandOS, args, flags map[string]*commands.Value) (*commands.ExecutorResponse, bool) {
+func (g *Grep) Option() *commands.Option {
+	return g.inputSource.Option()
+}
+
+func (g *Grep) execute(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo) (*commands.ExecutorResponse, bool) {
 	var filterFuncs []func(string) bool
 
 	// TODO: case flag, boolean flag
@@ -75,10 +80,10 @@ func (g *grep) execute(cos commands.CommandOS, args, flags map[string]*commands.
 		return true
 	}
 
-	return g.inputSource.Process(cos, args, flags, filterFunc)
+	return g.inputSource.Process(cos, args, flags, oi, filterFunc)
 }
 
-func (g *grep) Command() commands.Command {
+func (g *Grep) Command() commands.Command {
 	flags := []commands.Flag{
 		caseFlag,
 		invertFlag,

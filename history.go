@@ -1,21 +1,13 @@
 package grep
 
 import (
-	"os/exec"
-	"runtime"
-	"strings"
+	"bufio"
 
-	"github.com/leep-frog/cli/cli"
-	"github.com/leep-frog/cli/commands"
+	"github.com/leep-frog/commands/commands"
 )
 
-var (
-	cmdRun = internalCmdRun
-	goos   = internalGOOS
-)
-
-func HistoryGrep() cli.CLI {
-	return &grep{
+func HistoryGrep() *Grep {
+	return &Grep{
 		inputSource: &history{},
 	}
 }
@@ -24,40 +16,33 @@ type history struct{}
 
 func (*history) Name() string           { return "history-grep" }
 func (*history) Alias() string          { return "hp" }
+func (*history) Option() *commands.Option { 
+	return &commands.Option{
+		SetupCommand: "history",
+	}
+ }
 func (*history) Flags() []commands.Flag { return nil }
-func (*history) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, ff filterFunc) (*commands.ExecutorResponse, bool) {
-	if goos() == "windows" {
-		return execute(cos, "doskey", []string{"/history"}, ff)
-	}
-	return execute(cos, "history", nil, ff)
-}
-
-// separate function so it can be stubbed out for tests
-func execute(cos commands.CommandOS, command string, args []string, ff filterFunc) (*commands.ExecutorResponse, bool) {
-	stdout := &strings.Builder{}
-	cmd := &exec.Cmd{
-		Path:   command,
-		Args:   args,
-		Stdout: stdout,
-	}
-	if err := cmdRun(cmd); err != nil {
-		cos.Stderr("failed to run history command: %v", err)
+func (*history) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo, ff filterFunc) (*commands.ExecutorResponse, bool) {
+	if oi == nil {
+		cos.Stderr("OptionInfo is undefined")
 		return nil, false
 	}
 
-	ss := strings.Split(stdout.String(), "\n")
-	for _, s := range ss {
-		if ff(s) {
-			cos.Stdout(s)
+	f, err := osOpen(oi.SetupOutputFile)
+	if err != nil {
+		cos.Stderr("failed to open setup output file: %v", err)
+		return nil, false
+	}
+
+	scanner := bufio.NewScanner(f)
+	scanner.Split(bufio.ScanLines)
+	for scanner.Scan() {
+		txt := scanner.Text()
+		if ff(txt) {
+			cos.Stdout(txt)
 		}
 	}
+
+	// TODO: this should be able to handle nil ExecutorResponse
 	return &commands.ExecutorResponse{}, true
-}
-
-func internalCmdRun(cmd *exec.Cmd) error {
-	return cmd.Run()
-}
-
-func internalGOOS() string {
-	return runtime.GOOS
 }

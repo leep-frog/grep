@@ -3,20 +3,19 @@ package grep
 import (
 	"fmt"
 	"io"
-	"os/exec"
+	"strings"
 	"testing"
 
-	"github.com/leep-frog/cli/commands"
+	"github.com/leep-frog/commands/commands"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/leep-frog/cli/cli"
 )
 
 func TestLoad(t *testing.T) {
 	for _, test := range []struct {
 		name string
 		json string
-		want *grep
+		want *Grep
 	}{
 		{
 			name: "handles empty string",
@@ -31,7 +30,7 @@ func TestLoad(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			d := &grep{}
+			d := &Grep{}
 			if err := d.Load(test.json); err != nil {
 				t.Fatalf("Load(%v) should return nil; got %v", test.json, err)
 			}
@@ -43,36 +42,31 @@ func TestHistoryGrep(t *testing.T) {
 	for _, test := range []struct {
 		name        string
 		args        []string
-		cmdRunErr   error
-		stdout      string
-		goos        string
+		optionInfo *commands.OptionInfo
+		osOpenErr error
+		osOpenContents []string
 		wantOK      bool
 		wantResp    *commands.ExecutorResponse
-		wantCommand string
-		wantArgs    []string
+		wantName string
 		wantStdout  []string
 		wantStderr  []string
 	}{
 		{
+			name:        "errors if no option info",
+			wantStderr: []string{"OptionInfo is undefined"},
+		},
+		{
 			name:        "returns history",
-			goos:        "windows",
-			stdout:      "alpha\nbeta\ndelta",
-			wantOK:      true,
-			wantCommand: "doskey",
-			wantArgs:    []string{"/history"},
-			wantResp:    &commands.ExecutorResponse{},
-			wantStdout: []string{
+			osOpenContents: []string{
 				"alpha",
 				"beta",
 				"delta",
 			},
-		},
-		{
-			name:        "returns history on linux",
-			goos:        "linux",
-			stdout:      "alpha\nbeta\ndelta",
+			optionInfo: &commands.OptionInfo{
+				SetupOutputFile: "history.txt",
+			},
+			wantName: "history.txt",
 			wantOK:      true,
-			wantCommand: "history",
 			wantResp:    &commands.ExecutorResponse{},
 			wantStdout: []string{
 				"alpha",
@@ -83,11 +77,16 @@ func TestHistoryGrep(t *testing.T) {
 		{
 			name:        "filters history",
 			args:        []string{"^.e"},
-			goos:        "windows",
-			stdout:      "alpha\nbeta\ndelta",
+			osOpenContents: []string{
+				"alpha",
+				"beta",
+				"delta",
+			},
+			optionInfo: &commands.OptionInfo{
+				SetupOutputFile: "in/some/path/history.txt",
+			},
+			wantName: "in/some/path/history.txt",
 			wantOK:      true,
-			wantCommand: "doskey",
-			wantArgs:    []string{"/history"},
 			wantResp:    &commands.ExecutorResponse{},
 			wantStdout: []string{
 				"beta",
@@ -95,43 +94,30 @@ func TestHistoryGrep(t *testing.T) {
 			},
 		},
 		{
-			name:        "errors on cmd run error",
-			cmdRunErr:   fmt.Errorf("darn"),
-			goos:        "windows",
-			wantCommand: "doskey",
-			wantArgs:    []string{"/history"},
+			name:        "errors on os.Open error",
+			osOpenErr:   fmt.Errorf("darn"),
 			wantStderr: []string{
-				"failed to run history command: darn",
+				"failed to open setup output file: darn",
 			},
+			optionInfo: &commands.OptionInfo{
+				SetupOutputFile: "history.txt",
+			},
+			wantName: "history.txt",
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			// Mock cmd.Run()
-			var gotCommand string
-			var gotArgs []string
-			oldRun := cmdRun
-			cmdRun = func(cmd *exec.Cmd) error {
-				gotCommand = cmd.Path
-				gotArgs = cmd.Args
-				_, err := io.WriteString(cmd.Stdout, test.stdout)
-				if err != nil {
-					t.Fatalf("failed to mock write to stdout: %v", err)
-				}
-				return test.cmdRunErr
+			var gotName string
+			oldOpen := osOpen
+			osOpen = func(name string) (io.Reader, error) {
+				gotName = name
+				return strings.NewReader(strings.Join(test.osOpenContents, "\n")), test.osOpenErr
 			}
-			defer func() { cmdRun = oldRun }()
-
-			// Mock goos
-			if test.goos != "" {
-				oldGOOS := goos
-				goos = func() string { return test.goos }
-				defer func() { goos = oldGOOS }()
-			}
+			defer func() {osOpen = oldOpen}()
 
 			// Run test
 			tcos := &commands.TestCommandOS{}
 			c := HistoryGrep()
-			got, ok := cli.Execute(tcos, c, test.args)
+			got, ok := commands.Execute(tcos, c.Command(), test.args, test.optionInfo)
 			if ok != test.wantOK {
 				t.Fatalf("HistoryGrep: commands.Execute(%v) returned %v for ok; want %v", test.args, ok, test.wantOK)
 			}
@@ -150,12 +136,8 @@ func TestHistoryGrep(t *testing.T) {
 				t.Fatalf("HistoryGrep: Execute(%v, %v) marked Changed as true; want false", c, test.args)
 			}
 
-			if gotCommand != test.wantCommand {
-				t.Fatalf("HistoryGrep: Execute(%v, %v) ran command %q; want %q", c, test.args, gotCommand, test.wantCommand)
-			}
-
-			if diff := cmp.Diff(test.wantArgs, gotArgs); diff != "" {
-				t.Fatalf("HistoryGrep: Execute(%v, %v) produced args diff:\n%s", c, test.args, diff)
+			if test.wantName != gotName {
+				t.Fatalf("HistoryGrep: Execute(%v, %v) opened history file %q; want %q", c, test.args, gotName, test.wantName)
 			}
 		})
 	}

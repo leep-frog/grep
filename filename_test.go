@@ -5,8 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/leep-frog/cli/cli"
-	"github.com/leep-frog/cli/commands"
+	"github.com/leep-frog/commands/commands"
 )
 
 func TestFilenameGrep(t *testing.T) {
@@ -89,7 +88,7 @@ func TestFilenameGrep(t *testing.T) {
 			// run test
 			tcos := &commands.TestCommandOS{}
 			c := FilenameGrep()
-			got, ok := cli.Execute(tcos, c, test.args)
+			got, ok := commands.Execute(tcos, c.Command(), test.args, nil)
 			if ok != test.wantOK {
 				t.Fatalf("FilenameGrep: commands.Execute(%v) returned %v for ok; want %v", test.args, ok, test.wantOK)
 			}

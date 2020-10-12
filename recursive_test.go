@@ -2,13 +2,12 @@ package grep
 
 import (
 	"fmt"
-	"os"
+	"io"
 	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/leep-frog/cli/cli"
-	"github.com/leep-frog/cli/commands"
+	"github.com/leep-frog/commands/commands"
 )
 
 func TestRecursiveGrep(t *testing.T) {
@@ -76,13 +75,13 @@ func TestRecursiveGrep(t *testing.T) {
 			// Stub os.Open if necessary
 			if test.osOpenErr != nil {
 				oldOpen := osOpen
-				osOpen = func(s string) (*os.File, error) { return nil, test.osOpenErr }
+				osOpen = func(s string) (io.Reader, error) { return nil, test.osOpenErr }
 				defer func() { osOpen = oldOpen }()
 			}
 
 			tcos := &commands.TestCommandOS{}
 			c := RecursiveGrep()
-			got, ok := cli.Execute(tcos, c, test.args)
+			got, ok := commands.Execute(tcos, c.Command(), test.args, nil)
 			if ok != test.wantOK {
 				t.Fatalf("RecursiveGrep: commands.Execute(%v) returned %v for ok; want %v", test.args, ok, test.wantOK)
 			}
