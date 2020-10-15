@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/leep-frog/commands/color"
 	"github.com/leep-frog/commands/commands"
 )
 
@@ -19,6 +20,10 @@ var (
 	hideFileFlag = commands.BoolFlag("hideFile", 'h')
 	fileOnlyFlag = commands.BoolFlag("fileOnly", 'l')
 	// TODO: match only flag (-o)
+
+	fileColor = &color.Format{
+		Color: color.Purple,
+	}
 )
 
 func RecursiveGrep() *Grep {
@@ -78,15 +83,16 @@ func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*comman
 				continue
 			}
 
+			formattedPath := fileColor.Format(path)
 			if fileOnly {
-				cos.Stdout(path)
+				cos.Stdout(formattedPath)
 				break
 			}
 
 			if hideFile {
 				cos.Stdout(formattedString)
 			} else {
-				cos.Stdout("%s:%s", path, formattedString)
+				cos.Stdout("%s:%s", formattedPath, formattedString)
 			}
 		}
 

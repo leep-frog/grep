@@ -40,8 +40,8 @@ func TestRecursiveGrep(t *testing.T) {
 			args:   []string{"^alpha"},
 			wantOK: true,
 			wantStdout: []string{
-				fmt.Sprintf("%s:%s", filepath.Join("testing", "other", "other.txt"), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " zero")),
-				fmt.Sprintf("%s:%s", filepath.Join("testing", "that.py"), matchColor.Format("alpha")),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "other", "other.txt")), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " zero")),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "that.py")), matchColor.Format("alpha")),
 			},
 		},
 		{
@@ -49,7 +49,7 @@ func TestRecursiveGrep(t *testing.T) {
 			args:   []string{"^alpha", "-f", ".*.py"},
 			wantOK: true,
 			wantStdout: []string{
-				fmt.Sprintf("%s:%s", filepath.Join("testing", "that.py"), matchColor.Format("alpha")),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "that.py")), matchColor.Format("alpha")),
 			},
 		},
 		{
@@ -66,8 +66,8 @@ func TestRecursiveGrep(t *testing.T) {
 			args:   []string{"^alp", "-l"},
 			wantOK: true,
 			wantStdout: []string{
-				filepath.Join("testing", "other", "other.txt"), // "alpha zero"
-				filepath.Join("testing", "that.py"),            // "alpha"
+				fileColor.Format(filepath.Join("testing", "other", "other.txt")), // "alpha zero"
+				fileColor.Format(filepath.Join("testing", "that.py")),            // "alpha"
 			},
 		},
 		{
