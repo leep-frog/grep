@@ -22,7 +22,7 @@ var (
 	// TODO: match only flag (-o)
 
 	fileColor = &color.Format{
-		Color: color.Blue,
+		Color: color.Cyan,
 	}
 )
 
