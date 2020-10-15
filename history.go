@@ -14,13 +14,13 @@ func HistoryGrep() *Grep {
 
 type history struct{}
 
-func (*history) Name() string           { return "history-grep" }
-func (*history) Alias() string          { return "hp" }
-func (*history) Option() *commands.Option { 
+func (*history) Name() string  { return "history-grep" }
+func (*history) Alias() string { return "hp" }
+func (*history) Option() *commands.Option {
 	return &commands.Option{
 		SetupCommand: "history",
 	}
- }
+}
 func (*history) Flags() []commands.Flag { return nil }
 func (*history) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo, ff filterFunc) (*commands.ExecutorResponse, bool) {
 	if oi == nil {

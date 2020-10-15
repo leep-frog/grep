@@ -1,6 +1,7 @@
 package grep
 
 import (
+	"fmt"
 	"regexp"
 
 	"github.com/leep-frog/commands/commands"
@@ -8,7 +9,7 @@ import (
 
 var (
 	patternArg = commands.StringListArg("pattern", 0, -1, nil)
-	caseFlag   = commands.NewBooleanFlag("caseInsensitve", 'i', false)
+	caseFlag   = commands.BoolFlag("ignoreCase", 'i')
 	invertFlag = commands.StringListFlag("invert", 'v', 0, -1, nil)
 	// TODO: or pattern
 )
@@ -44,13 +45,14 @@ func (g *Grep) Option() *commands.Option {
 }
 
 func (g *Grep) execute(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo) (*commands.ExecutorResponse, bool) {
+	ignoreCase := flags[caseFlag.Name()].Bool() != nil && *flags[caseFlag.Name()].Bool()
+
 	var filterFuncs []func(string) bool
-
-	// TODO: case flag, boolean flag
-	//toLower := flags[caseFlag.Name()].Bool()
-
 	if patterns := args[patternArg.Name()].StringList(); patterns != nil {
 		for _, pattern := range *patterns {
+			if ignoreCase {
+				pattern = fmt.Sprintf("(?i)%s", pattern)
+			}
 			r, err := regexp.Compile(pattern)
 			if err != nil {
 				cos.Stderr("invalid regex: %v", err)

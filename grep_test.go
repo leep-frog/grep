@@ -40,23 +40,23 @@ func TestLoad(t *testing.T) {
 
 func TestHistoryGrep(t *testing.T) {
 	for _, test := range []struct {
-		name        string
-		args        []string
-		optionInfo *commands.OptionInfo
-		osOpenErr error
+		name           string
+		args           []string
+		optionInfo     *commands.OptionInfo
+		osOpenErr      error
 		osOpenContents []string
-		wantOK      bool
-		wantResp    *commands.ExecutorResponse
-		wantName string
-		wantStdout  []string
-		wantStderr  []string
+		wantOK         bool
+		wantResp       *commands.ExecutorResponse
+		wantName       string
+		wantStdout     []string
+		wantStderr     []string
 	}{
 		{
-			name:        "errors if no option info",
+			name:       "errors if no option info",
 			wantStderr: []string{"OptionInfo is undefined"},
 		},
 		{
-			name:        "returns history",
+			name: "returns history",
 			osOpenContents: []string{
 				"alpha",
 				"beta",
@@ -66,8 +66,8 @@ func TestHistoryGrep(t *testing.T) {
 				SetupOutputFile: "history.txt",
 			},
 			wantName: "history.txt",
-			wantOK:      true,
-			wantResp:    &commands.ExecutorResponse{},
+			wantOK:   true,
+			wantResp: &commands.ExecutorResponse{},
 			wantStdout: []string{
 				"alpha",
 				"beta",
@@ -75,8 +75,8 @@ func TestHistoryGrep(t *testing.T) {
 			},
 		},
 		{
-			name:        "filters history",
-			args:        []string{"^.e"},
+			name: "filters history",
+			args: []string{"^.e"},
 			osOpenContents: []string{
 				"alpha",
 				"beta",
@@ -86,16 +86,37 @@ func TestHistoryGrep(t *testing.T) {
 				SetupOutputFile: "in/some/path/history.txt",
 			},
 			wantName: "in/some/path/history.txt",
-			wantOK:      true,
-			wantResp:    &commands.ExecutorResponse{},
+			wantOK:   true,
+			wantResp: &commands.ExecutorResponse{},
 			wantStdout: []string{
 				"beta",
 				"delta",
 			},
 		},
 		{
-			name:        "errors on os.Open error",
-			osOpenErr:   fmt.Errorf("darn"),
+			name: "filters history ignoring case",
+			args: []string{"^.*a$", "-i"},
+			osOpenContents: []string{
+				"alphA",
+				"beta",
+				"deltA",
+				"zero",
+			},
+			optionInfo: &commands.OptionInfo{
+				SetupOutputFile: "in/some/path/history.txt",
+			},
+			wantName: "in/some/path/history.txt",
+			wantOK:   true,
+			wantResp: &commands.ExecutorResponse{},
+			wantStdout: []string{
+				"alphA",
+				"beta",
+				"deltA",
+			},
+		},
+		{
+			name:      "errors on os.Open error",
+			osOpenErr: fmt.Errorf("darn"),
 			wantStderr: []string{
 				"failed to open setup output file: darn",
 			},
@@ -112,7 +133,7 @@ func TestHistoryGrep(t *testing.T) {
 				gotName = name
 				return strings.NewReader(strings.Join(test.osOpenContents, "\n")), test.osOpenErr
 			}
-			defer func() {osOpen = oldOpen}()
+			defer func() { osOpen = oldOpen }()
 
 			// Run test
 			tcos := &commands.TestCommandOS{}

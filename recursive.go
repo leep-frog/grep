@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	startDir = "."
-	osOpen func(s string) (io.Reader, error)  = func(s string) (io.Reader, error) { return os.Open(s) }
+	startDir                                   = "."
+	osOpen   func(s string) (io.Reader, error) = func(s string) (io.Reader, error) { return os.Open(s) }
 )
 
 func RecursiveGrep() *Grep {
@@ -24,8 +24,8 @@ func RecursiveGrep() *Grep {
 
 type recursive struct{}
 
-func (*recursive) Name() string  { return "recursive-grep" }
-func (*recursive) Alias() string { return "rp" }
+func (*recursive) Name() string             { return "recursive-grep" }
+func (*recursive) Alias() string            { return "rp" }
 func (*recursive) Option() *commands.Option { return nil }
 func (*recursive) Flags() []commands.Flag {
 	return []commands.Flag{
