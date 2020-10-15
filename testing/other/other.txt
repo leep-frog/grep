@@ -1,2 +1,2 @@
-alpha
+alpha zero
 echo bravo

@@ -41,7 +41,7 @@ func TestRecursiveGrep(t *testing.T) {
 			wantOK:   true,
 			wantResp: &commands.ExecutorResponse{},
 			wantStdout: []string{
-				fmt.Sprintf("%s:%s", filepath.Join("testing", "other", "other.txt"), "alpha"),
+				fmt.Sprintf("%s:%s", filepath.Join("testing", "other", "other.txt"), "alpha zero"),
 				fmt.Sprintf("%s:%s", filepath.Join("testing", "that.py"), "alpha"),
 			},
 		},
@@ -52,6 +52,26 @@ func TestRecursiveGrep(t *testing.T) {
 			wantResp: &commands.ExecutorResponse{},
 			wantStdout: []string{
 				fmt.Sprintf("%s:%s", filepath.Join("testing", "that.py"), "alpha"),
+			},
+		},
+		{
+			name:     "hide file flag works",
+			args:     []string{"^alpha", "-h"},
+			wantOK:   true,
+			wantResp: &commands.ExecutorResponse{},
+			wantStdout: []string{
+				"alpha zero", // testing/other/other.txt
+				"alpha",      //testing/that.py
+			},
+		},
+		{
+			name:     "file only flag works",
+			args:     []string{"^alp", "-l"},
+			wantOK:   true,
+			wantResp: &commands.ExecutorResponse{},
+			wantStdout: []string{
+				filepath.Join("testing", "other", "other.txt"), // "alpha zero"
+				filepath.Join("testing", "that.py"),            // "alpha"
 			},
 		},
 		{

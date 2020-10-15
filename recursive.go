@@ -14,6 +14,11 @@ import (
 var (
 	startDir                                   = "."
 	osOpen   func(s string) (io.Reader, error) = func(s string) (io.Reader, error) { return os.Open(s) }
+
+	fileArg      = commands.StringFlag("file", 'f', nil)
+	hideFileFlag = commands.BoolFlag("hideFile", 'h')
+	fileOnlyFlag = commands.BoolFlag("fileOnly", 'l')
+	// TODO: match only flag (-o)
 )
 
 func RecursiveGrep() *Grep {
@@ -29,13 +34,16 @@ func (*recursive) Alias() string            { return "rp" }
 func (*recursive) Option() *commands.Option { return nil }
 func (*recursive) Flags() []commands.Flag {
 	return []commands.Flag{
-		commands.StringFlag("file", 'f', nil),
-		// TODO: bool flags:
-		// TODO: only match
-		// TODO: only filename
+		fileArg,
+		hideFileFlag,
+		fileOnlyFlag,
 	}
 }
 func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, _ *commands.OptionInfo, ff filterFunc) (*commands.ExecutorResponse, bool) {
+	hideFile := flags[hideFileFlag.Name()].Bool() != nil && *flags[hideFileFlag.Name()].Bool()
+	fmt.Println(hideFile)
+	fileOnly := flags[fileOnlyFlag.Name()].Bool() != nil && *flags[fileOnlyFlag.Name()].Bool()
+
 	var fr *regexp.Regexp
 	if fileRegex := flags["file"].String(); fileRegex != nil {
 		var err error
@@ -66,7 +74,16 @@ func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*comman
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
 			if ff(scanner.Text()) {
-				cos.Stdout("%s:%s", path, scanner.Text())
+				if fileOnly {
+					cos.Stdout(path)
+					break
+				}
+
+				if hideFile {
+					cos.Stdout(scanner.Text())
+				} else {
+					cos.Stdout("%s:%s", path, scanner.Text())
+				}
 			}
 		}
 
