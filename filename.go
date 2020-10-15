@@ -34,5 +34,5 @@ func (*filename) Process(cos commands.CommandOS, args, flags map[string]*command
 		cos.Stderr("error when walking through file system: %v", err)
 		return nil, false
 	}
-	return &commands.ExecutorResponse{}, true
+	return nil, true
 }

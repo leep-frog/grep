@@ -19,9 +19,8 @@ func TestFilenameGrep(t *testing.T) {
 		wantStderr []string
 	}{
 		{
-			name:     "returns all files",
-			wantOK:   true,
-			wantResp: &commands.ExecutorResponse{},
+			name:   "returns all files",
+			wantOK: true,
 			wantStdout: []string{
 				"testing",
 				filepath.Join("testing", "other"),
@@ -45,20 +44,18 @@ func TestFilenameGrep(t *testing.T) {
 			},
 		},
 		{
-			name:     "filters out files",
-			args:     []string{".*.txt"},
-			wantOK:   true,
-			wantResp: &commands.ExecutorResponse{},
+			name:   "filters out files",
+			args:   []string{".*.txt"},
+			wantOK: true,
 			wantStdout: []string{
 				filepath.Join("testing", "other", "other.txt"),
 				filepath.Join("testing", "this.txt"),
 			},
 		},
 		{
-			name:     "invert filter",
-			args:     []string{"-v", ".*.go"},
-			wantOK:   true,
-			wantResp: &commands.ExecutorResponse{},
+			name:   "invert filter",
+			args:   []string{"-v", ".*.go"},
+			wantOK: true,
 			wantStdout: []string{
 				"testing",
 				filepath.Join("testing", "other"),

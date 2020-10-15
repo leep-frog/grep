@@ -43,6 +43,5 @@ func (*history) Process(cos commands.CommandOS, args, flags map[string]*commands
 		}
 	}
 
-	// TODO: this should be able to handle nil ExecutorResponse
-	return &commands.ExecutorResponse{}, true
+	return nil, true
 }

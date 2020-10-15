@@ -36,39 +36,35 @@ func TestRecursiveGrep(t *testing.T) {
 			},
 		},
 		{
-			name:     "finds matches",
-			args:     []string{"^alpha"},
-			wantOK:   true,
-			wantResp: &commands.ExecutorResponse{},
+			name:   "finds matches",
+			args:   []string{"^alpha"},
+			wantOK: true,
 			wantStdout: []string{
 				fmt.Sprintf("%s:%s", filepath.Join("testing", "other", "other.txt"), "alpha zero"),
 				fmt.Sprintf("%s:%s", filepath.Join("testing", "that.py"), "alpha"),
 			},
 		},
 		{
-			name:     "file flag filter works",
-			args:     []string{"^alpha", "-f", ".*.py"},
-			wantOK:   true,
-			wantResp: &commands.ExecutorResponse{},
+			name:   "file flag filter works",
+			args:   []string{"^alpha", "-f", ".*.py"},
+			wantOK: true,
 			wantStdout: []string{
 				fmt.Sprintf("%s:%s", filepath.Join("testing", "that.py"), "alpha"),
 			},
 		},
 		{
-			name:     "hide file flag works",
-			args:     []string{"^alpha", "-h"},
-			wantOK:   true,
-			wantResp: &commands.ExecutorResponse{},
+			name:   "hide file flag works",
+			args:   []string{"^alpha", "-h"},
+			wantOK: true,
 			wantStdout: []string{
 				"alpha zero", // testing/other/other.txt
 				"alpha",      //testing/that.py
 			},
 		},
 		{
-			name:     "file only flag works",
-			args:     []string{"^alp", "-l"},
-			wantOK:   true,
-			wantResp: &commands.ExecutorResponse{},
+			name:   "file only flag works",
+			args:   []string{"^alp", "-l"},
+			wantOK: true,
 			wantStdout: []string{
 				filepath.Join("testing", "other", "other.txt"), // "alpha zero"
 				filepath.Join("testing", "that.py"),            // "alpha"

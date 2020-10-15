@@ -67,7 +67,6 @@ func TestHistoryGrep(t *testing.T) {
 			},
 			wantName: "history.txt",
 			wantOK:   true,
-			wantResp: &commands.ExecutorResponse{},
 			wantStdout: []string{
 				"alpha",
 				"beta",
@@ -87,7 +86,6 @@ func TestHistoryGrep(t *testing.T) {
 			},
 			wantName: "in/some/path/history.txt",
 			wantOK:   true,
-			wantResp: &commands.ExecutorResponse{},
 			wantStdout: []string{
 				"beta",
 				"delta",
@@ -107,7 +105,6 @@ func TestHistoryGrep(t *testing.T) {
 			},
 			wantName: "in/some/path/history.txt",
 			wantOK:   true,
-			wantResp: &commands.ExecutorResponse{},
 			wantStdout: []string{
 				"alphA",
 				"beta",

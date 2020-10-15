@@ -93,5 +93,5 @@ func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*comman
 		cos.Stderr("error when walking through file system: %v", err)
 		return nil, false
 	}
-	return &commands.ExecutorResponse{}, true
+	return nil, true
 }
