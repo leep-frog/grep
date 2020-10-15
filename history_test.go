@@ -169,11 +169,16 @@ func TestHistoryMetadata(t *testing.T) {
 
 	wantName := "history-grep"
 	if c.Name() != wantName {
-		t.Errorf("HistoryGrep.Name returned %q; want %q", c.Name(), wantName)
+		t.Errorf("HistoryGrep.Name() returned %q; want %q", c.Name(), wantName)
 	}
 
 	wantAlias := "hp"
 	if c.Alias() != wantAlias {
-		t.Errorf("HistoryGrep.Alias returned %q; want %q", c.Alias(), wantAlias)
+		t.Errorf("HistoryGrep.Alias() returned %q; want %q", c.Alias(), wantAlias)
+	}
+
+	wantOption := &commands.Option{SetupCommand: "history"}
+	if diff := cmp.Diff(wantOption, c.Option()); diff != "" {
+		t.Errorf("HistoryGrep.Option() produced diff:\n%s", diff)
 	}
 }
