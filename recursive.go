@@ -39,7 +39,7 @@ func (*recursive) Flags() []commands.Flag {
 		fileOnlyFlag,
 	}
 }
-func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, _ *commands.OptionInfo, ff filterFunc) (*commands.ExecutorResponse, bool) {
+func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, _ *commands.OptionInfo, ffs filterFuncs) (*commands.ExecutorResponse, bool) {
 	hideFile := flags[hideFileFlag.Name()].Bool() != nil && *flags[hideFileFlag.Name()].Bool()
 	fmt.Println(hideFile)
 	fileOnly := flags[fileOnlyFlag.Name()].Bool() != nil && *flags[fileOnlyFlag.Name()].Bool()
@@ -73,17 +73,20 @@ func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*comman
 
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
-			if ff(scanner.Text()) {
-				if fileOnly {
-					cos.Stdout(path)
-					break
-				}
+			formattedString, ok := ffs.Apply(scanner.Text())
+			if !ok {
+				continue
+			}
 
-				if hideFile {
-					cos.Stdout(scanner.Text())
-				} else {
-					cos.Stdout("%s:%s", path, scanner.Text())
-				}
+			if fileOnly {
+				cos.Stdout(path)
+				break
+			}
+
+			if hideFile {
+				cos.Stdout(formattedString)
+			} else {
+				cos.Stdout("%s:%s", path, formattedString)
 			}
 		}
 

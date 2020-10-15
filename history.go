@@ -22,7 +22,7 @@ func (*history) Option() *commands.Option {
 	}
 }
 func (*history) Flags() []commands.Flag { return nil }
-func (*history) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo, ff filterFunc) (*commands.ExecutorResponse, bool) {
+func (*history) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo, ffs filterFuncs) (*commands.ExecutorResponse, bool) {
 	if oi == nil {
 		cos.Stderr("OptionInfo is undefined")
 		return nil, false
@@ -37,10 +37,11 @@ func (*history) Process(cos commands.CommandOS, args, flags map[string]*commands
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanLines)
 	for scanner.Scan() {
-		txt := scanner.Text()
-		if ff(txt) {
-			cos.Stdout(txt)
+		formattedString, ok := ffs.Apply(scanner.Text())
+		if !ok {
+			continue
 		}
+		cos.Stdout(formattedString)
 	}
 
 	return nil, true

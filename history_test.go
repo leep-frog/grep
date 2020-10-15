@@ -87,8 +87,8 @@ func TestHistoryGrep(t *testing.T) {
 			wantName: "in/some/path/history.txt",
 			wantOK:   true,
 			wantStdout: []string{
-				"beta",
-				"delta",
+				fmt.Sprintf("%s%s", matchColor.Format("be"), "ta"),
+				fmt.Sprintf("%s%s", matchColor.Format("de"), "lta"),
 			},
 		},
 		{
@@ -106,9 +106,9 @@ func TestHistoryGrep(t *testing.T) {
 			wantName: "in/some/path/history.txt",
 			wantOK:   true,
 			wantStdout: []string{
-				"alphA",
-				"beta",
-				"deltA",
+				matchColor.Format("alphA"),
+				matchColor.Format("beta"),
+				matchColor.Format("deltA"),
 			},
 		},
 		{

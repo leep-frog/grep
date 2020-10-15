@@ -40,8 +40,8 @@ func TestRecursiveGrep(t *testing.T) {
 			args:   []string{"^alpha"},
 			wantOK: true,
 			wantStdout: []string{
-				fmt.Sprintf("%s:%s", filepath.Join("testing", "other", "other.txt"), "alpha zero"),
-				fmt.Sprintf("%s:%s", filepath.Join("testing", "that.py"), "alpha"),
+				fmt.Sprintf("%s:%s", filepath.Join("testing", "other", "other.txt"), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " zero")),
+				fmt.Sprintf("%s:%s", filepath.Join("testing", "that.py"), matchColor.Format("alpha")),
 			},
 		},
 		{
@@ -49,16 +49,16 @@ func TestRecursiveGrep(t *testing.T) {
 			args:   []string{"^alpha", "-f", ".*.py"},
 			wantOK: true,
 			wantStdout: []string{
-				fmt.Sprintf("%s:%s", filepath.Join("testing", "that.py"), "alpha"),
+				fmt.Sprintf("%s:%s", filepath.Join("testing", "that.py"), matchColor.Format("alpha")),
 			},
 		},
 		{
 			name:   "hide file flag works",
-			args:   []string{"^alpha", "-h"},
+			args:   []string{"pha[^e]*", "-h"},
 			wantOK: true,
 			wantStdout: []string{
-				"alpha zero", // testing/other/other.txt
-				"alpha",      //testing/that.py
+				fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha z"), "ero"), // testing/other/other.txt
+				fmt.Sprintf("%s%s", "al", matchColor.Format("pha")),            //testing/that.py
 			},
 		},
 		{

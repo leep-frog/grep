@@ -48,8 +48,8 @@ func TestFilenameGrep(t *testing.T) {
 			args:   []string{".*.txt"},
 			wantOK: true,
 			wantStdout: []string{
-				filepath.Join("testing", "other", "other.txt"),
-				filepath.Join("testing", "this.txt"),
+				filepath.Join("testing", "other", matchColor.Format("other.txt")),
+				filepath.Join("testing", matchColor.Format("this.txt")),
 			},
 		},
 		{

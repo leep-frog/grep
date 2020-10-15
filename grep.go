@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/leep-frog/commands/color"
 	"github.com/leep-frog/commands/commands"
 )
 
@@ -12,14 +13,38 @@ var (
 	caseFlag   = commands.BoolFlag("ignoreCase", 'i')
 	invertFlag = commands.StringListFlag("invert", 'v', 0, -1, nil)
 	// TODO: or pattern
+
+	matchColor = &color.Format{
+		Color:     color.Green,
+		Thickness: color.Bold,
+	}
 )
 
-type filterFunc func(string) bool
+type filterFunc func(string) (*formatter, bool)
+
+type filterFuncs []filterFunc
+
+func (ffs filterFuncs) Apply(s string) (string, bool) {
+	otherString := s
+	for _, ff := range ffs {
+		ft, ok := ff(s)
+		if !ok {
+			return "", false
+		}
+
+		if ft != nil {
+			idx, jdx := ft.indices[0], ft.indices[1]
+			otherString = fmt.Sprintf("%s%s%s", otherString[:idx], ft.format.Format(otherString[idx:jdx]), otherString[jdx:])
+		}
+	}
+
+	return otherString, true
+}
 
 type inputSource interface {
 	Name() string
 	Alias() string
-	Process(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo, filter filterFunc) (*commands.ExecutorResponse, bool)
+	Process(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo, filters filterFuncs) (*commands.ExecutorResponse, bool)
 	Flags() []commands.Flag
 	Option() *commands.Option
 }
@@ -44,10 +69,28 @@ func (g *Grep) Option() *commands.Option {
 	return g.inputSource.Option()
 }
 
+type formatter struct {
+	indices []int
+	format  *color.Format
+}
+
+func colorMatch(r *regexp.Regexp) func(string) (*formatter, bool) {
+	return func(s string) (*formatter, bool) {
+		indices := r.FindStringIndex(s)
+		if indices == nil {
+			return nil, false
+		}
+		return &formatter{
+			indices: indices,
+			format:  matchColor,
+		}, true
+	}
+}
+
 func (g *Grep) execute(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo) (*commands.ExecutorResponse, bool) {
 	ignoreCase := flags[caseFlag.Name()].Bool() != nil && *flags[caseFlag.Name()].Bool()
 
-	var filterFuncs []func(string) bool
+	var ffs filterFuncs //[]func(string) (*formatter, bool)
 	if patterns := args[patternArg.Name()].StringList(); patterns != nil {
 		for _, pattern := range *patterns {
 			if ignoreCase {
@@ -58,7 +101,8 @@ func (g *Grep) execute(cos commands.CommandOS, args, flags map[string]*commands.
 				cos.Stderr("invalid regex: %v", err)
 				return nil, false
 			}
-			filterFuncs = append(filterFuncs, r.MatchString)
+			// TODO: color response (regexp.FindStringIndex)
+			ffs = append(ffs, colorMatch(r))
 		}
 	}
 
@@ -69,20 +113,11 @@ func (g *Grep) execute(cos commands.CommandOS, args, flags map[string]*commands.
 				cos.Stderr("invalid invert regex: %v", err)
 				return nil, false
 			}
-			filterFuncs = append(filterFuncs, func(s string) bool { return !r.MatchString(s) })
+			ffs = append(ffs, func(s string) (*formatter, bool) { return nil, !r.MatchString(s) })
 		}
 	}
 
-	filterFunc := func(s string) bool {
-		for _, ff := range filterFuncs {
-			if !ff(s) {
-				return false
-			}
-		}
-		return true
-	}
-
-	return g.inputSource.Process(cos, args, flags, oi, filterFunc)
+	return g.inputSource.Process(cos, args, flags, oi, ffs)
 }
 
 func (g *Grep) Command() commands.Command {
