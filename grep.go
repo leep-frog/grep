@@ -101,7 +101,6 @@ func (g *Grep) execute(cos commands.CommandOS, args, flags map[string]*commands.
 				cos.Stderr("invalid regex: %v", err)
 				return nil, false
 			}
-			// TODO: color response (regexp.FindStringIndex)
 			ffs = append(ffs, colorMatch(r))
 		}
 	}

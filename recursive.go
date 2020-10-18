@@ -46,7 +46,6 @@ func (*recursive) Flags() []commands.Flag {
 }
 func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, _ *commands.OptionInfo, ffs filterFuncs) (*commands.ExecutorResponse, bool) {
 	hideFile := flags[hideFileFlag.Name()].Bool() != nil && *flags[hideFileFlag.Name()].Bool()
-	fmt.Println(hideFile)
 	fileOnly := flags[fileOnlyFlag.Name()].Bool() != nil && *flags[fileOnlyFlag.Name()].Bool()
 
 	var fr *regexp.Regexp
