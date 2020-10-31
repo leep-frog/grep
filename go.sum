@@ -1,5 +1,6 @@
 github.com/google/go-cmp v0.5.2 h1:X2ev0eStA3AbceY54o37/0PQ/UWqKEiiO2dKL5OPaFM=
 github.com/google/go-cmp v0.5.2/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
+github.com/leep-frog/commands v1.0.0 h1:5qpHgjqNg2p61qo89LWktnynFoGBoUcMDVyxxVGZI30=
 github.com/leep-frog/commands v1.0.1-0.20201012144621-3126d8e59655 h1:9XQIxdufniZlWKWObVWekCUOU5HVKBlAa4cHATecB+E=
 github.com/leep-frog/commands v1.0.1-0.20201012144621-3126d8e59655/go.mod h1:JiPTp+skgvKR98FS3nl6mdtzA2pB6BEFra2YR7XkMKA=
 github.com/leep-frog/commands v1.0.1-0.20201015095217-7f0fee7313e6 h1:2Mh5KdpWBTPAlbW3yjiQc37g9t8GyPp6AQvlb3Wu1Gk=

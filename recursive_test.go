@@ -32,7 +32,7 @@ func TestRecursiveGrep(t *testing.T) {
 			name:      "errors on open error",
 			osOpenErr: fmt.Errorf("oops"),
 			wantStderr: []string{
-				fmt.Sprintf(`error when walking through file system: failed to open file %q: oops`, filepath.Join("testing/other/other.txt")),
+				fmt.Sprintf(`error when walking through file system: failed to open file %q: oops`, filepath.Join("testing/numbered.txt")),
 			},
 		},
 		{
@@ -75,6 +75,77 @@ func TestRecursiveGrep(t *testing.T) {
 			args: []string{"^alpha", "-f", ":)"},
 			wantStderr: []string{
 				"invalid filename regex: error parsing regexp: unexpected ): `:)`",
+			},
+		},
+		// -a flag
+		{
+			name:   "returns lines after",
+			args:   []string{"five", "-h", "-a", "3"},
+			wantOK: true,
+			wantStdout: []string{
+				matchColor.Format("five"),
+				"six",
+				"seven",
+				"eight",
+			},
+		},
+		{
+			name:   "resets after lines if multiple matches",
+			args:   []string{"^....$", "-f", "numbered.txt", "-h", "-a", "2"},
+			wantOK: true,
+			wantStdout: []string{
+				matchColor.Format("zero"),
+				"one",
+				"two",
+				matchColor.Format("four"),
+				matchColor.Format("five"),
+				"six",
+				"seven",
+				matchColor.Format("nine"),
+			},
+		},
+		// -b flag
+		{
+			name:   "returns lines before",
+			args:   []string{"five", "-h", "-b", "3"},
+			wantOK: true,
+			wantStdout: []string{
+				"two",
+				"three",
+				"four",
+				matchColor.Format("five"),
+			},
+		},
+		{
+			name:   "returns lines before with overlaps",
+			args:   []string{"^....$", "-f", "numbered.txt", "-h", "-b", "2"},
+			wantOK: true,
+			wantStdout: []string{
+				matchColor.Format("zero"),
+				"two",
+				"three",
+				matchColor.Format("four"),
+				matchColor.Format("five"),
+				"seven",
+				"eight",
+				matchColor.Format("nine"),
+			},
+		},
+		// -a and -b together
+		{
+			name:   "after and before line flags work together",
+			args:   []string{"^...$", "-f", "numbered.txt", "-h", "-a", "2", "-b", "3"},
+			wantOK: true,
+			wantStdout: []string{
+				"zero",
+				matchColor.Format("one"),
+				matchColor.Format("two"),
+				"three",
+				"four",
+				"five",
+				matchColor.Format("six"),
+				"seven",
+				"eight",
 			},
 		},
 	} {

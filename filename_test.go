@@ -23,6 +23,7 @@ func TestFilenameGrep(t *testing.T) {
 			wantOK: true,
 			wantStdout: []string{
 				"testing",
+				filepath.Join("testing", "numbered.txt"),
 				filepath.Join("testing", "other"),
 				filepath.Join("testing", "other", "other.txt"),
 				filepath.Join("testing", "that.py"),
@@ -48,6 +49,7 @@ func TestFilenameGrep(t *testing.T) {
 			args:   []string{".*.txt"},
 			wantOK: true,
 			wantStdout: []string{
+				filepath.Join("testing", matchColor.Format("numbered.txt")),
 				filepath.Join("testing", "other", matchColor.Format("other.txt")),
 				filepath.Join("testing", matchColor.Format("this.txt")),
 			},
@@ -58,6 +60,7 @@ func TestFilenameGrep(t *testing.T) {
 			wantOK: true,
 			wantStdout: []string{
 				"testing",
+				filepath.Join("testing", "numbered.txt"),
 				filepath.Join("testing", "other"),
 				filepath.Join("testing", "other", "other.txt"),
 				filepath.Join("testing", "that.py"),
