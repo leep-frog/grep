@@ -58,7 +58,6 @@ func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*comman
 	if intPtr := flags[afterFlag.Name()].Int(); intPtr != nil {
 		linesAfter = *intPtr
 	}
-	_ = linesBefore
 
 	var fr *regexp.Regexp
 	if fileRegex := flags["file"].String(); fileRegex != nil {
