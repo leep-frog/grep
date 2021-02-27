@@ -97,7 +97,7 @@ func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*comman
 			cos.Stdout("Scan: %s", scanner.Text())
 			formattedString, ok := ffs.Apply(scanner.Text())
 			cos.Stdout("ok: %v", ok)
-			cos.Stdout("list B: %v", list)
+			cos.Stdout("list B: %v", list.ToString())
 			if !ok {
 				linesSinceMatch++
 				if linesSinceMatch > linesAfter {
@@ -112,7 +112,7 @@ func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*comman
 				linesSinceMatch = 0
 			}
 
-			cos.Stdout("list: %v", list)
+			cos.Stdout("list: %v", list.ToString())
 
 			formattedPath := fileColor.Format(path)
 			if fileOnly {
@@ -148,6 +148,16 @@ type linkedList struct {
 	front  *element
 	back   *element
 	length int
+}
+
+func (ll *linkedList) ToString() []string {
+	l := []string{}
+	e := ll.front
+	for e != nil {
+		l = append(l, e.value)
+		e = e.next
+	}
+	return l
 }
 
 func (ll *linkedList) pushBack(s string) {
