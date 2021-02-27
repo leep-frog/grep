@@ -16,11 +16,15 @@ var (
 	startDir                                   = "."
 	osOpen   func(s string) (io.Reader, error) = func(s string) (io.Reader, error) { return os.Open(s) }
 
-	fileArg      = commands.StringFlag("file", 'f', nil)
+	fileArg = commands.StringFlag("file", 'f', nil)
+	// Don't show file names
 	hideFileFlag = commands.BoolFlag("hideFile", 'h')
+	// Only show file names (hide lines).
 	fileOnlyFlag = commands.BoolFlag("fileOnly", 'l')
-	beforeFlag   = commands.IntFlag("before", 'b', nil)
-	afterFlag    = commands.IntFlag("after", 'a', nil)
+	// Show the matched line and the `n` lines before it.
+	beforeFlag = commands.IntFlag("before", 'b', nil)
+	// Show the matched line and the `n` lines after it.
+	afterFlag = commands.IntFlag("after", 'a', nil)
 	// TODO: match only flag (-o)
 
 	fileColor = &color.Format{
@@ -117,7 +121,7 @@ func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*comman
 				}
 				cos.Stdout(formattedString)
 			} else {
-				cos.Stdout("%s:%s", formattedPath, formattedString)
+				cos.Stdout("b4(%d) %s:%s", linesBefore, formattedPath, formattedString)
 			}
 		}
 
