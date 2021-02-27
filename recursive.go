@@ -94,7 +94,10 @@ func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*comman
 		linesSinceMatch := linesAfter
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
+			cos.Stdout("Scan: %s", scanner.Text())
 			formattedString, ok := ffs.Apply(scanner.Text())
+			cos.Stdout("ok: %v", ok)
+			cos.Stdout("list B: %v", list)
 			if !ok {
 				linesSinceMatch++
 				if linesSinceMatch > linesAfter {
@@ -108,6 +111,8 @@ func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*comman
 			} else {
 				linesSinceMatch = 0
 			}
+
+			cos.Stdout("list: %v", list)
 
 			formattedPath := fileColor.Format(path)
 			if fileOnly {
