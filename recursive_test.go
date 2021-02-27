@@ -80,6 +80,17 @@ func TestRecursiveGrep(t *testing.T) {
 		// -a flag
 		{
 			name:   "returns lines after",
+			args:   []string{"five", "-a", "3"},
+			wantOK: true,
+			wantStdout: []string{
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "six"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "eight"),
+			},
+		},
+		{
+			name:   "returns lines after when file is hidden",
 			args:   []string{"five", "-h", "-a", "3"},
 			wantOK: true,
 			wantStdout: []string{
@@ -91,6 +102,21 @@ func TestRecursiveGrep(t *testing.T) {
 		},
 		{
 			name:   "resets after lines if multiple matches",
+			args:   []string{"^....$", "-f", "numbered.txt", "-a", "2"},
+			wantOK: true,
+			wantStdout: []string{
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("zero")),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "one"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "two"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("four")),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "six"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("nine")),
+			},
+		},
+		{
+			name:   "resets after lines if multiple matches when file is hidden",
 			args:   []string{"^....$", "-f", "numbered.txt", "-h", "-a", "2"},
 			wantOK: true,
 			wantStdout: []string{
@@ -107,6 +133,17 @@ func TestRecursiveGrep(t *testing.T) {
 		// -b flag
 		{
 			name:   "returns lines before",
+			args:   []string{"five", "-b", "3"},
+			wantOK: true,
+			wantStdout: []string{
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "two"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "three"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "four"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
+			},
+		},
+		{
+			name:   "returns lines before when file is hidden",
 			args:   []string{"five", "-h", "-b", "3"},
 			wantOK: true,
 			wantStdout: []string{
@@ -118,6 +155,21 @@ func TestRecursiveGrep(t *testing.T) {
 		},
 		{
 			name:   "returns lines before with overlaps",
+			args:   []string{"^....$", "-f", "numbered.txt", "-b", "2"},
+			wantOK: true,
+			wantStdout: []string{
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("zero")),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "two"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "three"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("four")),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "eight"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("nine")),
+			},
+		},
+		{
+			name:   "returns lines before with overlaps when file is hidden",
 			args:   []string{"^....$", "-f", "numbered.txt", "-h", "-b", "2"},
 			wantOK: true,
 			wantStdout: []string{
@@ -134,6 +186,22 @@ func TestRecursiveGrep(t *testing.T) {
 		// -a and -b together
 		{
 			name:   "after and before line flags work together",
+			args:   []string{"^...$", "-f", "numbered.txt", "-a", "2", "-b", "3"},
+			wantOK: true,
+			wantStdout: []string{
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "zero"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("one")),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("two")),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "three"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "four"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "five"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("six")),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "eight"),
+			},
+		},
+		{
+			name:   "after and before line flags work together when file is hidden",
 			args:   []string{"^...$", "-f", "numbered.txt", "-h", "-a", "2", "-b", "3"},
 			wantOK: true,
 			wantStdout: []string{
