@@ -126,7 +126,10 @@ func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*comman
 				}
 				cos.Stdout(formattedString)
 			} else {
-				cos.Stdout("b4(%d) %s:%s", linesBefore, formattedPath, formattedString)
+				for list.length > 0 {
+					cos.Stdout("%s:%s", formattedPath, list.pop())
+				}
+				cos.Stdout("%s:%s", linesBefore, formattedPath, formattedString)
 			}
 		}
 
