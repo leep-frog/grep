@@ -2,6 +2,7 @@ package grep
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -38,7 +39,9 @@ func RecursiveGrep() *Grep {
 	}
 }
 
-type recursive struct{}
+type recursive struct {
+	changed bool
+}
 
 func (*recursive) Name() string             { return "recursive-grep" }
 func (*recursive) Alias() string            { return "rp" }
@@ -52,6 +55,28 @@ func (*recursive) Flags() []commands.Flag {
 		afterFlag,
 	}
 }
+
+// Load creates a recursive grep object from a JSON string.
+func (r *recursive) Load(jsn string) error {
+	if jsn == "" {
+		r = &recursive{}
+		return nil
+	}
+
+	if err := json.Unmarshal([]byte(jsn), r); err != nil {
+		return fmt.Errorf("failed to unmarshal json for recursive grep object: %v", err)
+	}
+	return nil
+}
+
+func (r *recursive) Changed() bool {
+	return r.changed
+}
+
+func (*recursive) Subcommands() map[string]commands.Command {
+	return nil
+}
+
 func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, _ *commands.OptionInfo, ffs filterFuncs) (*commands.ExecutorResponse, bool) {
 	hideFile := flags[hideFileFlag.Name()].Bool() != nil && *flags[hideFileFlag.Name()].Bool()
 	fileOnly := flags[fileOnlyFlag.Name()].Bool() != nil && *flags[fileOnlyFlag.Name()].Bool()

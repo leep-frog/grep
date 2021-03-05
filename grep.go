@@ -47,6 +47,9 @@ type inputSource interface {
 	Process(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo, filters filterFuncs) (*commands.ExecutorResponse, bool)
 	Flags() []commands.Flag
 	Option() *commands.Option
+	Subcommands() map[string]commands.Command
+	Changed() bool
+	Load(string) error
 }
 
 type Grep struct {
@@ -54,8 +57,13 @@ type Grep struct {
 	inputSource   inputSource
 }
 
-func (*Grep) Load(jsn string) error { return nil }
-func (*Grep) Changed() bool         { return false }
+func (g *Grep) Load(jsn string) error {
+	return g.inputSource.Load(jsn)
+}
+
+func (g *Grep) Changed() bool {
+	return g.inputSource.Changed()
+}
 
 func (g *Grep) Name() string {
 	return g.inputSource.Name()
@@ -124,11 +132,14 @@ func (g *Grep) Command() commands.Command {
 		caseFlag,
 		invertFlag,
 	}
-	return &commands.TerminusCommand{
-		Executor: g.execute,
-		Args: []commands.Arg{
-			patternArg,
+	return &commands.CommandBranch{
+		Subcommands: g.inputSource.Subcommands(),
+		TerminusCommand: &commands.TerminusCommand{
+			Executor: g.execute,
+			Args: []commands.Arg{
+				patternArg,
+			},
+			Flags: append(flags, g.inputSource.Flags()...),
 		},
-		Flags: append(flags, g.inputSource.Flags()...),
 	}
 }

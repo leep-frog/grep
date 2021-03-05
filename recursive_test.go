@@ -4,11 +4,65 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/leep-frog/commands/commands"
 )
+
+func TestRecursiveLoad(t *testing.T) {
+	for _, test := range []struct {
+		name    string
+		json    string
+		want    *Grep
+		wantErr string
+	}{
+		{
+			name: "handles empty string",
+			want: &Grep{
+				inputSource: &recursive{},
+			},
+		},
+		{
+			name:    "handles invalid json",
+			json:    "}}",
+			wantErr: "failed to unmarshal json for recursive grep object: invalid character",
+			want: &Grep{
+				inputSource: &recursive{},
+			},
+		},
+		{
+			name: "handles valid json",
+			json: `{"Field": "Value"}`,
+			want: &Grep{
+				inputSource: &recursive{},
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			d := RecursiveGrep()
+			err := d.Load(test.json)
+			if test.wantErr == "" && err != nil {
+				t.Errorf("Load(%s) returned error %v; want nil", test.json, err)
+			}
+			if test.wantErr != "" && err == nil {
+				t.Errorf("Load(%s) returned nil; want err %q", test.json, test.wantErr)
+			}
+			if test.wantErr != "" && err != nil && !strings.Contains(err.Error(), test.wantErr) {
+				t.Errorf("Load(%s) returned err %q; want %q", test.json, err.Error(), test.wantErr)
+			}
+
+			opts := []cmp.Option{
+				cmp.AllowUnexported(recursive{}),
+				cmp.AllowUnexported(Grep{}),
+			}
+			if diff := cmp.Diff(test.want, d, opts...); diff != "" {
+				t.Errorf("Load(%s) produced diff:\n%s", test.json, diff)
+			}
+		})
+	}
+}
 
 func TestRecursiveGrep(t *testing.T) {
 	for _, test := range []struct {
