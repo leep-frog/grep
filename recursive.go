@@ -81,31 +81,25 @@ func (*recursive) Subcommands() map[string]commands.Command {
 }
 
 func (r *recursive) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, _ *commands.OptionInfo, ffs filterFuncs) (*commands.ExecutorResponse, bool) {
-	hideFile := flags[hideFileFlag.Name()].Bool() != nil && *flags[hideFileFlag.Name()].Bool()
-	fileOnly := flags[fileOnlyFlag.Name()].Bool() != nil && *flags[fileOnlyFlag.Name()].Bool()
-	var linesBefore, linesAfter int
-	if intPtr := flags[beforeFlag.Name()].Int(); intPtr != nil {
-		linesBefore = *intPtr
-	}
-	if intPtr := flags[afterFlag.Name()].Int(); intPtr != nil {
-		linesAfter = *intPtr
-	}
+	linesBefore := int(flags[beforeFlag.Name()].GetInt())
+	linesAfter := int(flags[afterFlag.Name()].GetInt())
 
 	var fr *regexp.Regexp
-	if fileRegex := flags["file"].String(); fileRegex != nil {
+	if flags["file"].GetSet() {
 		var err error
-		if fr, err = regexp.Compile(*fileRegex); err != nil {
+		if fr, err = regexp.Compile(flags["file"].GetString_()); err != nil {
 			cos.Stderr("invalid filename regex: %v", err)
 			return nil, false
 		}
 	}
 
 	dir := startDir
-	if strPtr := flags[dirFlag.Name()].String(); strPtr != nil {
+	if flags[dirFlag.Name()].GetSet() {
+		da := flags[dirFlag.Name()].GetString_()
 		var ok bool
-		dir, ok = r.DirectoryAliases[*strPtr]
+		dir, ok = r.DirectoryAliases[da]
 		if !ok {
-			cos.Stderr("unknown alias: %q", *strPtr)
+			cos.Stderr("unknown alias: %q", da)
 			return nil, false
 		}
 	}
@@ -148,12 +142,12 @@ func (r *recursive) Process(cos commands.CommandOS, args, flags map[string]*comm
 			}
 
 			formattedPath := fileColor.Format(path)
-			if fileOnly {
+			if flags[fileOnlyFlag.Name()].GetBool() {
 				cos.Stdout(formattedPath)
 				break
 			}
 
-			if hideFile {
+			if flags[hideFileFlag.Name()].GetBool() {
 				for list.length > 0 {
 					cos.Stdout(list.pop())
 				}

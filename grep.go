@@ -96,32 +96,28 @@ func colorMatch(r *regexp.Regexp) func(string) (*formatter, bool) {
 }
 
 func (g *Grep) execute(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo) (*commands.ExecutorResponse, bool) {
-	ignoreCase := flags[caseFlag.Name()].Bool() != nil && *flags[caseFlag.Name()].Bool()
+	ignoreCase := flags[caseFlag.Name()].GetBool()
 
 	var ffs filterFuncs //[]func(string) (*formatter, bool)
-	if patterns := args[patternArg.Name()].StringList(); patterns != nil {
-		for _, pattern := range *patterns {
-			if ignoreCase {
-				pattern = fmt.Sprintf("(?i)%s", pattern)
-			}
-			r, err := regexp.Compile(pattern)
-			if err != nil {
-				cos.Stderr("invalid regex: %v", err)
-				return nil, false
-			}
-			ffs = append(ffs, colorMatch(r))
+	for _, pattern := range args[patternArg.Name()].GetStringList().GetList() {
+		if ignoreCase {
+			pattern = fmt.Sprintf("(?i)%s", pattern)
 		}
+		r, err := regexp.Compile(pattern)
+		if err != nil {
+			cos.Stderr("invalid regex: %v", err)
+			return nil, false
+		}
+		ffs = append(ffs, colorMatch(r))
 	}
 
-	if inverts := flags[invertFlag.Name()].StringList(); inverts != nil {
-		for _, pattern := range *inverts {
-			r, err := regexp.Compile(pattern)
-			if err != nil {
-				cos.Stderr("invalid invert regex: %v", err)
-				return nil, false
-			}
-			ffs = append(ffs, func(s string) (*formatter, bool) { return nil, !r.MatchString(s) })
+	for _, pattern := range flags[invertFlag.Name()].GetStringList().GetList() {
+		r, err := regexp.Compile(pattern)
+		if err != nil {
+			cos.Stderr("invalid invert regex: %v", err)
+			return nil, false
 		}
+		ffs = append(ffs, func(s string) (*formatter, bool) { return nil, !r.MatchString(s) })
 	}
 
 	return g.inputSource.Process(cos, args, flags, oi, ffs)
