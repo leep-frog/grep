@@ -68,6 +68,7 @@ func TestRecursiveGrep(t *testing.T) {
 	for _, test := range []struct {
 		name       string
 		args       []string
+		aliases    map[string]string
 		stubDir    string
 		osOpenErr  error
 		wantOK     bool
@@ -270,6 +271,25 @@ func TestRecursiveGrep(t *testing.T) {
 				"eight",
 			},
 		},
+		// Directory flag (-d).
+		{
+			name: "fails if unknown directory flag",
+			args: []string{"un", "-d", "dev-null"},
+			wantStderr: []string{
+				`unknown alias: "dev-null"`,
+			},
+		},
+		{
+			name: "searches in aliased directory instead",
+			aliases: map[string]string{
+				"ooo": "testing/other",
+			},
+			args:   []string{"alpha", "-d", "ooo"},
+			wantOK: true,
+			wantStdout: []string{
+				fmt.Sprintf("%s:%s zero", fileColor.Format(filepath.Join("testing", "other", "other.txt")), matchColor.Format("alpha")),
+			},
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			// Change starting directory
@@ -289,7 +309,11 @@ func TestRecursiveGrep(t *testing.T) {
 			}
 
 			tcos := &commands.TestCommandOS{}
-			c := RecursiveGrep()
+			c := &Grep{
+				inputSource: &recursive{
+					DirectoryAliases: test.aliases,
+				},
+			}
 			got, ok := commands.Execute(tcos, c.Command(), test.args, nil)
 			if ok != test.wantOK {
 				t.Fatalf("RecursiveGrep: commands.Execute(%v) returned %v for ok; want %v", test.args, ok, test.wantOK)

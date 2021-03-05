@@ -26,6 +26,8 @@ var (
 	beforeFlag = commands.IntFlag("before", 'b', nil)
 	// Show the matched line and the `n` lines after it.
 	afterFlag = commands.IntFlag("after", 'a', nil)
+	// Directory flag to search through an aliased directory instead of pwd.
+	dirFlag = commands.StringFlag("directory", 'd', nil /*todo completor*/)
 	// TODO: match only flag (-o)
 
 	fileColor = &color.Format{
@@ -40,7 +42,8 @@ func RecursiveGrep() *Grep {
 }
 
 type recursive struct {
-	changed bool
+	DirectoryAliases map[string]string
+	changed          bool
 }
 
 func (*recursive) Name() string             { return "recursive-grep" }
@@ -53,10 +56,10 @@ func (*recursive) Flags() []commands.Flag {
 		fileOnlyFlag,
 		beforeFlag,
 		afterFlag,
+		dirFlag,
 	}
 }
 
-// Load creates a recursive grep object from a JSON string.
 func (r *recursive) Load(jsn string) error {
 	if jsn == "" {
 		r = &recursive{}
@@ -77,7 +80,7 @@ func (*recursive) Subcommands() map[string]commands.Command {
 	return nil
 }
 
-func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, _ *commands.OptionInfo, ffs filterFuncs) (*commands.ExecutorResponse, bool) {
+func (r *recursive) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, _ *commands.OptionInfo, ffs filterFuncs) (*commands.ExecutorResponse, bool) {
 	hideFile := flags[hideFileFlag.Name()].Bool() != nil && *flags[hideFileFlag.Name()].Bool()
 	fileOnly := flags[fileOnlyFlag.Name()].Bool() != nil && *flags[fileOnlyFlag.Name()].Bool()
 	var linesBefore, linesAfter int
@@ -97,7 +100,17 @@ func (*recursive) Process(cos commands.CommandOS, args, flags map[string]*comman
 		}
 	}
 
-	err := filepath.Walk(startDir, func(path string, fi os.FileInfo, err error) error {
+	dir := startDir
+	if strPtr := flags[dirFlag.Name()].String(); strPtr != nil {
+		var ok bool
+		dir, ok = r.DirectoryAliases[*strPtr]
+		if !ok {
+			cos.Stderr("unknown alias: %q", *strPtr)
+			return nil, false
+		}
+	}
+
+	err := filepath.Walk(dir, func(path string, fi os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to access path %q: %v", path, err)
 		}
