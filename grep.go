@@ -96,10 +96,10 @@ func colorMatch(r *regexp.Regexp) func(string) (*formatter, bool) {
 }
 
 func (g *Grep) execute(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo) (*commands.ExecutorResponse, bool) {
-	ignoreCase := flags[caseFlag.Name()].GetBool()
+	ignoreCase := flags[caseFlag.Name()].Bool()
 
 	var ffs filterFuncs //[]func(string) (*formatter, bool)
-	for _, pattern := range args[patternArg.Name()].GetStringList().GetList() {
+	for _, pattern := range args[patternArg.Name()].StringList() {
 		if ignoreCase {
 			pattern = fmt.Sprintf("(?i)%s", pattern)
 		}
@@ -111,7 +111,7 @@ func (g *Grep) execute(cos commands.CommandOS, args, flags map[string]*commands.
 		ffs = append(ffs, colorMatch(r))
 	}
 
-	for _, pattern := range flags[invertFlag.Name()].GetStringList().GetList() {
+	for _, pattern := range flags[invertFlag.Name()].StringList() {
 		r, err := regexp.Compile(pattern)
 		if err != nil {
 			cos.Stderr("invalid invert regex: %v", err)
