@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/leep-frog/commands/commands"
+	"github.com/leep-frog/commands/commandtest"
 )
 
 func TestRecursiveLoad(t *testing.T) {
@@ -71,14 +72,18 @@ func TestRecursiveGrep(t *testing.T) {
 		aliases    map[string]string
 		stubDir    string
 		osOpenErr  error
-		wantOK     bool
-		wantResp   *commands.ExecutorResponse
+		want       *commands.WorldState
 		wantStdout []string
 		wantStderr []string
 	}{
 		{
 			name:    "errors on walk error",
 			stubDir: "does-not-exist",
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue(),
+				},
+			},
 			wantStderr: []string{
 				`error when walking through file system: failed to access path "does-not-exist": CreateFile does-not-exist: The system cannot find the file specified.`,
 			},
@@ -86,40 +91,70 @@ func TestRecursiveGrep(t *testing.T) {
 		{
 			name:      "errors on open error",
 			osOpenErr: fmt.Errorf("oops"),
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue(),
+				},
+			},
 			wantStderr: []string{
 				fmt.Sprintf(`error when walking through file system: failed to open file %q: oops`, filepath.Join("testing/numbered.txt")),
 			},
 		},
 		{
-			name:   "finds matches",
-			args:   []string{"^alpha"},
-			wantOK: true,
+			name: "finds matches",
+			args: []string{"^alpha"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("^alpha"),
+				},
+			},
 			wantStdout: []string{
 				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "other", "other.txt")), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " zero")),
 				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "that.py")), matchColor.Format("alpha")),
 			},
 		},
 		{
-			name:   "file flag filter works",
-			args:   []string{"^alpha", "-f", ".*.py"},
-			wantOK: true,
+			name: "file flag filter works",
+			args: []string{"^alpha", "-f", ".*.py"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("^alpha"),
+				},
+				Flags: map[string]*commands.Value{
+					fileArg.Name(): commands.StringValue(".*.py"),
+				},
+			},
 			wantStdout: []string{
 				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "that.py")), matchColor.Format("alpha")),
 			},
 		},
 		{
-			name:   "hide file flag works",
-			args:   []string{"pha[^e]*", "-h"},
-			wantOK: true,
+			name: "hide file flag works",
+			args: []string{"pha[^e]*", "-h"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("pha[^e]*"),
+				},
+				Flags: map[string]*commands.Value{
+					hideFileFlag.Name(): commands.BoolValue(true),
+				},
+			},
 			wantStdout: []string{
 				fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha z"), "ero"), // testing/other/other.txt
 				fmt.Sprintf("%s%s", "al", matchColor.Format("pha")),            //testing/that.py
 			},
 		},
 		{
-			name:   "file only flag works",
-			args:   []string{"^alp", "-l"},
-			wantOK: true,
+			name: "file only flag works",
+			args: []string{"^alp", "-l"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("^alp"),
+				},
+				Flags: map[string]*commands.Value{
+					fileOnlyFlag.Name(): commands.BoolValue(true),
+				},
+			},
 			wantStdout: []string{
 				fileColor.Format(filepath.Join("testing", "other", "other.txt")), // "alpha zero"
 				fileColor.Format(filepath.Join("testing", "that.py")),            // "alpha"
@@ -128,15 +163,30 @@ func TestRecursiveGrep(t *testing.T) {
 		{
 			name: "errors on invalid regex in file flag",
 			args: []string{"^alpha", "-f", ":)"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("^alpha"),
+				},
+				Flags: map[string]*commands.Value{
+					fileArg.Name(): commands.StringValue(":)"),
+				},
+			},
 			wantStderr: []string{
 				"invalid filename regex: error parsing regexp: unexpected ): `:)`",
 			},
 		},
 		// -a flag
 		{
-			name:   "returns lines after",
-			args:   []string{"five", "-a", "3"},
-			wantOK: true,
+			name: "returns lines after",
+			args: []string{"five", "-a", "3"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("five"),
+				},
+				Flags: map[string]*commands.Value{
+					afterFlag.Name(): commands.IntValue(3),
+				},
+			},
 			wantStdout: []string{
 				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
 				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "six"),
@@ -145,9 +195,17 @@ func TestRecursiveGrep(t *testing.T) {
 			},
 		},
 		{
-			name:   "returns lines after when file is hidden",
-			args:   []string{"five", "-h", "-a", "3"},
-			wantOK: true,
+			name: "returns lines after when file is hidden",
+			args: []string{"five", "-h", "-a", "3"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("five"),
+				},
+				Flags: map[string]*commands.Value{
+					afterFlag.Name():    commands.IntValue(3),
+					hideFileFlag.Name(): commands.BoolValue(true),
+				},
+			},
 			wantStdout: []string{
 				matchColor.Format("five"),
 				"six",
@@ -156,9 +214,17 @@ func TestRecursiveGrep(t *testing.T) {
 			},
 		},
 		{
-			name:   "resets after lines if multiple matches",
-			args:   []string{"^....$", "-f", "numbered.txt", "-a", "2"},
-			wantOK: true,
+			name: "resets after lines if multiple matches",
+			args: []string{"^....$", "-f", "numbered.txt", "-a", "2"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("^....$"),
+				},
+				Flags: map[string]*commands.Value{
+					afterFlag.Name(): commands.IntValue(2),
+					fileArg.Name():   commands.StringValue("numbered.txt"),
+				},
+			},
 			wantStdout: []string{
 				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("zero")),
 				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "one"),
@@ -171,9 +237,18 @@ func TestRecursiveGrep(t *testing.T) {
 			},
 		},
 		{
-			name:   "resets after lines if multiple matches when file is hidden",
-			args:   []string{"^....$", "-f", "numbered.txt", "-h", "-a", "2"},
-			wantOK: true,
+			name: "resets after lines if multiple matches when file is hidden",
+			args: []string{"^....$", "-f", "numbered.txt", "-h", "-a", "2"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("^....$"),
+				},
+				Flags: map[string]*commands.Value{
+					afterFlag.Name():    commands.IntValue(2),
+					fileArg.Name():      commands.StringValue("numbered.txt"),
+					hideFileFlag.Name(): commands.BoolValue(true),
+				},
+			},
 			wantStdout: []string{
 				matchColor.Format("zero"),
 				"one",
@@ -187,9 +262,16 @@ func TestRecursiveGrep(t *testing.T) {
 		},
 		// -b flag
 		{
-			name:   "returns lines before",
-			args:   []string{"five", "-b", "3"},
-			wantOK: true,
+			name: "returns lines before",
+			args: []string{"five", "-b", "3"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("five"),
+				},
+				Flags: map[string]*commands.Value{
+					beforeFlag.Name(): commands.IntValue(3),
+				},
+			},
 			wantStdout: []string{
 				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "two"),
 				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "three"),
@@ -198,9 +280,17 @@ func TestRecursiveGrep(t *testing.T) {
 			},
 		},
 		{
-			name:   "returns lines before when file is hidden",
-			args:   []string{"five", "-h", "-b", "3"},
-			wantOK: true,
+			name: "returns lines before when file is hidden",
+			args: []string{"five", "-h", "-b", "3"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("five"),
+				},
+				Flags: map[string]*commands.Value{
+					beforeFlag.Name():   commands.IntValue(3),
+					hideFileFlag.Name(): commands.BoolValue(true),
+				},
+			},
 			wantStdout: []string{
 				"two",
 				"three",
@@ -209,9 +299,17 @@ func TestRecursiveGrep(t *testing.T) {
 			},
 		},
 		{
-			name:   "returns lines before with overlaps",
-			args:   []string{"^....$", "-f", "numbered.txt", "-b", "2"},
-			wantOK: true,
+			name: "returns lines before with overlaps",
+			args: []string{"^....$", "-f", "numbered.txt", "-b", "2"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("^....$"),
+				},
+				Flags: map[string]*commands.Value{
+					beforeFlag.Name(): commands.IntValue(2),
+					fileArg.Name():    commands.StringValue("numbered.txt"),
+				},
+			},
 			wantStdout: []string{
 				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("zero")),
 				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "two"),
@@ -224,9 +322,18 @@ func TestRecursiveGrep(t *testing.T) {
 			},
 		},
 		{
-			name:   "returns lines before with overlaps when file is hidden",
-			args:   []string{"^....$", "-f", "numbered.txt", "-h", "-b", "2"},
-			wantOK: true,
+			name: "returns lines before with overlaps when file is hidden",
+			args: []string{"^....$", "-f", "numbered.txt", "-h", "-b", "2"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("^....$"),
+				},
+				Flags: map[string]*commands.Value{
+					beforeFlag.Name():   commands.IntValue(2),
+					fileArg.Name():      commands.StringValue("numbered.txt"),
+					hideFileFlag.Name(): commands.BoolValue(true),
+				},
+			},
 			wantStdout: []string{
 				matchColor.Format("zero"),
 				"two",
@@ -240,9 +347,18 @@ func TestRecursiveGrep(t *testing.T) {
 		},
 		// -a and -b together
 		{
-			name:   "after and before line flags work together",
-			args:   []string{"^...$", "-f", "numbered.txt", "-a", "2", "-b", "3"},
-			wantOK: true,
+			name: "after and before line flags work together",
+			args: []string{"^...$", "-f", "numbered.txt", "-a", "2", "-b", "3"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("^...$"),
+				},
+				Flags: map[string]*commands.Value{
+					beforeFlag.Name(): commands.IntValue(3),
+					afterFlag.Name():  commands.IntValue(2),
+					fileArg.Name():    commands.StringValue("numbered.txt"),
+				},
+			},
 			wantStdout: []string{
 				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "zero"),
 				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("one")),
@@ -256,9 +372,19 @@ func TestRecursiveGrep(t *testing.T) {
 			},
 		},
 		{
-			name:   "after and before line flags work together when file is hidden",
-			args:   []string{"^...$", "-f", "numbered.txt", "-h", "-a", "2", "-b", "3"},
-			wantOK: true,
+			name: "after and before line flags work together when file is hidden",
+			args: []string{"^...$", "-f", "numbered.txt", "-h", "-a", "2", "-b", "3"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("^...$"),
+				},
+				Flags: map[string]*commands.Value{
+					beforeFlag.Name():   commands.IntValue(3),
+					afterFlag.Name():    commands.IntValue(2),
+					fileArg.Name():      commands.StringValue("numbered.txt"),
+					hideFileFlag.Name(): commands.BoolValue(true),
+				},
+			},
 			wantStdout: []string{
 				"zero",
 				matchColor.Format("one"),
@@ -275,6 +401,14 @@ func TestRecursiveGrep(t *testing.T) {
 		{
 			name: "fails if unknown directory flag",
 			args: []string{"un", "-d", "dev-null"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("un"),
+				},
+				Flags: map[string]*commands.Value{
+					dirFlag.Name(): commands.StringValue("dev-null"),
+				},
+			},
 			wantStderr: []string{
 				`unknown alias: "dev-null"`,
 			},
@@ -284,8 +418,15 @@ func TestRecursiveGrep(t *testing.T) {
 			aliases: map[string]string{
 				"ooo": "testing/other",
 			},
-			args:   []string{"alpha", "-d", "ooo"},
-			wantOK: true,
+			args: []string{"alpha", "-d", "ooo"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("alpha"),
+				},
+				Flags: map[string]*commands.Value{
+					dirFlag.Name(): commands.StringValue("ooo"),
+				},
+			},
 			wantStdout: []string{
 				fmt.Sprintf("%s:%s zero", fileColor.Format(filepath.Join("testing", "other", "other.txt")), matchColor.Format("alpha")),
 			},
@@ -308,29 +449,15 @@ func TestRecursiveGrep(t *testing.T) {
 				defer func() { osOpen = oldOpen }()
 			}
 
-			tcos := &commands.TestCommandOS{}
-			c := &Grep{
+			r := &Grep{
 				inputSource: &recursive{
 					DirectoryAliases: test.aliases,
 				},
 			}
-			got, ok := commands.Execute(tcos, c.Command(), test.args, nil)
-			if ok != test.wantOK {
-				t.Fatalf("RecursiveGrep: commands.Execute(%v) returned %v for ok; want %v", test.args, ok, test.wantOK)
-			}
-			if diff := cmp.Diff(test.wantResp, got); diff != "" {
-				t.Fatalf("RecursiveGrep: Execute(%v, %v) produced response diff (-want, +got):\n%s", c, test.args, diff)
-			}
+			commandtest.Execute(t, r.Node(), &commands.WorldState{RawArgs: test.args}, test.want, test.wantStdout, test.wantStderr)
 
-			if diff := cmp.Diff(test.wantStdout, tcos.GetStdout()); diff != "" {
-				t.Errorf("RecursiveGrep: command.Execute(%v) produced stdout diff (-want, +got):\n%s", test.args, diff)
-			}
-			if diff := cmp.Diff(test.wantStderr, tcos.GetStderr()); diff != "" {
-				t.Errorf("RecursiveGrep: command.Execute(%v) produced stderr diff (-want, +got):\n%s", test.args, diff)
-			}
-
-			if c.Changed() {
-				t.Fatalf("RecursiveGrep: Execute(%v, %v) marked Changed as true; want false", c, test.args)
+			if r.Changed() {
+				t.Fatalf("RecursiveGrep: Execute(%v, %v) marked Changed as true; want false", r, test.args)
 			}
 		})
 	}

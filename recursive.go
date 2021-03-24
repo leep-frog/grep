@@ -76,31 +76,27 @@ func (r *recursive) Changed() bool {
 	return r.changed
 }
 
-func (*recursive) Subcommands() map[string]commands.Command {
-	return nil
-}
-
-func (r *recursive) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, _ *commands.OptionInfo, ffs filterFuncs) (*commands.ExecutorResponse, bool) {
-	linesBefore := int(flags[beforeFlag.Name()].Int())
-	linesAfter := int(flags[afterFlag.Name()].Int())
+func (r *recursive) Process(ws *commands.WorldState, ffs filterFuncs) bool {
+	linesBefore := ws.Flags[beforeFlag.Name()].Int()
+	linesAfter := ws.Flags[afterFlag.Name()].Int()
 
 	var fr *regexp.Regexp
-	if flags["file"].Provided() {
+	if ws.Flags["file"].Provided() {
 		var err error
-		if fr, err = regexp.Compile(flags["file"].String()); err != nil {
-			cos.Stderr("invalid filename regex: %v", err)
-			return nil, false
+		if fr, err = regexp.Compile(ws.Flags["file"].String()); err != nil {
+			ws.Cos.Stderr("invalid filename regex: %v", err)
+			return false
 		}
 	}
 
 	dir := startDir
-	if flags[dirFlag.Name()].Provided() {
-		da := flags[dirFlag.Name()].String()
+	if ws.Flags[dirFlag.Name()].Provided() {
+		da := ws.Flags[dirFlag.Name()].String()
 		var ok bool
 		dir, ok = r.DirectoryAliases[da]
 		if !ok {
-			cos.Stderr("unknown alias: %q", da)
-			return nil, false
+			ws.Cos.Stderr("unknown alias: %q", da)
+			return false
 		}
 	}
 
@@ -142,31 +138,31 @@ func (r *recursive) Process(cos commands.CommandOS, args, flags map[string]*comm
 			}
 
 			formattedPath := fileColor.Format(path)
-			if flags[fileOnlyFlag.Name()].Bool() {
-				cos.Stdout(formattedPath)
+			if ws.Flags[fileOnlyFlag.Name()].Bool() {
+				ws.Cos.Stdout(formattedPath)
 				break
 			}
 
-			if flags[hideFileFlag.Name()].Bool() {
+			if ws.Flags[hideFileFlag.Name()].Bool() {
 				for list.length > 0 {
-					cos.Stdout(list.pop())
+					ws.Cos.Stdout(list.pop())
 				}
-				cos.Stdout(formattedString)
+				ws.Cos.Stdout(formattedString)
 			} else {
 				for list.length > 0 {
-					cos.Stdout("%s:%s", formattedPath, list.pop())
+					ws.Cos.Stdout("%s:%s", formattedPath, list.pop())
 				}
-				cos.Stdout("%s:%s", formattedPath, formattedString)
+				ws.Cos.Stdout("%s:%s", formattedPath, formattedString)
 			}
 		}
 
 		return nil
 	})
 	if err != nil {
-		cos.Stderr("error when walking through file system: %v", err)
-		return nil, false
+		ws.Cos.Stderr("error when walking through file system: %v", err)
+		return false
 	}
-	return nil, true
+	return true
 }
 
 type element struct {

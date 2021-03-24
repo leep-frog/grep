@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/leep-frog/commands/commands"
+	"github.com/leep-frog/commands/commandtest"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -71,8 +72,7 @@ func TestHistoryGrep(t *testing.T) {
 		optionInfo     *commands.OptionInfo
 		osOpenErr      error
 		osOpenContents []string
-		wantOK         bool
-		wantResp       *commands.ExecutorResponse
+		want           *commands.WorldState
 		wantName       string
 		wantStdout     []string
 		wantStderr     []string
@@ -80,6 +80,11 @@ func TestHistoryGrep(t *testing.T) {
 		{
 			name:       "errors if no option info",
 			wantStderr: []string{"OptionInfo is undefined"},
+			want: &commands.WorldState{
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue(),
+				},
+			},
 		},
 		{
 			name: "returns history",
@@ -91,8 +96,15 @@ func TestHistoryGrep(t *testing.T) {
 			optionInfo: &commands.OptionInfo{
 				SetupOutputFile: "history.txt",
 			},
+			want: &commands.WorldState{
+				OptionInfo: &commands.OptionInfo{
+					SetupOutputFile: "history.txt",
+				},
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue(),
+				},
+			},
 			wantName: "history.txt",
-			wantOK:   true,
 			wantStdout: []string{
 				"alpha",
 				"beta",
@@ -110,8 +122,15 @@ func TestHistoryGrep(t *testing.T) {
 			optionInfo: &commands.OptionInfo{
 				SetupOutputFile: "in/some/path/history.txt",
 			},
+			want: &commands.WorldState{
+				OptionInfo: &commands.OptionInfo{
+					SetupOutputFile: "in/some/path/history.txt",
+				},
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("^.e"),
+				},
+			},
 			wantName: "in/some/path/history.txt",
-			wantOK:   true,
 			wantStdout: []string{
 				fmt.Sprintf("%s%s", matchColor.Format("be"), "ta"),
 				fmt.Sprintf("%s%s", matchColor.Format("de"), "lta"),
@@ -129,8 +148,18 @@ func TestHistoryGrep(t *testing.T) {
 			optionInfo: &commands.OptionInfo{
 				SetupOutputFile: "in/some/path/history.txt",
 			},
+			want: &commands.WorldState{
+				OptionInfo: &commands.OptionInfo{
+					SetupOutputFile: "in/some/path/history.txt",
+				},
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue("^.*a$"),
+				},
+				Flags: map[string]*commands.Value{
+					caseFlagName: commands.BoolValue(true),
+				},
+			},
 			wantName: "in/some/path/history.txt",
-			wantOK:   true,
 			wantStdout: []string{
 				matchColor.Format("alphA"),
 				matchColor.Format("beta"),
@@ -146,6 +175,14 @@ func TestHistoryGrep(t *testing.T) {
 			optionInfo: &commands.OptionInfo{
 				SetupOutputFile: "history.txt",
 			},
+			want: &commands.WorldState{
+				OptionInfo: &commands.OptionInfo{
+					SetupOutputFile: "history.txt",
+				},
+				Args: map[string]*commands.Value{
+					patternArgName: commands.StringListValue(),
+				},
+			},
 			wantName: "history.txt",
 		},
 	} {
@@ -159,29 +196,15 @@ func TestHistoryGrep(t *testing.T) {
 			defer func() { osOpen = oldOpen }()
 
 			// Run test
-			tcos := &commands.TestCommandOS{}
-			c := HistoryGrep()
-			got, ok := commands.Execute(tcos, c.Command(), test.args, test.optionInfo)
-			if ok != test.wantOK {
-				t.Fatalf("HistoryGrep: commands.Execute(%v) returned %v for ok; want %v", test.args, ok, test.wantOK)
-			}
-			if diff := cmp.Diff(test.wantResp, got); diff != "" {
-				t.Fatalf("HistoryGrep: Execute(%v, %v) produced response diff (-want, +got):\n%s", c, test.args, diff)
-			}
+			h := HistoryGrep()
+			commandtest.Execute(t, h.Node(), &commands.WorldState{OptionInfo: test.optionInfo, RawArgs: test.args}, test.want, test.wantStdout, test.wantStderr)
 
-			if diff := cmp.Diff(test.wantStdout, tcos.GetStdout()); diff != "" {
-				t.Errorf("HistoryGrep: command.Execute(%v) produced stdout diff (-want, +got):\n%s", test.args, diff)
-			}
-			if diff := cmp.Diff(test.wantStderr, tcos.GetStderr()); diff != "" {
-				t.Errorf("HistoryGrep: command.Execute(%v) produced stderr diff (-want, +got):\n%s", test.args, diff)
-			}
-
-			if c.Changed() {
-				t.Fatalf("HistoryGrep: Execute(%v, %v) marked Changed as true; want false", c, test.args)
+			if h.Changed() {
+				t.Fatalf("HistoryGrep: Execute(%v, %v) marked Changed as true; want false", h, test.args)
 			}
 
 			if test.wantName != gotName {
-				t.Fatalf("HistoryGrep: Execute(%v, %v) opened history file %q; want %q", c, test.args, gotName, test.wantName)
+				t.Fatalf("HistoryGrep: Execute(%v, %v) opened history file %q; want %q", h, test.args, gotName, test.wantName)
 			}
 		})
 	}

@@ -9,9 +9,12 @@ import (
 )
 
 var (
-	patternArg = commands.StringListArg("pattern", 0, -1, nil)
-	caseFlag   = commands.BoolFlag("ignoreCase", 'i')
-	invertFlag = commands.StringListFlag("invert", 'v', 0, -1, nil)
+	patternArgName = "pattern"
+	patternArg     = commands.StringListNode(patternArgName, 0, -1, nil)
+	caseFlagName   = "ignoreCase"
+	caseFlag       = commands.BoolFlag(caseFlagName, 'i')
+	invertFlagName = "invert"
+	invertFlag     = commands.StringListFlag(invertFlagName, 'v', 0, commands.UnboundedList, nil)
 	// TODO: or pattern
 
 	matchColor = &color.Format{
@@ -44,10 +47,9 @@ func (ffs filterFuncs) Apply(s string) (string, bool) {
 type inputSource interface {
 	Name() string
 	Alias() string
-	Process(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo, filters filterFuncs) (*commands.ExecutorResponse, bool)
+	Process(*commands.WorldState, filterFuncs) bool
 	Flags() []commands.Flag
 	Option() *commands.Option
-	Subcommands() map[string]commands.Command
 	Changed() bool
 	Load(string) error
 }
@@ -95,35 +97,54 @@ func colorMatch(r *regexp.Regexp) func(string) (*formatter, bool) {
 	}
 }
 
-func (g *Grep) execute(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo) (*commands.ExecutorResponse, bool) {
-	ignoreCase := flags[caseFlag.Name()].Bool()
+func (g *Grep) Complete(ws *commands.WorldState) bool {
+	// Currently no way to autocomplete regular expressions.
+	return false
+}
+
+//func (g *Grep) execute(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo) (*commands.ExecutorResponse, bool) {
+func (g *Grep) Execute(ws *commands.WorldState) bool {
+	ignoreCase := ws.Flags[caseFlagName].Bool()
 
 	var ffs filterFuncs //[]func(string) (*formatter, bool)
-	for _, pattern := range args[patternArg.Name()].StringList() {
+	for _, pattern := range ws.Args[patternArgName].StringList() {
 		if ignoreCase {
 			pattern = fmt.Sprintf("(?i)%s", pattern)
 		}
 		r, err := regexp.Compile(pattern)
 		if err != nil {
-			cos.Stderr("invalid regex: %v", err)
-			return nil, false
+			ws.Cos.Stderr("invalid regex: %v", err)
+			return false
 		}
 		ffs = append(ffs, colorMatch(r))
 	}
 
-	for _, pattern := range flags[invertFlag.Name()].StringList() {
+	for _, pattern := range ws.Flags[invertFlagName].StringList() {
 		r, err := regexp.Compile(pattern)
 		if err != nil {
-			cos.Stderr("invalid invert regex: %v", err)
-			return nil, false
+			ws.Cos.Stderr("invalid invert regex: %v", err)
+			return false
 		}
 		ffs = append(ffs, func(s string) (*formatter, bool) { return nil, !r.MatchString(s) })
 	}
 
-	return g.inputSource.Process(cos, args, flags, oi, ffs)
+	return g.inputSource.Process(ws, ffs)
 }
 
-func (g *Grep) Command() commands.Command {
+func (g *Grep) Node() *commands.Node {
+	flags := append(g.inputSource.Flags(), caseFlag, invertFlag)
+	flagNode := commands.NewFlagNode(flags...)
+	return commands.SerialNodes(flagNode, patternArg, g)
+}
+
+/*func (g *Grep) Node() commands.NodeProcessor {
+	flags := append(g.inputSource.Flags(), caseFlag, invertFlag)
+	return &commands.Node{
+		Processor: commands.ExecutorNode(g.),
+	}
+}*/
+
+/*func (g *Grep) Command() commands.Command {
 	flags := []commands.Flag{
 		caseFlag,
 		invertFlag,
@@ -138,4 +159,4 @@ func (g *Grep) Command() commands.Command {
 			Flags: append(flags, g.inputSource.Flags()...),
 		},
 	}
-}
+}*/

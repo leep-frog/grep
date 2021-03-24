@@ -37,19 +37,20 @@ func (h *history) Load(jsn string) error {
 	return nil
 }
 
-func (*history) Flags() []commands.Flag                   { return nil }
-func (*history) Changed() bool                            { return false }
-func (*history) Subcommands() map[string]commands.Command { return nil }
-func (*history) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo, ffs filterFuncs) (*commands.ExecutorResponse, bool) {
-	if oi == nil {
-		cos.Stderr("OptionInfo is undefined")
-		return nil, false
+func (*history) Flags() []commands.Flag { return nil }
+func (*history) Changed() bool          { return false }
+
+//func (*history) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo, ffs filterFuncs) (*commands.ExecutorResponse, bool) {
+func (*history) Process(ws *commands.WorldState, ffs filterFuncs) bool {
+	if ws.OptionInfo == nil {
+		ws.Cos.Stderr("OptionInfo is undefined")
+		return false
 	}
 
-	f, err := osOpen(oi.SetupOutputFile)
+	f, err := osOpen(ws.OptionInfo.SetupOutputFile)
 	if err != nil {
-		cos.Stderr("failed to open setup output file: %v", err)
-		return nil, false
+		ws.Cos.Stderr("failed to open setup output file: %v", err)
+		return false
 	}
 
 	scanner := bufio.NewScanner(f)
@@ -59,8 +60,8 @@ func (*history) Process(cos commands.CommandOS, args, flags map[string]*commands
 		if !ok {
 			continue
 		}
-		cos.Stdout(formattedString)
+		ws.Cos.Stdout(formattedString)
 	}
 
-	return nil, true
+	return true
 }
