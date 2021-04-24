@@ -17,7 +17,10 @@ var (
 	startDir                                   = "."
 	osOpen   func(s string) (io.Reader, error) = func(s string) (io.Reader, error) { return os.Open(s) }
 
+	// Only select files that match pattern.
 	fileArg = command.StringFlag("file", 'f', nil)
+	// Only select files that match pattern.
+	invertFileArg = command.StringFlag("invertFile", 'F', nil)
 	// Don't show file names
 	hideFileFlag = command.BoolFlag("hideFile", 'h')
 	// Only show file names (hide lines).
@@ -50,6 +53,7 @@ func (*recursive) Setup() []string { return nil }
 func (*recursive) Flags() []command.Flag {
 	return []command.Flag{
 		fileArg,
+		invertFileArg,
 		hideFileFlag,
 		fileOnlyFlag,
 		beforeFlag,
@@ -79,10 +83,18 @@ func (r *recursive) Process(output command.Output, data *command.Data, ffs filte
 	linesAfter := data.Values[afterFlag.Name()].Int()
 
 	var fr *regexp.Regexp
-	if f := data.Values["file"]; f.Provided() {
+	if f := data.Values[fileArg.Name()]; f.Provided() {
 		var err error
 		if fr, err = regexp.Compile(f.String()); err != nil {
 			return output.Stderr("invalid filename regex: %v", err)
+		}
+	}
+
+	var ifr *regexp.Regexp
+	if f := data.Values[invertFileArg.Name()]; f.Provided() {
+		var err error
+		if ifr, err = regexp.Compile(f.String()); err != nil {
+			return output.Stderr("invalid invert filename regex: %v", err)
 		}
 	}
 
@@ -108,6 +120,10 @@ func (r *recursive) Process(output command.Output, data *command.Data, ffs filte
 		}
 
 		if fr != nil && !fr.MatchString(fi.Name()) {
+			return nil
+		}
+
+		if ifr != nil && ifr.MatchString(fi.Name()) {
 			return nil
 		}
 

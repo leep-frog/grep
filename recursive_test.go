@@ -131,6 +131,33 @@ func TestRecursive(t *testing.T) {
 			},
 		},
 		{
+			name: "inverted file flag filter works",
+			args: []string{"^alpha", "-F", ".*.py"},
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName:       command.StringListValue("^alpha"),
+					invertFileArg.Name(): command.StringValue(".*.py"),
+				},
+			},
+			wantStdout: []string{
+				fmt.Sprintf("%s:%s %s", fileColor.Format(filepath.Join("testing", "lots.txt")), matchColor.Format("alpha"), "bravo delta"),
+				fmt.Sprintf("%s:%s %s", fileColor.Format(filepath.Join("testing", "lots.txt")), matchColor.Format("alpha"), "hello there"),
+				fmt.Sprintf("%s:%s %s", fileColor.Format(filepath.Join("testing", "other", "other.txt")), matchColor.Format("alpha"), "zero"),
+			},
+		},
+		{
+			name: "failure if invalid invert file flag",
+			args: []string{"^alpha", "-F", ":)"},
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName:       command.StringListValue("^alpha"),
+					invertFileArg.Name(): command.StringValue(":)"),
+				},
+			},
+			wantErr:    fmt.Errorf("invalid invert filename regex: error parsing regexp: unexpected ): `:)`"),
+			wantStderr: []string{"invalid invert filename regex: error parsing regexp: unexpected ): `:)`"},
+		},
+		{
 			name: "hide file flag works",
 			args: []string{"pha[^e]*", "-h"},
 			wantData: &command.Data{
