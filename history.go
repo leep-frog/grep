@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/leep-frog/commands/commands"
+	"github.com/leep-frog/command"
 )
 
 func HistoryGrep() *Grep {
@@ -18,10 +18,8 @@ type history struct{}
 
 func (*history) Name() string  { return "history-grep" }
 func (*history) Alias() string { return "hp" }
-func (*history) Option() *commands.Option {
-	return &commands.Option{
-		SetupCommand: "history",
-	}
+func (*history) Setup() []string {
+	return []string{"history"}
 }
 
 // Load creates a history grep object from a JSON string.
@@ -37,20 +35,13 @@ func (h *history) Load(jsn string) error {
 	return nil
 }
 
-func (*history) Flags() []commands.Flag { return nil }
-func (*history) Changed() bool          { return false }
+func (*history) Flags() []command.Flag { return nil }
+func (*history) Changed() bool         { return false }
 
-//func (*history) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo, ffs filterFuncs) (*commands.ExecutorResponse, bool) {
-func (*history) Process(ws *commands.WorldState, ffs filterFuncs) bool {
-	if ws.OptionInfo == nil {
-		ws.Cos.Stderr("OptionInfo is undefined")
-		return false
-	}
-
-	f, err := osOpen(ws.OptionInfo.SetupOutputFile)
+func (*history) Process(output command.Output, data *command.Data, ffs filterFuncs) error {
+	f, err := osOpen(data.Values[command.SetupArgName].String())
 	if err != nil {
-		ws.Cos.Stderr("failed to open setup output file: %v", err)
-		return false
+		return output.Stderr("failed to open setup output file: %v", err)
 	}
 
 	scanner := bufio.NewScanner(f)
@@ -60,8 +51,8 @@ func (*history) Process(ws *commands.WorldState, ffs filterFuncs) bool {
 		if !ok {
 			continue
 		}
-		ws.Cos.Stdout(formattedString)
+		output.Stdout(formattedString)
 	}
 
-	return true
+	return nil
 }

@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/leep-frog/commands/commands"
+	"github.com/leep-frog/command"
 )
 
 func FilenameGrep() *Grep {
@@ -17,11 +17,11 @@ func FilenameGrep() *Grep {
 
 type filename struct{}
 
-func (*filename) Name() string             { return "filename-grep" }
-func (*filename) Alias() string            { return "fp" }
-func (*filename) Changed() bool            { return false }
-func (*filename) Option() *commands.Option { return nil }
-func (*filename) Flags() []commands.Flag   { return nil }
+func (*filename) Name() string          { return "filename-grep" }
+func (*filename) Alias() string         { return "fp" }
+func (*filename) Changed() bool         { return false }
+func (*filename) Setup() []string       { return nil }
+func (*filename) Flags() []command.Flag { return nil }
 
 func (f *filename) Load(jsn string) error {
 	if jsn == "" {
@@ -35,21 +35,18 @@ func (f *filename) Load(jsn string) error {
 	return nil
 }
 
-//func (*filename) Process(cos commands.CommandOS, args, flags map[string]*commands.Value, _ *commands.OptionInfo, ffs filterFuncs) (*commands.ExecutorResponse, bool) {
-func (*filename) Process(ws *commands.WorldState, ffs filterFuncs) bool {
-	err := filepath.Walk(startDir, func(path string, fi os.FileInfo, err error) error {
+func (*filename) Process(output command.Output, data *command.Data, ffs filterFuncs) error {
+	return filepath.Walk(startDir, func(path string, fi os.FileInfo, err error) error {
 		if err != nil {
-			return fmt.Errorf("failed to access path %q: %v", path, err)
+			if os.IsNotExist(err) {
+				return output.Stderr("file not found: %s", path)
+			}
+			return output.Stderr("failed to access path %q: %v", path, err)
 		}
 
 		if formattedString, ok := ffs.Apply(fi.Name()); ok {
-			ws.Cos.Stdout(filepath.Join(filepath.Dir(path), formattedString))
+			output.Stdout(filepath.Join(filepath.Dir(path), formattedString))
 		}
 		return nil
 	})
-	if err != nil {
-		ws.Cos.Stderr("error when walking through file system: %v", err)
-		return false
-	}
-	return true
 }

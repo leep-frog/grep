@@ -3,13 +3,12 @@ package grep
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"strings"
 	"testing"
 
-	"github.com/leep-frog/commands/commands"
-	"github.com/leep-frog/commands/commandtest"
-
 	"github.com/google/go-cmp/cmp"
+	"github.com/leep-frog/command"
 )
 
 func TestHistoryLoad(t *testing.T) {
@@ -67,41 +66,27 @@ func TestHistoryLoad(t *testing.T) {
 
 func TestHistoryGrep(t *testing.T) {
 	for _, test := range []struct {
-		name           string
-		args           []string
-		optionInfo     *commands.OptionInfo
-		osOpenErr      error
-		osOpenContents []string
-		want           *commands.WorldState
-		wantName       string
-		wantStdout     []string
-		wantStderr     []string
+		name       string
+		args       []string
+		history    []string
+		osOpenErr  error
+		want       *command.ExecuteData
+		wantData   *command.Data
+		wantName   string
+		wantStdout []string
+		wantStderr []string
+		wantErr    error
 	}{
 		{
-			name:       "errors if no option info",
-			wantStderr: []string{"OptionInfo is undefined"},
-			want: &commands.WorldState{
-				Args: map[string]*commands.Value{
-					patternArgName: commands.StringListValue(),
-				},
-			},
-		},
-		{
 			name: "returns history",
-			osOpenContents: []string{
+			history: []string{
 				"alpha",
 				"beta",
 				"delta",
 			},
-			optionInfo: &commands.OptionInfo{
-				SetupOutputFile: "history.txt",
-			},
-			want: &commands.WorldState{
-				OptionInfo: &commands.OptionInfo{
-					SetupOutputFile: "history.txt",
-				},
-				Args: map[string]*commands.Value{
-					patternArgName: commands.StringListValue(),
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName: command.StringListValue(),
 				},
 			},
 			wantName: "history.txt",
@@ -114,20 +99,14 @@ func TestHistoryGrep(t *testing.T) {
 		{
 			name: "filters history",
 			args: []string{"^.e"},
-			osOpenContents: []string{
+			history: []string{
 				"alpha",
 				"beta",
 				"delta",
 			},
-			optionInfo: &commands.OptionInfo{
-				SetupOutputFile: "in/some/path/history.txt",
-			},
-			want: &commands.WorldState{
-				OptionInfo: &commands.OptionInfo{
-					SetupOutputFile: "in/some/path/history.txt",
-				},
-				Args: map[string]*commands.Value{
-					patternArgName: commands.StringListValue("^.e"),
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName: command.StringListValue("^.e"),
 				},
 			},
 			wantName: "in/some/path/history.txt",
@@ -139,24 +118,16 @@ func TestHistoryGrep(t *testing.T) {
 		{
 			name: "filters history ignoring case",
 			args: []string{"^.*a$", "-i"},
-			osOpenContents: []string{
+			history: []string{
 				"alphA",
 				"beta",
 				"deltA",
 				"zero",
 			},
-			optionInfo: &commands.OptionInfo{
-				SetupOutputFile: "in/some/path/history.txt",
-			},
-			want: &commands.WorldState{
-				OptionInfo: &commands.OptionInfo{
-					SetupOutputFile: "in/some/path/history.txt",
-				},
-				Args: map[string]*commands.Value{
-					patternArgName: commands.StringListValue("^.*a$"),
-				},
-				Flags: map[string]*commands.Value{
-					caseFlagName: commands.BoolValue(true),
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName: command.StringListValue("^.*a$"),
+					caseFlagName:   command.BoolValue(true),
 				},
 			},
 			wantName: "in/some/path/history.txt",
@@ -172,42 +143,50 @@ func TestHistoryGrep(t *testing.T) {
 			wantStderr: []string{
 				"failed to open setup output file: darn",
 			},
-			optionInfo: &commands.OptionInfo{
-				SetupOutputFile: "history.txt",
-			},
-			want: &commands.WorldState{
-				OptionInfo: &commands.OptionInfo{
-					SetupOutputFile: "history.txt",
-				},
-				Args: map[string]*commands.Value{
-					patternArgName: commands.StringListValue(),
+			wantErr: fmt.Errorf("failed to open setup output file: darn"),
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName: command.StringListValue(),
 				},
 			},
 			wantName: "history.txt",
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			var gotName string
-			oldOpen := osOpen
-			osOpen = func(name string) (io.Reader, error) {
-				gotName = name
-				return strings.NewReader(strings.Join(test.osOpenContents, "\n")), test.osOpenErr
+			// Stub os.Open if necessary
+			if test.osOpenErr != nil {
+				oldOpen := osOpen
+				osOpen = func(s string) (io.Reader, error) { return nil, test.osOpenErr }
+				defer func() { osOpen = oldOpen }()
 			}
-			defer func() { osOpen = oldOpen }()
 
 			// Run test
 			h := HistoryGrep()
-			commandtest.Execute(t, h.Node(), &commands.WorldState{OptionInfo: test.optionInfo, RawArgs: test.args}, test.want, test.wantStdout, test.wantStderr)
+			setupFile := fakeSetup(t, test.history)
+			test.wantData.Values[command.SetupArgName] = command.StringValue(setupFile)
+			test.args = append([]string{setupFile}, test.args...)
+			command.ExecuteTest(t, command.SerialNodesTo(h.Node(), command.SetupArg), test.args, test.wantErr, test.want, test.wantData, test.wantStdout, test.wantStderr)
 
 			if h.Changed() {
 				t.Fatalf("HistoryGrep: Execute(%v, %v) marked Changed as true; want false", h, test.args)
 			}
-
-			if test.wantName != gotName {
-				t.Fatalf("HistoryGrep: Execute(%v, %v) opened history file %q; want %q", h, test.args, gotName, test.wantName)
-			}
 		})
 	}
+}
+
+// TODO: move this to command package (or create commandtest and put it there).
+// TODO: actually make "setup" a field in command.TestObject and just
+// do stuff automatically there.
+func fakeSetup(t *testing.T, contents []string) string {
+	f, err := ioutil.TempFile("", "command_test_setup")
+	if err != nil {
+		t.Fatalf("ioutil.TempFile('', 'command_test_setup') returned error: %v", err)
+	}
+	defer f.Close()
+	for _, s := range contents {
+		fmt.Fprintln(f, s)
+	}
+	return f.Name()
 }
 
 func TestHistoryMetadata(t *testing.T) {
@@ -223,8 +202,7 @@ func TestHistoryMetadata(t *testing.T) {
 		t.Errorf("HistoryGrep.Alias() returned %q; want %q", c.Alias(), wantAlias)
 	}
 
-	wantOption := &commands.Option{SetupCommand: "history"}
-	if diff := cmp.Diff(wantOption, c.Option()); diff != "" {
-		t.Errorf("HistoryGrep.Option() produced diff:\n%s", diff)
+	if diff := cmp.Diff([]string{"history"}, c.Setup()); diff != "" {
+		t.Errorf("HistoryGrep.Setup() produced diff:\n%s", diff)
 	}
 }

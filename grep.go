@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/leep-frog/commands/color"
-	"github.com/leep-frog/commands/commands"
+	"github.com/leep-frog/command"
+	"github.com/leep-frog/command/color"
 )
 
 var (
 	patternArgName = "pattern"
-	patternArg     = commands.StringListNode(patternArgName, 0, -1, nil)
+	patternArg     = command.StringListNode(patternArgName, 0, -1, nil)
 	caseFlagName   = "ignoreCase"
-	caseFlag       = commands.BoolFlag(caseFlagName, 'i')
+	caseFlag       = command.BoolFlag(caseFlagName, 'i')
 	invertFlagName = "invert"
-	invertFlag     = commands.StringListFlag(invertFlagName, 'v', 0, commands.UnboundedList, nil)
+	invertFlag     = command.StringListFlag(invertFlagName, 'v', 0, command.UnboundedList, nil)
 	// TODO: or pattern
 
 	matchColor = &color.Format{
@@ -47,9 +47,9 @@ func (ffs filterFuncs) Apply(s string) (string, bool) {
 type inputSource interface {
 	Name() string
 	Alias() string
-	Process(*commands.WorldState, filterFuncs) bool
-	Flags() []commands.Flag
-	Option() *commands.Option
+	Process(command.Output, *command.Data, filterFuncs) error
+	Flags() []command.Flag
+	Setup() []string
 	Changed() bool
 	Load(string) error
 }
@@ -75,8 +75,8 @@ func (g *Grep) Alias() string {
 	return g.inputSource.Alias()
 }
 
-func (g *Grep) Option() *commands.Option {
-	return g.inputSource.Option()
+func (g *Grep) Setup() []string {
+	return g.inputSource.Setup()
 }
 
 type formatter struct {
@@ -97,63 +97,65 @@ func colorMatch(r *regexp.Regexp) func(string) (*formatter, bool) {
 	}
 }
 
-func (g *Grep) Complete(ws *commands.WorldState) bool {
+func (g *Grep) Complete(*command.Input, *command.Data) *command.CompleteData {
 	// Currently no way to autocomplete regular expressions.
-	return false
+	return nil
 }
 
-//func (g *Grep) execute(cos commands.CommandOS, args, flags map[string]*commands.Value, oi *commands.OptionInfo) (*commands.ExecutorResponse, bool) {
-func (g *Grep) Execute(ws *commands.WorldState) bool {
-	ignoreCase := ws.Flags[caseFlagName].Bool()
+func (g *Grep) Execute(output command.Output, data *command.Data) error {
+	ignoreCase := data.Values[caseFlagName].Bool()
 
 	var ffs filterFuncs //[]func(string) (*formatter, bool)
-	for _, pattern := range ws.Args[patternArgName].StringList() {
+	for _, pattern := range data.Values[patternArgName].StringList() {
 		if ignoreCase {
 			pattern = fmt.Sprintf("(?i)%s", pattern)
 		}
 		r, err := regexp.Compile(pattern)
 		if err != nil {
-			ws.Cos.Stderr("invalid regex: %v", err)
-			return false
+			return output.Stderr("invalid regex: %v", err)
 		}
 		ffs = append(ffs, colorMatch(r))
 	}
 
-	for _, pattern := range ws.Flags[invertFlagName].StringList() {
+	for _, pattern := range data.Values[invertFlagName].StringList() {
 		r, err := regexp.Compile(pattern)
 		if err != nil {
-			ws.Cos.Stderr("invalid invert regex: %v", err)
-			return false
+			return output.Stderr("invalid invert regex: %v", err)
 		}
 		ffs = append(ffs, func(s string) (*formatter, bool) { return nil, !r.MatchString(s) })
 	}
 
-	return g.inputSource.Process(ws, ffs)
+	return g.inputSource.Process(output, data, ffs)
 }
 
-func (g *Grep) Node() *commands.Node {
+func (g *Grep) Node() *command.Node {
 	flags := append(g.inputSource.Flags(), caseFlag, invertFlag)
-	flagNode := commands.NewFlagNode(flags...)
-	return commands.SerialNodes(flagNode, patternArg, g)
+	flagNode := command.NewFlagNode(flags...)
+	return command.SerialNodes(
+		flagNode,
+		patternArg,
+		command.ExecutorNode(g.Execute),
+		//command.ExecutorNode(g.P,
+	)
 }
 
-/*func (g *Grep) Node() commands.NodeProcessor {
+/*func (g *Grep) Node() command.NodeProcessor {
 	flags := append(g.inputSource.Flags(), caseFlag, invertFlag)
-	return &commands.Node{
-		Processor: commands.ExecutorNode(g.),
+	return &command.Node{
+		Processor: command.ExecutorNode(g.),
 	}
 }*/
 
-/*func (g *Grep) Command() commands.Command {
-	flags := []commands.Flag{
+/*func (g *Grep) Command() command.Command {
+	flags := []command.Flag{
 		caseFlag,
 		invertFlag,
 	}
-	return &commands.CommandBranch{
+	return &command.CommandBranch{
 		Subcommands: g.inputSource.Subcommands(),
-		TerminusCommand: &commands.TerminusCommand{
+		TerminusCommand: &command.TerminusCommand{
 			Executor: g.execute,
-			Args: []commands.Arg{
+			Args: []command.Arg{
 				patternArg,
 			},
 			Flags: append(flags, g.inputSource.Flags()...),

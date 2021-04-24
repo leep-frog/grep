@@ -1,13 +1,13 @@
 package grep
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/leep-frog/commands/commands"
-	"github.com/leep-frog/commands/commandtest"
+	"github.com/leep-frog/command"
 )
 
 func TestFilenameLoad(t *testing.T) {
@@ -68,9 +68,11 @@ func TestFilenameGrep(t *testing.T) {
 		name       string
 		args       []string
 		stubDir    string
-		want       *commands.WorldState
+		want       *command.ExecuteData
+		wantData   *command.Data
 		wantStdout []string
 		wantStderr []string
+		wantErr    error
 	}{
 		{
 			name: "returns all files",
@@ -82,21 +84,20 @@ func TestFilenameGrep(t *testing.T) {
 				filepath.Join("testing", "that.py"),
 				filepath.Join("testing", "this.txt"),
 			},
-			want: &commands.WorldState{
-				Args: map[string]*commands.Value{
-					patternArgName: commands.StringListValue(),
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName: command.StringListValue(),
 				},
 			},
 		},
 		{
-			name:    "errors on walk error",
-			stubDir: "does-not-exist",
-			wantStderr: []string{
-				`error when walking through file system: failed to access path "does-not-exist": CreateFile does-not-exist: The system cannot find the file specified.`,
-			},
-			want: &commands.WorldState{
-				Args: map[string]*commands.Value{
-					patternArgName: commands.StringListValue(),
+			name:       "errors on walk error",
+			stubDir:    "does-not-exist",
+			wantStderr: []string{"file not found: does-not-exist"},
+			wantErr:    fmt.Errorf("file not found: does-not-exist"),
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName: command.StringListValue(),
 				},
 			},
 		},
@@ -106,9 +107,10 @@ func TestFilenameGrep(t *testing.T) {
 			wantStderr: []string{
 				"invalid regex: error parsing regexp: unexpected ): `:)`",
 			},
-			want: &commands.WorldState{
-				Args: map[string]*commands.Value{
-					patternArgName: commands.StringListValue(":)"),
+			wantErr: fmt.Errorf("invalid regex: error parsing regexp: unexpected ): `:)`"),
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName: command.StringListValue(":)"),
 				},
 			},
 		},
@@ -120,9 +122,9 @@ func TestFilenameGrep(t *testing.T) {
 				filepath.Join("testing", "other", matchColor.Format("other.txt")),
 				filepath.Join("testing", matchColor.Format("this.txt")),
 			},
-			want: &commands.WorldState{
-				Args: map[string]*commands.Value{
-					patternArgName: commands.StringListValue(".*.txt"),
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName: command.StringListValue(".*.txt"),
 				},
 			},
 		},
@@ -137,12 +139,10 @@ func TestFilenameGrep(t *testing.T) {
 				filepath.Join("testing", "that.py"),
 				filepath.Join("testing", "this.txt"),
 			},
-			want: &commands.WorldState{
-				Args: map[string]*commands.Value{
-					patternArgName: commands.StringListValue(),
-				},
-				Flags: map[string]*commands.Value{
-					"invert": commands.StringListValue(".*.go"),
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName: command.StringListValue(),
+					"invert":       command.StringListValue(".*.go"),
 				},
 			},
 		},
@@ -152,12 +152,11 @@ func TestFilenameGrep(t *testing.T) {
 			wantStderr: []string{
 				"invalid invert regex: error parsing regexp: unexpected ): `:)`",
 			},
-			want: &commands.WorldState{
-				Args: map[string]*commands.Value{
-					patternArgName: commands.StringListValue(),
-				},
-				Flags: map[string]*commands.Value{
-					"invert": commands.StringListValue(":)"),
+			wantErr: fmt.Errorf("invalid invert regex: error parsing regexp: unexpected ): `:)`"),
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName: command.StringListValue(),
+					"invert":       command.StringListValue(":)"),
 				},
 			},
 		},
@@ -174,7 +173,7 @@ func TestFilenameGrep(t *testing.T) {
 
 			// Run the test.
 			f := FilenameGrep()
-			commandtest.Execute(t, f.Node(), &commands.WorldState{RawArgs: test.args}, test.want, test.wantStdout, test.wantStderr)
+			command.ExecuteTest(t, f.Node(), test.args, test.wantErr, test.want, test.wantData, test.wantStdout, test.wantStderr)
 
 			if f.Changed() {
 				t.Fatalf("FilenameGrep: Execute(%v, %v) marked Changed as true; want false", f, test.args)
@@ -196,7 +195,7 @@ func TestFilenameMetadata(t *testing.T) {
 		t.Errorf("FilenameGrep.Alias() returned %q; want %q", c.Alias(), wantAlias)
 	}
 
-	if c.Option() != nil {
-		t.Errorf("FilenameGrep.Option() returned %v; want nil", c.Option())
+	if c.Setup() != nil {
+		t.Errorf("FilenameGrep.Setup() returned %v; want nil", c.Setup())
 	}
 }
