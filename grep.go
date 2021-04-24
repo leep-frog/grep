@@ -11,14 +11,11 @@ import (
 )
 
 var (
-	patternArgName    = "pattern"
-	patternArg        = command.StringListNode(patternArgName, 0, -1, nil)
-	caseFlagName      = "ignoreCase"
-	caseFlag          = command.BoolFlag(caseFlagName, 'i')
-	invertFlagName    = "invert"
-	invertFlag        = command.StringListFlag(invertFlagName, 'v', 0, command.UnboundedList, nil)
-	matchOnlyFlagName = "matchOnly"
-	matchOnlyFlag     = command.BoolFlag(matchOnlyFlagName, 'o')
+	patternArgName = "pattern"
+	patternArg     = command.StringListNode(patternArgName, 0, -1, nil)
+	caseFlag       = command.BoolFlag("ignoreCase", 'i')
+	invertFlag     = command.StringListFlag("invert", 'v', 0, command.UnboundedList, nil)
+	matchOnlyFlag  = command.BoolFlag("matchOnly", 'o')
 	// TODO: or pattern
 
 	matchColor = &color.Format{
@@ -68,7 +65,7 @@ func disjointMatches(ms []*match) []*match {
 }
 
 func (ffs filterFuncs) Apply(s string, data *command.Data) (string, bool) {
-	matchOnly := data.Values[matchOnlyFlagName].Bool()
+	matchOnly := data.Values[matchOnlyFlag.Name()].Bool()
 	otherString := s
 
 	var matches []*match
@@ -160,7 +157,7 @@ func (g *Grep) Complete(*command.Input, *command.Data) *command.CompleteData {
 }
 
 func (g *Grep) Execute(output command.Output, data *command.Data) error {
-	ignoreCase := data.Values[caseFlagName].Bool()
+	ignoreCase := data.Values[caseFlag.Name()].Bool()
 
 	var ffs filterFuncs //[]func(string) (*formatter, bool)
 	for _, pattern := range data.Values[patternArgName].StringList() {
@@ -174,7 +171,7 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 		ffs = append(ffs, colorMatch(r))
 	}
 
-	for _, pattern := range data.Values[invertFlagName].StringList() {
+	for _, pattern := range data.Values[invertFlag.Name()].StringList() {
 		r, err := regexp.Compile(pattern)
 		if err != nil {
 			return output.Stderr("invalid invert regex: %v", err)

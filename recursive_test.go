@@ -179,8 +179,8 @@ func TestRecursive(t *testing.T) {
 			args: []string{"^alp", "-o"},
 			wantData: &command.Data{
 				Values: map[string]*command.Value{
-					patternArgName:    command.StringListValue("^alp"),
-					matchOnlyFlagName: command.BoolValue(true),
+					patternArgName:       command.StringListValue("^alp"),
+					matchOnlyFlag.Name(): command.BoolValue(true),
 				},
 			},
 			wantStdout: []string{
@@ -195,9 +195,9 @@ func TestRecursive(t *testing.T) {
 			args: []string{"^alp", "-o", "-h"},
 			wantData: &command.Data{
 				Values: map[string]*command.Value{
-					patternArgName:      command.StringListValue("^alp"),
-					matchOnlyFlagName:   command.BoolValue(true),
-					hideFileFlag.Name(): command.BoolValue(true),
+					patternArgName:       command.StringListValue("^alp"),
+					matchOnlyFlag.Name(): command.BoolValue(true),
+					hideFileFlag.Name():  command.BoolValue(true),
 				},
 			},
 			wantStdout: []string{
@@ -212,8 +212,8 @@ func TestRecursive(t *testing.T) {
 			args: []string{"qwerty", "rtyui", "-o"},
 			wantData: &command.Data{
 				Values: map[string]*command.Value{
-					patternArgName:    command.StringListValue("qwerty", "rtyui"),
-					matchOnlyFlagName: command.BoolValue(true),
+					patternArgName:       command.StringListValue("qwerty", "rtyui"),
+					matchOnlyFlag.Name(): command.BoolValue(true),
 				},
 			},
 			wantStdout: []string{
@@ -225,8 +225,8 @@ func TestRecursive(t *testing.T) {
 			args: []string{"qw", "op", "ty", "-o"},
 			wantData: &command.Data{
 				Values: map[string]*command.Value{
-					patternArgName:    command.StringListValue("qw", "op", "ty"),
-					matchOnlyFlagName: command.BoolValue(true),
+					patternArgName:       command.StringListValue("qw", "op", "ty"),
+					matchOnlyFlag.Name(): command.BoolValue(true),
 				},
 			},
 			wantStdout: []string{

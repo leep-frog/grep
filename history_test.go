@@ -127,8 +127,8 @@ func TestHistory(t *testing.T) {
 			},
 			wantData: &command.Data{
 				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue("^.*a$"),
-					caseFlagName:   command.BoolValue(true),
+					patternArgName:  command.StringListValue("^.*a$"),
+					caseFlag.Name(): command.BoolValue(true),
 				},
 			},
 			wantName: "in/some/path/history.txt",
@@ -162,8 +162,8 @@ func TestHistory(t *testing.T) {
 			args: []string{"T.*T", "-o"},
 			wantData: &command.Data{
 				Values: map[string]*command.Value{
-					patternArgName:    command.StringListValue("T.*T"),
-					matchOnlyFlagName: command.BoolValue(true),
+					patternArgName:       command.StringListValue("T.*T"),
+					matchOnlyFlag.Name(): command.BoolValue(true),
 				},
 			},
 			wantStdout: []string{
@@ -181,8 +181,8 @@ func TestHistory(t *testing.T) {
 			args: []string{"T.*T", "S.*S", "-o"},
 			wantData: &command.Data{
 				Values: map[string]*command.Value{
-					patternArgName:    command.StringListValue("T.*T", "S.*S"),
-					matchOnlyFlagName: command.BoolValue(true),
+					patternArgName:       command.StringListValue("T.*T", "S.*S"),
+					matchOnlyFlag.Name(): command.BoolValue(true),
 				},
 			},
 			wantStdout: []string{
@@ -200,8 +200,8 @@ func TestHistory(t *testing.T) {
 			args: []string{"T.*T", "S.*S", "-o"},
 			wantData: &command.Data{
 				Values: map[string]*command.Value{
-					patternArgName:    command.StringListValue("T.*T", "S.*S"),
-					matchOnlyFlagName: command.BoolValue(true),
+					patternArgName:       command.StringListValue("T.*T", "S.*S"),
+					matchOnlyFlag.Name(): command.BoolValue(true),
 				},
 			},
 			wantStdout: []string{
