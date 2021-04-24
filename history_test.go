@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/leep-frog/command"
 )
 
@@ -199,5 +200,80 @@ func TestHistoryMetadata(t *testing.T) {
 
 	if diff := cmp.Diff([]string{"history"}, c.Setup()); diff != "" {
 		t.Errorf("History.Setup() produced diff:\n%s", diff)
+	}
+}
+
+func TestDisjointMatches(t *testing.T) {
+	for _, test := range []struct {
+		name    string
+		matches []*match
+		want    []*match
+	}{
+		{
+			name: "handles empty",
+		},
+		{
+			name: "leaves disjoint matches alone",
+			matches: []*match{
+				{2, 4},
+				{14, 18},
+				{8, 12},
+			},
+			want: []*match{
+				{2, 4},
+				{8, 12},
+				{14, 18},
+			},
+		},
+		{
+			name: "handles matches that overlap on the same number",
+			matches: []*match{
+				{2, 4},
+				{4, 6},
+				{18, 19},
+				{12, 18},
+			},
+			want: []*match{
+				{2, 6},
+				{12, 19},
+			},
+		},
+		{
+			// Indices returned by regex are already of format [start, end)
+			name: "leaves matches that are adjacent separate",
+			matches: []*match{
+				{2, 4},
+				{5, 6},
+				{19, 20},
+				{12, 18},
+			},
+			want: []*match{
+				{2, 4},
+				{5, 6},
+				{12, 18},
+				{19, 20},
+			},
+		},
+		{
+			name: "handles overlapping regions",
+			matches: []*match{
+				{12, 22},
+				{5, 6},
+				{2, 15},
+				{13, 16},
+				{20, 25},
+				{19, 19},
+				{12, 18},
+			},
+			want: []*match{
+				{2, 25},
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if diff := cmp.Diff(test.want, disjointMatches(test.matches), cmp.AllowUnexported(match{}), cmpopts.EquateEmpty()); diff != "" {
+				t.Errorf("disjointMatches(%v) returned diff (-want, +got):\n%s", test.matches, diff)
+			}
+		})
 	}
 }

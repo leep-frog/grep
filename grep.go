@@ -3,6 +3,7 @@ package grep
 import (
 	"fmt"
 	"regexp"
+	"sort"
 
 	"github.com/leep-frog/command"
 	"github.com/leep-frog/command/color"
@@ -23,22 +24,71 @@ var (
 	}
 )
 
-type filterFunc func(string) (*formatter, bool)
+type filterFunc func(string) (*match, bool)
 
 type filterFuncs []filterFunc
 
+// Used to determine how to color overlapping matches
+type event struct {
+	start bool
+	idx   int
+}
+
+func disjointMatches(ms []*match) []*match {
+	events := make([]*event, 0, 2*len(ms))
+	for _, m := range ms {
+		events = append(events, &event{start: true, idx: m.start}, &event{idx: m.end})
+	}
+	sort.Slice(events, func(i, j int) bool {
+		ie := events[i]
+		je := events[j]
+		return ie.idx < je.idx || (ie.idx == je.idx && ie.start)
+	})
+
+	var ums []*match
+	var inMatchCount int
+	var newStart int
+	for _, e := range events {
+		if e.start {
+			inMatchCount++
+			if inMatchCount == 1 {
+				newStart = e.idx
+			}
+		} else {
+			inMatchCount--
+			if inMatchCount == 0 {
+				ums = append(ums, &match{start: newStart, end: e.idx})
+			}
+		}
+	}
+	return ums
+}
+
 func (ffs filterFuncs) Apply(s string) (string, bool) {
 	otherString := s
+
+	var matches []*match
 	for _, ff := range ffs {
-		ft, ok := ff(s)
+		m, ok := ff(s)
 		if !ok {
 			return "", false
 		}
-
-		if ft != nil {
-			idx, jdx := ft.indices[0], ft.indices[1]
-			otherString = fmt.Sprintf("%s%s%s", otherString[:idx], ft.format.Format(otherString[idx:jdx]), otherString[jdx:])
+		if m != nil {
+			matches = append(matches, m)
 		}
+	}
+	matches = disjointMatches(matches)
+
+	var offset int
+	for _, m := range matches {
+		origLen := len(otherString)
+		otherString = fmt.Sprintf(
+			"%s%s%s",
+			otherString[:(offset+m.start)],
+			matchColor.Format(otherString[(offset+m.start):(offset+m.end)]),
+			otherString[(offset+m.end):],
+		)
+		offset += len(otherString) - origLen
 	}
 
 	return otherString, true
@@ -74,20 +124,20 @@ func (g *Grep) Setup() []string {
 	return g.inputSource.Setup()
 }
 
-type formatter struct {
-	indices []int
-	format  *color.Format
+type match struct {
+	start int
+	end   int
 }
 
-func colorMatch(r *regexp.Regexp) func(string) (*formatter, bool) {
-	return func(s string) (*formatter, bool) {
+func colorMatch(r *regexp.Regexp) func(string) (*match, bool) {
+	return func(s string) (*match, bool) {
 		indices := r.FindStringIndex(s)
 		if indices == nil {
 			return nil, false
 		}
-		return &formatter{
-			indices: indices,
-			format:  matchColor,
+		return &match{
+			start: indices[0],
+			end:   indices[1],
 		}, true
 	}
 }
@@ -117,7 +167,7 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 		if err != nil {
 			return output.Stderr("invalid invert regex: %v", err)
 		}
-		ffs = append(ffs, func(s string) (*formatter, bool) { return nil, !r.MatchString(s) })
+		ffs = append(ffs, func(s string) (*match, bool) { return nil, !r.MatchString(s) })
 	}
 
 	return g.inputSource.Process(output, data, ffs)

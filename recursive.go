@@ -28,7 +28,8 @@ var (
 	afterFlag = command.IntFlag("after", 'a', nil)
 	// Directory flag to search through an aliased directory instead of pwd.
 	dirFlag = command.StringFlag("directory", 'd', nil /*todo completor*/)
-	// TODO: match only flag (-o)
+	// TODO: Only show the exact match.
+	//matchOnlyFlag = command.BoolFlag("matchOnly", 'o')
 
 	fileColor = &color.Format{
 		Color: color.Cyan,

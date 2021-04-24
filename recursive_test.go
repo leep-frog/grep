@@ -98,9 +98,9 @@ func TestRecursive(t *testing.T) {
 				},
 			},
 			wantStderr: []string{
-				fmt.Sprintf(`failed to open file %q: oops`, filepath.Join("testing/numbered.txt")),
+				fmt.Sprintf(`failed to open file %q: oops`, filepath.Join("testing", "lots.txt")),
 			},
-			wantErr: fmt.Errorf(`failed to open file %q: oops`, filepath.Join("testing/numbered.txt")),
+			wantErr: fmt.Errorf(`failed to open file %q: oops`, filepath.Join("testing", "lots.txt")),
 		},
 		{
 			name: "finds matches",
@@ -111,6 +111,8 @@ func TestRecursive(t *testing.T) {
 				},
 			},
 			wantStdout: []string{
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " bravo delta")),
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " hello there")),
 				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "other", "other.txt")), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " zero")),
 				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "that.py")), matchColor.Format("alpha")),
 			},
@@ -138,8 +140,38 @@ func TestRecursive(t *testing.T) {
 				},
 			},
 			wantStdout: []string{
-				fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha z"), "ero"), // testing/other/other.txt
-				fmt.Sprintf("%s%s", "al", matchColor.Format("pha")),            //testing/that.py
+				fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha bravo d"), "elta"), // testing/lots.txt
+				fmt.Sprintf("%s%s", "bravo delta al", matchColor.Format("pha")),       // testing/lots.txt
+				fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha h"), "ello there"), // testing/lots.txt
+				fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha z"), "ero"),        // testing/other/other.txt
+				fmt.Sprintf("%s%s", "al", matchColor.Format("pha")),                   //testing/that.py
+			},
+		},
+		{
+			name: "colors multiple matches properly",
+			args: []string{"alpha", "bravo", "-h"},
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("alpha", "bravo"),
+					hideFileFlag.Name(): command.BoolValue(true),
+				},
+			},
+			wantStdout: []string{
+				strings.Join([]string{matchColor.Format("alpha"), matchColor.Format("bravo"), "delta"}, " "),
+				strings.Join([]string{matchColor.Format("bravo"), "delta", matchColor.Format("alpha")}, " "),
+			},
+		},
+		{
+			name: "colors overlapping matches properly",
+			args: []string{"q.*t", "e.*u", "-h"},
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("q.*t", "e.*u"),
+					hideFileFlag.Name(): command.BoolValue(true),
+				},
+			},
+			wantStdout: []string{
+				fmt.Sprintf("%s%s", matchColor.Format("qwertyu"), "iop"),
 			},
 		},
 		{
@@ -152,6 +184,7 @@ func TestRecursive(t *testing.T) {
 				},
 			},
 			wantStdout: []string{
+				fileColor.Format(filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
 				fileColor.Format(filepath.Join("testing", "other", "other.txt")), // "alpha zero"
 				fileColor.Format(filepath.Join("testing", "that.py")),            // "alpha"
 			},

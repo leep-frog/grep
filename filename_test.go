@@ -78,6 +78,7 @@ func TestFilename(t *testing.T) {
 			name: "returns all files",
 			wantStdout: []string{
 				"testing",
+				filepath.Join("testing", "lots.txt"),
 				filepath.Join("testing", "numbered.txt"),
 				filepath.Join("testing", "other"),
 				filepath.Join("testing", "other", "other.txt"),
@@ -118,6 +119,7 @@ func TestFilename(t *testing.T) {
 			name: "filters out files",
 			args: []string{".*.txt"},
 			wantStdout: []string{
+				filepath.Join("testing", matchColor.Format("lots.txt")),
 				filepath.Join("testing", matchColor.Format("numbered.txt")),
 				filepath.Join("testing", "other", matchColor.Format("other.txt")),
 				filepath.Join("testing", matchColor.Format("this.txt")),
@@ -133,6 +135,7 @@ func TestFilename(t *testing.T) {
 			args: []string{"-v", ".*.go"},
 			wantStdout: []string{
 				"testing",
+				filepath.Join("testing", "lots.txt"),
 				filepath.Join("testing", "numbered.txt"),
 				filepath.Join("testing", "other"),
 				filepath.Join("testing", "other", "other.txt"),
