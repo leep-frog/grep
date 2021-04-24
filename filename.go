@@ -43,7 +43,7 @@ func (*filename) Process(output command.Output, data *command.Data, ffs filterFu
 			return output.Stderr("failed to access path %q: %v", path, err)
 		}
 
-		if formattedString, ok := ffs.Apply(fi.Name()); ok {
+		if formattedString, ok := ffs.Apply(fi.Name(), data); ok {
 			output.Stdout(filepath.Join(filepath.Dir(path), formattedString))
 		}
 		return nil

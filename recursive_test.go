@@ -175,6 +175,65 @@ func TestRecursive(t *testing.T) {
 			},
 		},
 		{
+			name: "match only flag works",
+			args: []string{"^alp", "-o"},
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName:    command.StringListValue("^alp"),
+					matchOnlyFlagName: command.BoolValue(true),
+				},
+			},
+			wantStdout: []string{
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "alp"),           // "alpha bravo delta"
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "alp"),           // "alpha bravo delta"
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "other", "other.txt")), "alp"), // "alpha zero"
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "that.py")), "alp"),            // "alpha"
+			},
+		},
+		{
+			name: "match only flag and no file flag works",
+			args: []string{"^alp", "-o", "-h"},
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("^alp"),
+					matchOnlyFlagName:   command.BoolValue(true),
+					hideFileFlag.Name(): command.BoolValue(true),
+				},
+			},
+			wantStdout: []string{
+				"alp",
+				"alp",
+				"alp",
+				"alp",
+			},
+		},
+		{
+			name: "match only flag works with overlapping",
+			args: []string{"qwerty", "rtyui", "-o"},
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName:    command.StringListValue("qwerty", "rtyui"),
+					matchOnlyFlagName: command.BoolValue(true),
+				},
+			},
+			wantStdout: []string{
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "qwertyui"),
+			},
+		},
+		{
+			name: "match only flag works with non-overlapping",
+			args: []string{"qw", "op", "ty", "-o"},
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName:    command.StringListValue("qw", "op", "ty"),
+					matchOnlyFlagName: command.BoolValue(true),
+				},
+			},
+			wantStdout: []string{
+				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "qw...ty...op"),
+			},
+		},
+		{
 			name: "file only flag works",
 			args: []string{"^alp", "-l"},
 			wantData: &command.Data{

@@ -4,18 +4,21 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/leep-frog/command"
 	"github.com/leep-frog/command/color"
 )
 
 var (
-	patternArgName = "pattern"
-	patternArg     = command.StringListNode(patternArgName, 0, -1, nil)
-	caseFlagName   = "ignoreCase"
-	caseFlag       = command.BoolFlag(caseFlagName, 'i')
-	invertFlagName = "invert"
-	invertFlag     = command.StringListFlag(invertFlagName, 'v', 0, command.UnboundedList, nil)
+	patternArgName    = "pattern"
+	patternArg        = command.StringListNode(patternArgName, 0, -1, nil)
+	caseFlagName      = "ignoreCase"
+	caseFlag          = command.BoolFlag(caseFlagName, 'i')
+	invertFlagName    = "invert"
+	invertFlag        = command.StringListFlag(invertFlagName, 'v', 0, command.UnboundedList, nil)
+	matchOnlyFlagName = "matchOnly"
+	matchOnlyFlag     = command.BoolFlag(matchOnlyFlagName, 'o')
 	// TODO: or pattern
 
 	matchColor = &color.Format{
@@ -64,7 +67,8 @@ func disjointMatches(ms []*match) []*match {
 	return ums
 }
 
-func (ffs filterFuncs) Apply(s string) (string, bool) {
+func (ffs filterFuncs) Apply(s string, data *command.Data) (string, bool) {
+	matchOnly := data.Values[matchOnlyFlagName].Bool()
 	otherString := s
 
 	var matches []*match
@@ -80,17 +84,25 @@ func (ffs filterFuncs) Apply(s string) (string, bool) {
 	matches = disjointMatches(matches)
 
 	var offset int
+	var mo []string
 	for _, m := range matches {
-		origLen := len(otherString)
-		otherString = fmt.Sprintf(
-			"%s%s%s",
-			otherString[:(offset+m.start)],
-			matchColor.Format(otherString[(offset+m.start):(offset+m.end)]),
-			otherString[(offset+m.end):],
-		)
-		offset += len(otherString) - origLen
+		if matchOnly {
+			mo = append(mo, otherString[m.start:m.end])
+		} else {
+			origLen := len(otherString)
+			otherString = fmt.Sprintf(
+				"%s%s%s",
+				otherString[:(offset+m.start)],
+				matchColor.Format(otherString[(offset+m.start):(offset+m.end)]),
+				otherString[(offset+m.end):],
+			)
+			offset += len(otherString) - origLen
+		}
 	}
 
+	if matchOnly {
+		return strings.Join(mo, "..."), true
+	}
 	return otherString, true
 }
 
@@ -174,7 +186,7 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 }
 
 func (g *Grep) Node() *command.Node {
-	flags := append(g.inputSource.Flags(), caseFlag, invertFlag)
+	flags := append(g.inputSource.Flags(), caseFlag, invertFlag, matchOnlyFlag)
 	flagNode := command.NewFlagNode(flags...)
 	return command.SerialNodes(
 		flagNode,

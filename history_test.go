@@ -152,6 +152,63 @@ func TestHistory(t *testing.T) {
 			},
 			wantName: "history.txt",
 		},
+		{
+			name: "works with match only",
+			history: []string{
+				"qwerTyuiop",
+				"asdTfghjTkl",
+				"TxcvbnmT",
+			},
+			args: []string{"T.*T", "-o"},
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName:    command.StringListValue("T.*T"),
+					matchOnlyFlagName: command.BoolValue(true),
+				},
+			},
+			wantStdout: []string{
+				"TfghjT",
+				"TxcvbnmT",
+			},
+		},
+		{
+			name: "works with match only and overlapping matches",
+			history: []string{
+				"qwerTyuiop",
+				"aSdTfghSjTkl",
+				"TxScvbSnmT",
+			},
+			args: []string{"T.*T", "S.*S", "-o"},
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName:    command.StringListValue("T.*T", "S.*S"),
+					matchOnlyFlagName: command.BoolValue(true),
+				},
+			},
+			wantStdout: []string{
+				"SdTfghSjT",
+				"TxScvbSnmT",
+			},
+		},
+		{
+			name: "works with match only and non-overlapping matches",
+			history: []string{
+				"qwerTyuiop",
+				"SaSdfTghjTkl",
+				"TzTxcvbSnmS",
+			},
+			args: []string{"T.*T", "S.*S", "-o"},
+			wantData: &command.Data{
+				Values: map[string]*command.Value{
+					patternArgName:    command.StringListValue("T.*T", "S.*S"),
+					matchOnlyFlagName: command.BoolValue(true),
+				},
+			},
+			wantStdout: []string{
+				"SaS...TghjT",
+				"TzT...SnmS",
+			},
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			// Stub os.Open if necessary

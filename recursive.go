@@ -28,8 +28,6 @@ var (
 	afterFlag = command.IntFlag("after", 'a', nil)
 	// Directory flag to search through an aliased directory instead of pwd.
 	dirFlag = command.StringFlag("directory", 'd', nil /*todo completor*/)
-	// TODO: Only show the exact match.
-	//matchOnlyFlag = command.BoolFlag("matchOnly", 'o')
 
 	fileColor = &color.Format{
 		Color: color.Cyan,
@@ -122,7 +120,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, ffs filte
 		linesSinceMatch := linesAfter
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
-			formattedString, ok := ffs.Apply(scanner.Text())
+			formattedString, ok := ffs.Apply(scanner.Text(), data)
 			if !ok {
 				linesSinceMatch++
 				if linesSinceMatch > linesAfter {

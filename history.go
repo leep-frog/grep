@@ -46,7 +46,7 @@ func (*history) Process(output command.Output, data *command.Data, ffs filterFun
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanLines)
 	for scanner.Scan() {
-		formattedString, ok := ffs.Apply(scanner.Text())
+		formattedString, ok := ffs.Apply(scanner.Text(), data)
 		if !ok {
 			continue
 		}
