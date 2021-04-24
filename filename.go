@@ -9,7 +9,7 @@ import (
 	"github.com/leep-frog/command"
 )
 
-func FilenameGrep() *Grep {
+func Filename() *Grep {
 	return &Grep{
 		inputSource: &filename{},
 	}

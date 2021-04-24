@@ -40,7 +40,7 @@ func TestFilenameLoad(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			d := FilenameGrep()
+			d := Filename()
 			err := d.Load(test.json)
 			if test.wantErr == "" && err != nil {
 				t.Errorf("Load(%s) returned error %v; want nil", test.json, err)
@@ -63,7 +63,7 @@ func TestFilenameLoad(t *testing.T) {
 	}
 }
 
-func TestFilenameGrep(t *testing.T) {
+func TestFilename(t *testing.T) {
 	for _, test := range []struct {
 		name       string
 		args       []string
@@ -172,25 +172,25 @@ func TestFilenameGrep(t *testing.T) {
 			defer func() { startDir = oldStart }()
 
 			// Run the test.
-			f := FilenameGrep()
+			f := Filename()
 			command.ExecuteTest(t, f.Node(), test.args, test.wantErr, test.want, test.wantData, test.wantStdout, test.wantStderr)
 
 			if f.Changed() {
-				t.Fatalf("FilenameGrep: Execute(%v, %v) marked Changed as true; want false", f, test.args)
+				t.Fatalf("Filename: Execute(%v, %v) marked Changed as true; want false", f, test.args)
 			}
 		})
 	}
 }
 
 func TestFilenameMetadata(t *testing.T) {
-	c := FilenameGrep()
+	c := Filename()
 
 	wantName := "fp"
 	if c.Name() != wantName {
-		t.Errorf("FilenameGrep.Name() returned %q; want %q", c.Name(), wantName)
+		t.Errorf("Filename.Name() returned %q; want %q", c.Name(), wantName)
 	}
 
 	if c.Setup() != nil {
-		t.Errorf("FilenameGrep.Setup() returned %v; want nil", c.Setup())
+		t.Errorf("Filename.Setup() returned %v; want nil", c.Setup())
 	}
 }

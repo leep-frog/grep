@@ -41,7 +41,7 @@ func TestRecursiveLoad(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			d := RecursiveGrep()
+			d := Recursive()
 			err := d.Load(test.json)
 			if test.wantErr == "" && err != nil {
 				t.Errorf("Load(%s) returned error %v; want nil", test.json, err)
@@ -64,7 +64,7 @@ func TestRecursiveLoad(t *testing.T) {
 	}
 }
 
-func TestRecursiveGrep(t *testing.T) {
+func TestRecursive(t *testing.T) {
 	for _, test := range []struct {
 		name      string
 		args      []string
@@ -430,21 +430,21 @@ func TestRecursiveGrep(t *testing.T) {
 			//commandtest.Execute(t, r.Node(), &command.WorldState{RawValues: test.args}, test.want, test.wantStdout, test.wantStderr)
 
 			if r.Changed() {
-				t.Fatalf("RecursiveGrep: Execute(%v, %v) marked Changed as true; want false", r, test.args)
+				t.Fatalf("Recursive: Execute(%v, %v) marked Changed as true; want false", r, test.args)
 			}
 		})
 	}
 }
 
 func TestRecusriveMetadata(t *testing.T) {
-	c := RecursiveGrep()
+	c := Recursive()
 
 	wantName := "rp"
 	if c.Name() != wantName {
-		t.Errorf("RecursiveGrep.Name() returned %q; want %q", c.Name(), wantName)
+		t.Errorf("Recursive.Name() returned %q; want %q", c.Name(), wantName)
 	}
 
 	if c.Setup() != nil {
-		t.Errorf("RecursiveGrep.Option() returned %v; want nil", c.Setup())
+		t.Errorf("Recursive.Option() returned %v; want nil", c.Setup())
 	}
 }

@@ -41,7 +41,7 @@ func TestHistoryLoad(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			d := HistoryGrep()
+			d := History()
 			err := d.Load(test.json)
 			if test.wantErr == "" && err != nil {
 				t.Errorf("Load(%s) returned error %v; want nil", test.json, err)
@@ -64,7 +64,7 @@ func TestHistoryLoad(t *testing.T) {
 	}
 }
 
-func TestHistoryGrep(t *testing.T) {
+func TestHistory(t *testing.T) {
 	for _, test := range []struct {
 		name       string
 		args       []string
@@ -161,14 +161,14 @@ func TestHistoryGrep(t *testing.T) {
 			}
 
 			// Run test
-			h := HistoryGrep()
+			h := History()
 			setupFile := fakeSetup(t, test.history)
 			test.wantData.Values[command.SetupArgName] = command.StringValue(setupFile)
 			test.args = append([]string{setupFile}, test.args...)
 			command.ExecuteTest(t, command.SerialNodesTo(h.Node(), command.SetupArg), test.args, test.wantErr, test.want, test.wantData, test.wantStdout, test.wantStderr)
 
 			if h.Changed() {
-				t.Fatalf("HistoryGrep: Execute(%v, %v) marked Changed as true; want false", h, test.args)
+				t.Fatalf("History: Execute(%v, %v) marked Changed as true; want false", h, test.args)
 			}
 		})
 	}
@@ -190,14 +190,14 @@ func fakeSetup(t *testing.T, contents []string) string {
 }
 
 func TestHistoryMetadata(t *testing.T) {
-	c := HistoryGrep()
+	c := History()
 
 	wantName := "hp"
 	if c.Name() != wantName {
-		t.Errorf("HistoryGrep.Name() returned %q; want %q", c.Name(), wantName)
+		t.Errorf("History.Name() returned %q; want %q", c.Name(), wantName)
 	}
 
 	if diff := cmp.Diff([]string{"history"}, c.Setup()); diff != "" {
-		t.Errorf("HistoryGrep.Setup() produced diff:\n%s", diff)
+		t.Errorf("History.Setup() produced diff:\n%s", diff)
 	}
 }

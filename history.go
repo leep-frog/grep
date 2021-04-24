@@ -8,7 +8,7 @@ import (
 	"github.com/leep-frog/command"
 )
 
-func HistoryGrep() *Grep {
+func History() *Grep {
 	return &Grep{
 		inputSource: &history{},
 	}
