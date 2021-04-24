@@ -35,7 +35,7 @@ var (
 	}
 )
 
-func Recursive() *Grep {
+func RecursiveCLI() *Grep {
 	return &Grep{
 		inputSource: &recursive{},
 	}

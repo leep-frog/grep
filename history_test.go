@@ -41,7 +41,7 @@ func TestHistoryLoad(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			d := History()
+			d := HistoryCLI()
 			err := d.Load(test.json)
 			if test.wantErr == "" && err != nil {
 				t.Errorf("Load(%s) returned error %v; want nil", test.json, err)
@@ -161,7 +161,7 @@ func TestHistory(t *testing.T) {
 			}
 
 			// Run test
-			h := History()
+			h := HistoryCLI()
 			setupFile := fakeSetup(t, test.history)
 			test.wantData.Values[command.SetupArgName] = command.StringValue(setupFile)
 			test.args = append([]string{setupFile}, test.args...)
@@ -190,7 +190,7 @@ func fakeSetup(t *testing.T, contents []string) string {
 }
 
 func TestHistoryMetadata(t *testing.T) {
-	c := History()
+	c := HistoryCLI()
 
 	wantName := "hp"
 	if c.Name() != wantName {

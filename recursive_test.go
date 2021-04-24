@@ -41,7 +41,7 @@ func TestRecursiveLoad(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			d := Recursive()
+			d := RecursiveCLI()
 			err := d.Load(test.json)
 			if test.wantErr == "" && err != nil {
 				t.Errorf("Load(%s) returned error %v; want nil", test.json, err)
@@ -437,7 +437,7 @@ func TestRecursive(t *testing.T) {
 }
 
 func TestRecusriveMetadata(t *testing.T) {
-	c := Recursive()
+	c := RecursiveCLI()
 
 	wantName := "rp"
 	if c.Name() != wantName {

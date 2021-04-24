@@ -40,7 +40,7 @@ func TestFilenameLoad(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			d := Filename()
+			d := FilenameCLI()
 			err := d.Load(test.json)
 			if test.wantErr == "" && err != nil {
 				t.Errorf("Load(%s) returned error %v; want nil", test.json, err)
@@ -172,7 +172,7 @@ func TestFilename(t *testing.T) {
 			defer func() { startDir = oldStart }()
 
 			// Run the test.
-			f := Filename()
+			f := FilenameCLI()
 			command.ExecuteTest(t, f.Node(), test.args, test.wantErr, test.want, test.wantData, test.wantStdout, test.wantStderr)
 
 			if f.Changed() {
@@ -183,7 +183,7 @@ func TestFilename(t *testing.T) {
 }
 
 func TestFilenameMetadata(t *testing.T) {
-	c := Filename()
+	c := FilenameCLI()
 
 	wantName := "fp"
 	if c.Name() != wantName {
