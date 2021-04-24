@@ -10,7 +10,7 @@ import (
 	"regexp"
 
 	"github.com/leep-frog/command"
-	"github.com/leep-frog/commands/color"
+	"github.com/leep-frog/command/color"
 )
 
 var (
