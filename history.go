@@ -16,8 +16,7 @@ func HistoryGrep() *Grep {
 
 type history struct{}
 
-func (*history) Name() string  { return "history-grep" }
-func (*history) Alias() string { return "hp" }
+func (*history) Name() string { return "hp" }
 func (*history) Setup() []string {
 	return []string{"history"}
 }

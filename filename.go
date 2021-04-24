@@ -17,8 +17,7 @@ func FilenameGrep() *Grep {
 
 type filename struct{}
 
-func (*filename) Name() string          { return "filename-grep" }
-func (*filename) Alias() string         { return "fp" }
+func (*filename) Name() string          { return "fp" }
 func (*filename) Changed() bool         { return false }
 func (*filename) Setup() []string       { return nil }
 func (*filename) Flags() []command.Flag { return nil }

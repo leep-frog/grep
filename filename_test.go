@@ -185,14 +185,9 @@ func TestFilenameGrep(t *testing.T) {
 func TestFilenameMetadata(t *testing.T) {
 	c := FilenameGrep()
 
-	wantName := "filename-grep"
+	wantName := "fp"
 	if c.Name() != wantName {
 		t.Errorf("FilenameGrep.Name() returned %q; want %q", c.Name(), wantName)
-	}
-
-	wantAlias := "fp"
-	if c.Alias() != wantAlias {
-		t.Errorf("FilenameGrep.Alias() returned %q; want %q", c.Alias(), wantAlias)
 	}
 
 	if c.Setup() != nil {

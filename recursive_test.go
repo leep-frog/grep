@@ -439,14 +439,9 @@ func TestRecursiveGrep(t *testing.T) {
 func TestRecusriveMetadata(t *testing.T) {
 	c := RecursiveGrep()
 
-	wantName := "recursive-grep"
+	wantName := "rp"
 	if c.Name() != wantName {
 		t.Errorf("RecursiveGrep.Name() returned %q; want %q", c.Name(), wantName)
-	}
-
-	wantAlias := "rp"
-	if c.Alias() != wantAlias {
-		t.Errorf("RecursiveGrep.Alias() returned %q; want %q", c.Alias(), wantAlias)
 	}
 
 	if c.Setup() != nil {

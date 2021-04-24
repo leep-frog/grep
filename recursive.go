@@ -46,8 +46,7 @@ type recursive struct {
 	changed          bool
 }
 
-func (*recursive) Name() string    { return "recursive-grep" }
-func (*recursive) Alias() string   { return "rp" }
+func (*recursive) Name() string    { return "rp" }
 func (*recursive) Setup() []string { return nil }
 func (*recursive) Flags() []command.Flag {
 	return []command.Flag{

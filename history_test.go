@@ -192,14 +192,9 @@ func fakeSetup(t *testing.T, contents []string) string {
 func TestHistoryMetadata(t *testing.T) {
 	c := HistoryGrep()
 
-	wantName := "history-grep"
+	wantName := "hp"
 	if c.Name() != wantName {
 		t.Errorf("HistoryGrep.Name() returned %q; want %q", c.Name(), wantName)
-	}
-
-	wantAlias := "hp"
-	if c.Alias() != wantAlias {
-		t.Errorf("HistoryGrep.Alias() returned %q; want %q", c.Alias(), wantAlias)
 	}
 
 	if diff := cmp.Diff([]string{"history"}, c.Setup()); diff != "" {

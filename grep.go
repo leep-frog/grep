@@ -46,7 +46,6 @@ func (ffs filterFuncs) Apply(s string) (string, bool) {
 
 type inputSource interface {
 	Name() string
-	Alias() string
 	Process(command.Output, *command.Data, filterFuncs) error
 	Flags() []command.Flag
 	Setup() []string
@@ -69,10 +68,6 @@ func (g *Grep) Changed() bool {
 
 func (g *Grep) Name() string {
 	return g.inputSource.Name()
-}
-
-func (g *Grep) Alias() string {
-	return g.inputSource.Alias()
 }
 
 func (g *Grep) Setup() []string {
