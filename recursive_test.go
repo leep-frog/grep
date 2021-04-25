@@ -79,24 +79,14 @@ func TestRecursive(t *testing.T) {
 		wantStderr []string
 	}{
 		{
-			name:    "errors on walk error",
-			stubDir: "does-not-exist",
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue(),
-				},
-			},
+			name:       "errors on walk error",
+			stubDir:    "does-not-exist",
 			wantStderr: []string{`file not found: does-not-exist`},
 			wantErr:    fmt.Errorf(`file not found: does-not-exist`),
 		},
 		{
 			name:      "errors on open error",
 			osOpenErr: fmt.Errorf("oops"),
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue(),
-				},
-			},
 			wantStderr: []string{
 				fmt.Sprintf(`failed to open file %q: oops`, filepath.Join("testing", "lots.txt")),
 			},

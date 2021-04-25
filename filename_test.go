@@ -85,22 +85,12 @@ func TestFilename(t *testing.T) {
 				filepath.Join("testing", "that.py"),
 				filepath.Join("testing", "this.txt"),
 			},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue(),
-				},
-			},
 		},
 		{
 			name:       "errors on walk error",
 			stubDir:    "does-not-exist",
 			wantStderr: []string{"file not found: does-not-exist"},
 			wantErr:    fmt.Errorf("file not found: does-not-exist"),
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue(),
-				},
-			},
 		},
 		{
 			name: "errors on invalid regex filter",
@@ -144,8 +134,7 @@ func TestFilename(t *testing.T) {
 			},
 			wantData: &command.Data{
 				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue(),
-					"invert":       command.StringListValue(".*.go"),
+					"invert": command.StringListValue(".*.go"),
 				},
 			},
 		},
@@ -158,8 +147,7 @@ func TestFilename(t *testing.T) {
 			wantErr: fmt.Errorf("invalid invert regex: error parsing regexp: unexpected ): `:)`"),
 			wantData: &command.Data{
 				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue(),
-					"invert":       command.StringListValue(":)"),
+					"invert": command.StringListValue(":)"),
 				},
 			},
 		},

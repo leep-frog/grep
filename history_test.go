@@ -85,11 +85,6 @@ func TestHistory(t *testing.T) {
 				"beta",
 				"delta",
 			},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue(),
-				},
-			},
 			wantName: "history.txt",
 			wantStdout: []string{
 				"alpha",
@@ -144,12 +139,7 @@ func TestHistory(t *testing.T) {
 			wantStderr: []string{
 				"failed to open setup output file: darn",
 			},
-			wantErr: fmt.Errorf("failed to open setup output file: darn"),
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue(),
-				},
-			},
+			wantErr:  fmt.Errorf("failed to open setup output file: darn"),
 			wantName: "history.txt",
 		},
 		{
@@ -221,9 +211,15 @@ func TestHistory(t *testing.T) {
 			// Run test
 			h := HistoryCLI()
 			setupFile := fakeSetup(t, test.history)
-			test.wantData.Values[command.SetupArgName] = command.StringValue(setupFile)
+			wd := test.wantData
+			if test.wantData == nil {
+				wd = &command.Data{
+					Values: map[string]*command.Value{},
+				}
+			}
+			wd.Values[command.SetupArgName] = command.StringValue(setupFile)
 			test.args = append([]string{setupFile}, test.args...)
-			command.ExecuteTest(t, command.SerialNodesTo(h.Node(), command.SetupArg), test.args, test.wantErr, test.want, test.wantData, test.wantStdout, test.wantStderr)
+			command.ExecuteTest(t, command.SerialNodesTo(h.Node(), command.SetupArg), test.args, test.wantErr, test.want, wd, test.wantStdout, test.wantStderr)
 
 			if h.Changed() {
 				t.Fatalf("History: Execute(%v, %v) marked Changed as true; want false", h, test.args)
