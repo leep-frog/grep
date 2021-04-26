@@ -15,7 +15,7 @@ func TestFilenameLoad(t *testing.T) {
 		name    string
 		json    string
 		want    *Grep
-		wantErr string
+		WantErr string
 	}{
 		{
 			name: "handles empty string",
@@ -26,7 +26,7 @@ func TestFilenameLoad(t *testing.T) {
 		{
 			name:    "handles invalid json",
 			json:    "}}",
-			wantErr: "failed to unmarshal json for filename grep object: invalid character",
+			WantErr: "failed to unmarshal json for filename grep object: invalid character",
 			want: &Grep{
 				inputSource: &filename{},
 			},
@@ -42,14 +42,14 @@ func TestFilenameLoad(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			d := FilenameCLI()
 			err := d.Load(test.json)
-			if test.wantErr == "" && err != nil {
+			if test.WantErr == "" && err != nil {
 				t.Errorf("Load(%s) returned error %v; want nil", test.json, err)
 			}
-			if test.wantErr != "" && err == nil {
-				t.Errorf("Load(%s) returned nil; want err %q", test.json, test.wantErr)
+			if test.WantErr != "" && err == nil {
+				t.Errorf("Load(%s) returned nil; want err %q", test.json, test.WantErr)
 			}
-			if test.wantErr != "" && err != nil && !strings.Contains(err.Error(), test.wantErr) {
-				t.Errorf("Load(%s) returned err %q; want %q", test.json, err.Error(), test.wantErr)
+			if test.WantErr != "" && err != nil && !strings.Contains(err.Error(), test.WantErr) {
+				t.Errorf("Load(%s) returned err %q; want %q", test.json, err.Error(), test.WantErr)
 			}
 
 			opts := []cmp.Option{
@@ -65,89 +65,96 @@ func TestFilenameLoad(t *testing.T) {
 
 func TestFilename(t *testing.T) {
 	for _, test := range []struct {
-		name       string
-		args       []string
-		stubDir    string
-		want       *command.ExecuteData
-		wantData   *command.Data
-		wantStdout []string
-		wantStderr []string
-		wantErr    error
+		name    string
+		etc     *command.ExecuteTestCase
+		stubDir string
 	}{
 		{
 			name: "returns all files",
-			wantStdout: []string{
-				"testing",
-				filepath.Join("testing", "lots.txt"),
-				filepath.Join("testing", "numbered.txt"),
-				filepath.Join("testing", "other"),
-				filepath.Join("testing", "other", "other.txt"),
-				filepath.Join("testing", "that.py"),
-				filepath.Join("testing", "this.txt"),
+			etc: &command.ExecuteTestCase{
+				WantStdout: []string{
+					"testing",
+					filepath.Join("testing", "lots.txt"),
+					filepath.Join("testing", "numbered.txt"),
+					filepath.Join("testing", "other"),
+					filepath.Join("testing", "other", "other.txt"),
+					filepath.Join("testing", "that.py"),
+					filepath.Join("testing", "this.txt"),
+				},
 			},
 		},
 		{
-			name:       "errors on walk error",
-			stubDir:    "does-not-exist",
-			wantStderr: []string{"file not found: does-not-exist"},
-			wantErr:    fmt.Errorf("file not found: does-not-exist"),
+			name:    "errors on walk error",
+			stubDir: "does-not-exist",
+			etc: &command.ExecuteTestCase{
+				WantStderr: []string{"file not found: does-not-exist"},
+				WantErr:    fmt.Errorf("file not found: does-not-exist"),
+			},
 		},
 		{
 			name: "errors on invalid regex filter",
-			args: []string{":)"},
-			wantStderr: []string{
-				"invalid regex: error parsing regexp: unexpected ): `:)`",
-			},
-			wantErr: fmt.Errorf("invalid regex: error parsing regexp: unexpected ): `:)`"),
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue(":)"),
+			etc: &command.ExecuteTestCase{
+				Args: []string{":)"},
+				WantStderr: []string{
+					"invalid regex: error parsing regexp: unexpected ): `:)`",
+				},
+				WantErr: fmt.Errorf("invalid regex: error parsing regexp: unexpected ): `:)`"),
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName: command.StringListValue(":)"),
+					},
 				},
 			},
 		},
 		{
 			name: "filters out files",
-			args: []string{".*.txt"},
-			wantStdout: []string{
-				filepath.Join("testing", matchColor.Format("lots.txt")),
-				filepath.Join("testing", matchColor.Format("numbered.txt")),
-				filepath.Join("testing", "other", matchColor.Format("other.txt")),
-				filepath.Join("testing", matchColor.Format("this.txt")),
-			},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue(".*.txt"),
+			etc: &command.ExecuteTestCase{
+				Args: []string{".*.txt"},
+				WantStdout: []string{
+					filepath.Join("testing", matchColor.Format("lots.txt")),
+					filepath.Join("testing", matchColor.Format("numbered.txt")),
+					filepath.Join("testing", "other", matchColor.Format("other.txt")),
+					filepath.Join("testing", matchColor.Format("this.txt")),
+				},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName: command.StringListValue(".*.txt"),
+					},
 				},
 			},
 		},
 		{
 			name: "invert filter",
-			args: []string{"-v", ".*.go"},
-			wantStdout: []string{
-				"testing",
-				filepath.Join("testing", "lots.txt"),
-				filepath.Join("testing", "numbered.txt"),
-				filepath.Join("testing", "other"),
-				filepath.Join("testing", "other", "other.txt"),
-				filepath.Join("testing", "that.py"),
-				filepath.Join("testing", "this.txt"),
-			},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					"invert": command.StringListValue(".*.go"),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"-v", ".*.go"},
+				WantStdout: []string{
+					"testing",
+					filepath.Join("testing", "lots.txt"),
+					filepath.Join("testing", "numbered.txt"),
+					filepath.Join("testing", "other"),
+					filepath.Join("testing", "other", "other.txt"),
+					filepath.Join("testing", "that.py"),
+					filepath.Join("testing", "this.txt"),
+				},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						"invert": command.StringListValue(".*.go"),
+					},
 				},
 			},
 		},
 		{
 			name: "errors on invalid invert filter",
-			args: []string{"-v", ":)"},
-			wantStderr: []string{
-				"invalid invert regex: error parsing regexp: unexpected ): `:)`",
-			},
-			wantErr: fmt.Errorf("invalid invert regex: error parsing regexp: unexpected ): `:)`"),
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					"invert": command.StringListValue(":)"),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"-v", ":)"},
+				WantStderr: []string{
+					"invalid invert regex: error parsing regexp: unexpected ): `:)`",
+				},
+				WantErr: fmt.Errorf("invalid invert regex: error parsing regexp: unexpected ): `:)`"),
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						"invert": command.StringListValue(":)"),
+					},
 				},
 			},
 		},
@@ -164,10 +171,11 @@ func TestFilename(t *testing.T) {
 
 			// Run the test.
 			f := FilenameCLI()
-			command.ExecuteTest(t, f.Node(), test.args, test.wantErr, test.want, test.wantData, test.wantStdout, test.wantStderr)
+			test.etc.Node = f.Node()
+			command.ExecuteTest(t, test.etc, nil)
 
 			if f.Changed() {
-				t.Fatalf("Filename: Execute(%v, %v) marked Changed as true; want false", f, test.args)
+				t.Fatalf("Filename: Execute(%v, %v) marked Changed as true; want false", f, test.etc.Args)
 			}
 		})
 	}

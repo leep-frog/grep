@@ -189,30 +189,5 @@ func (g *Grep) Node() *command.Node {
 		flagNode,
 		patternArg,
 		command.ExecutorNode(g.Execute),
-		//command.ExecutorNode(g.P,
 	)
 }
-
-/*func (g *Grep) Node() command.NodeProcessor {
-	flags := append(g.inputSource.Flags(), caseFlag, invertFlag)
-	return &command.Node{
-		Processor: command.ExecutorNode(g.),
-	}
-}*/
-
-/*func (g *Grep) Command() command.Command {
-	flags := []command.Flag{
-		caseFlag,
-		invertFlag,
-	}
-	return &command.CommandBranch{
-		Subcommands: g.inputSource.Subcommands(),
-		TerminusCommand: &command.TerminusCommand{
-			Executor: g.execute,
-			Args: []command.Arg{
-				patternArg,
-			},
-			Flags: append(flags, g.inputSource.Flags()...),
-		},
-	}
-}*/

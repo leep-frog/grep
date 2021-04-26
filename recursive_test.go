@@ -16,7 +16,7 @@ func TestRecursiveLoad(t *testing.T) {
 		name    string
 		json    string
 		want    *Grep
-		wantErr string
+		WantErr string
 	}{
 		{
 			name: "handles empty string",
@@ -27,7 +27,7 @@ func TestRecursiveLoad(t *testing.T) {
 		{
 			name:    "handles invalid json",
 			json:    "}}",
-			wantErr: "failed to unmarshal json for recursive grep object: invalid character",
+			WantErr: "failed to unmarshal json for recursive grep object: invalid character",
 			want: &Grep{
 				inputSource: &recursive{},
 			},
@@ -43,14 +43,14 @@ func TestRecursiveLoad(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			d := RecursiveCLI()
 			err := d.Load(test.json)
-			if test.wantErr == "" && err != nil {
+			if test.WantErr == "" && err != nil {
 				t.Errorf("Load(%s) returned error %v; want nil", test.json, err)
 			}
-			if test.wantErr != "" && err == nil {
-				t.Errorf("Load(%s) returned nil; want err %q", test.json, test.wantErr)
+			if test.WantErr != "" && err == nil {
+				t.Errorf("Load(%s) returned nil; want err %q", test.json, test.WantErr)
 			}
-			if test.wantErr != "" && err != nil && !strings.Contains(err.Error(), test.wantErr) {
-				t.Errorf("Load(%s) returned err %q; want %q", test.json, err.Error(), test.wantErr)
+			if test.WantErr != "" && err != nil && !strings.Contains(err.Error(), test.WantErr) {
+				t.Errorf("Load(%s) returned err %q; want %q", test.json, err.Error(), test.WantErr)
 			}
 
 			opts := []cmp.Option{
@@ -67,449 +67,497 @@ func TestRecursiveLoad(t *testing.T) {
 func TestRecursive(t *testing.T) {
 	for _, test := range []struct {
 		name      string
-		args      []string
 		aliases   map[string]string
 		stubDir   string
 		osOpenErr error
-		// TODO: make this an object in the command (or commandtest) package.
-		want       *command.ExecuteData
-		wantData   *command.Data
-		wantErr    error
-		wantStdout []string
-		wantStderr []string
+		etc       *command.ExecuteTestCase
 	}{
 		{
-			name:       "errors on walk error",
-			stubDir:    "does-not-exist",
-			wantStderr: []string{`file not found: does-not-exist`},
-			wantErr:    fmt.Errorf(`file not found: does-not-exist`),
+			name:    "errors on walk error",
+			stubDir: "does-not-exist",
+			etc: &command.ExecuteTestCase{
+				WantStderr: []string{`file not found: does-not-exist`},
+				WantErr:    fmt.Errorf(`file not found: does-not-exist`),
+			},
 		},
 		{
 			name:      "errors on open error",
 			osOpenErr: fmt.Errorf("oops"),
-			wantStderr: []string{
-				fmt.Sprintf(`failed to open file %q: oops`, filepath.Join("testing", "lots.txt")),
+			etc: &command.ExecuteTestCase{
+				WantStderr: []string{
+					fmt.Sprintf(`failed to open file %q: oops`, filepath.Join("testing", "lots.txt")),
+				},
+				WantErr: fmt.Errorf(`failed to open file %q: oops`, filepath.Join("testing", "lots.txt")),
 			},
-			wantErr: fmt.Errorf(`failed to open file %q: oops`, filepath.Join("testing", "lots.txt")),
 		},
 		{
 			name: "finds matches",
-			args: []string{"^alpha"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue("^alpha"),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^alpha"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName: command.StringListValue("^alpha"),
+					},
 				},
-			},
-			wantStdout: []string{
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " bravo delta")),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " hello there")),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "other", "other.txt")), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " zero")),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "that.py")), matchColor.Format("alpha")),
+				WantStdout: []string{
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " bravo delta")),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " hello there")),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "other", "other.txt")), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " zero")),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "that.py")), matchColor.Format("alpha")),
+				},
 			},
 		},
 		{
 			name: "file flag filter works",
-			args: []string{"^alpha", "-f", ".*.py"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue("^alpha"),
-					fileArg.Name(): command.StringValue(".*.py"),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^alpha", "-f", ".*.py"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName: command.StringListValue("^alpha"),
+						fileArg.Name(): command.StringValue(".*.py"),
+					},
 				},
-			},
-			wantStdout: []string{
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "that.py")), matchColor.Format("alpha")),
+				WantStdout: []string{
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "that.py")), matchColor.Format("alpha")),
+				},
 			},
 		},
 		{
 			name: "inverted file flag filter works",
-			args: []string{"^alpha", "-F", ".*.py"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:       command.StringListValue("^alpha"),
-					invertFileArg.Name(): command.StringValue(".*.py"),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^alpha", "-F", ".*.py"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:       command.StringListValue("^alpha"),
+						invertFileArg.Name(): command.StringValue(".*.py"),
+					},
 				},
-			},
-			wantStdout: []string{
-				fmt.Sprintf("%s:%s %s", fileColor.Format(filepath.Join("testing", "lots.txt")), matchColor.Format("alpha"), "bravo delta"),
-				fmt.Sprintf("%s:%s %s", fileColor.Format(filepath.Join("testing", "lots.txt")), matchColor.Format("alpha"), "hello there"),
-				fmt.Sprintf("%s:%s %s", fileColor.Format(filepath.Join("testing", "other", "other.txt")), matchColor.Format("alpha"), "zero"),
+				WantStdout: []string{
+					fmt.Sprintf("%s:%s %s", fileColor.Format(filepath.Join("testing", "lots.txt")), matchColor.Format("alpha"), "bravo delta"),
+					fmt.Sprintf("%s:%s %s", fileColor.Format(filepath.Join("testing", "lots.txt")), matchColor.Format("alpha"), "hello there"),
+					fmt.Sprintf("%s:%s %s", fileColor.Format(filepath.Join("testing", "other", "other.txt")), matchColor.Format("alpha"), "zero"),
+				},
 			},
 		},
 		{
 			name: "failure if invalid invert file flag",
-			args: []string{"^alpha", "-F", ":)"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:       command.StringListValue("^alpha"),
-					invertFileArg.Name(): command.StringValue(":)"),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^alpha", "-F", ":)"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:       command.StringListValue("^alpha"),
+						invertFileArg.Name(): command.StringValue(":)"),
+					},
 				},
+				WantErr:    fmt.Errorf("invalid invert filename regex: error parsing regexp: unexpected ): `:)`"),
+				WantStderr: []string{"invalid invert filename regex: error parsing regexp: unexpected ): `:)`"},
 			},
-			wantErr:    fmt.Errorf("invalid invert filename regex: error parsing regexp: unexpected ): `:)`"),
-			wantStderr: []string{"invalid invert filename regex: error parsing regexp: unexpected ): `:)`"},
 		},
 		{
 			name: "hide file flag works",
-			args: []string{"pha[^e]*", "-h"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:      command.StringListValue("pha[^e]*"),
-					hideFileFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"pha[^e]*", "-h"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:      command.StringListValue("pha[^e]*"),
+						hideFileFlag.Name(): command.BoolValue(true),
+					},
 				},
-			},
-			wantStdout: []string{
-				fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha bravo d"), "elta"), // testing/lots.txt
-				fmt.Sprintf("%s%s", "bravo delta al", matchColor.Format("pha")),       // testing/lots.txt
-				fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha h"), "ello there"), // testing/lots.txt
-				fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha z"), "ero"),        // testing/other/other.txt
-				fmt.Sprintf("%s%s", "al", matchColor.Format("pha")),                   //testing/that.py
+				WantStdout: []string{
+					fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha bravo d"), "elta"), // testing/lots.txt
+					fmt.Sprintf("%s%s", "bravo delta al", matchColor.Format("pha")),       // testing/lots.txt
+					fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha h"), "ello there"), // testing/lots.txt
+					fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha z"), "ero"),        // testing/other/other.txt
+					fmt.Sprintf("%s%s", "al", matchColor.Format("pha")),                   //testing/that.py
+				},
 			},
 		},
 		{
 			name: "colors multiple matches properly",
-			args: []string{"alpha", "bravo", "-h"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:      command.StringListValue("alpha", "bravo"),
-					hideFileFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"alpha", "bravo", "-h"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:      command.StringListValue("alpha", "bravo"),
+						hideFileFlag.Name(): command.BoolValue(true),
+					},
 				},
-			},
-			wantStdout: []string{
-				strings.Join([]string{matchColor.Format("alpha"), matchColor.Format("bravo"), "delta"}, " "),
-				strings.Join([]string{matchColor.Format("bravo"), "delta", matchColor.Format("alpha")}, " "),
+				WantStdout: []string{
+					strings.Join([]string{matchColor.Format("alpha"), matchColor.Format("bravo"), "delta"}, " "),
+					strings.Join([]string{matchColor.Format("bravo"), "delta", matchColor.Format("alpha")}, " "),
+				},
 			},
 		},
 		{
 			name: "colors overlapping matches properly",
-			args: []string{"q.*t", "e.*u", "-h"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:      command.StringListValue("q.*t", "e.*u"),
-					hideFileFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"q.*t", "e.*u", "-h"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:      command.StringListValue("q.*t", "e.*u"),
+						hideFileFlag.Name(): command.BoolValue(true),
+					},
 				},
-			},
-			wantStdout: []string{
-				fmt.Sprintf("%s%s", matchColor.Format("qwertyu"), "iop"),
+				WantStdout: []string{
+					fmt.Sprintf("%s%s", matchColor.Format("qwertyu"), "iop"),
+				},
 			},
 		},
 		{
 			name: "match only flag works",
-			args: []string{"^alp", "-o"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:       command.StringListValue("^alp"),
-					matchOnlyFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^alp", "-o"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:       command.StringListValue("^alp"),
+						matchOnlyFlag.Name(): command.BoolValue(true),
+					},
 				},
-			},
-			wantStdout: []string{
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "alp"),           // "alpha bravo delta"
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "alp"),           // "alpha bravo delta"
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "other", "other.txt")), "alp"), // "alpha zero"
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "that.py")), "alp"),            // "alpha"
+				WantStdout: []string{
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "alp"),           // "alpha bravo delta"
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "alp"),           // "alpha bravo delta"
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "other", "other.txt")), "alp"), // "alpha zero"
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "that.py")), "alp"),            // "alpha"
+				},
 			},
 		},
 		{
 			name: "match only flag and no file flag works",
-			args: []string{"^alp", "-o", "-h"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:       command.StringListValue("^alp"),
-					matchOnlyFlag.Name(): command.BoolValue(true),
-					hideFileFlag.Name():  command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^alp", "-o", "-h"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:       command.StringListValue("^alp"),
+						matchOnlyFlag.Name(): command.BoolValue(true),
+						hideFileFlag.Name():  command.BoolValue(true),
+					},
 				},
-			},
-			wantStdout: []string{
-				"alp",
-				"alp",
-				"alp",
-				"alp",
+				WantStdout: []string{
+					"alp",
+					"alp",
+					"alp",
+					"alp",
+				},
 			},
 		},
 		{
 			name: "match only flag works with overlapping",
-			args: []string{"qwerty", "rtyui", "-o"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:       command.StringListValue("qwerty", "rtyui"),
-					matchOnlyFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"qwerty", "rtyui", "-o"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:       command.StringListValue("qwerty", "rtyui"),
+						matchOnlyFlag.Name(): command.BoolValue(true),
+					},
 				},
-			},
-			wantStdout: []string{
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "qwertyui"),
+				WantStdout: []string{
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "qwertyui"),
+				},
 			},
 		},
 		{
 			name: "match only flag works with non-overlapping",
-			args: []string{"qw", "op", "ty", "-o"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:       command.StringListValue("qw", "op", "ty"),
-					matchOnlyFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"qw", "op", "ty", "-o"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:       command.StringListValue("qw", "op", "ty"),
+						matchOnlyFlag.Name(): command.BoolValue(true),
+					},
 				},
-			},
-			wantStdout: []string{
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "qw...ty...op"),
+				WantStdout: []string{
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "qw...ty...op"),
+				},
 			},
 		},
 		{
 			name: "file only flag works",
-			args: []string{"^alp", "-l"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:      command.StringListValue("^alp"),
-					fileOnlyFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^alp", "-l"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:      command.StringListValue("^alp"),
+						fileOnlyFlag.Name(): command.BoolValue(true),
+					},
 				},
-			},
-			wantStdout: []string{
-				fileColor.Format(filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
-				fileColor.Format(filepath.Join("testing", "other", "other.txt")), // "alpha zero"
-				fileColor.Format(filepath.Join("testing", "that.py")),            // "alpha"
+				WantStdout: []string{
+					fileColor.Format(filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
+					fileColor.Format(filepath.Join("testing", "other", "other.txt")), // "alpha zero"
+					fileColor.Format(filepath.Join("testing", "that.py")),            // "alpha"
+				},
 			},
 		},
 		{
 			name: "errors on invalid regex in file flag",
-			args: []string{"^alpha", "-f", ":)"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue("^alpha"),
-					fileArg.Name(): command.StringValue(":)"),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^alpha", "-f", ":)"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName: command.StringListValue("^alpha"),
+						fileArg.Name(): command.StringValue(":)"),
+					},
 				},
+				WantStderr: []string{
+					"invalid filename regex: error parsing regexp: unexpected ): `:)`",
+				},
+				WantErr: fmt.Errorf("invalid filename regex: error parsing regexp: unexpected ): `:)`"),
 			},
-			wantStderr: []string{
-				"invalid filename regex: error parsing regexp: unexpected ): `:)`",
-			},
-			wantErr: fmt.Errorf("invalid filename regex: error parsing regexp: unexpected ): `:)`"),
 		},
 		// -a flag
 		{
 			name: "returns lines after",
-			args: []string{"five", "-a", "3"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:   command.StringListValue("five"),
-					afterFlag.Name(): command.IntValue(3),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"five", "-a", "3"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:   command.StringListValue("five"),
+						afterFlag.Name(): command.IntValue(3),
+					},
 				},
-			},
-			wantStdout: []string{
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "six"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "eight"),
+				WantStdout: []string{
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "six"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "eight"),
+				},
 			},
 		},
 		{
 			name: "returns lines after when file is hidden",
-			args: []string{"five", "-h", "-a", "3"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:      command.StringListValue("five"),
-					afterFlag.Name():    command.IntValue(3),
-					hideFileFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"five", "-h", "-a", "3"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:      command.StringListValue("five"),
+						afterFlag.Name():    command.IntValue(3),
+						hideFileFlag.Name(): command.BoolValue(true),
+					},
 				},
-			},
-			wantStdout: []string{
-				matchColor.Format("five"),
-				"six",
-				"seven",
-				"eight",
+				WantStdout: []string{
+					matchColor.Format("five"),
+					"six",
+					"seven",
+					"eight",
+				},
 			},
 		},
 		{
 			name: "resets after lines if multiple matches",
-			args: []string{"^....$", "-f", "numbered.txt", "-a", "2"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:   command.StringListValue("^....$"),
-					afterFlag.Name(): command.IntValue(2),
-					fileArg.Name():   command.StringValue("numbered.txt"),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^....$", "-f", "numbered.txt", "-a", "2"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:   command.StringListValue("^....$"),
+						afterFlag.Name(): command.IntValue(2),
+						fileArg.Name():   command.StringValue("numbered.txt"),
+					},
 				},
-			},
-			wantStdout: []string{
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("zero")),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "one"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "two"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("four")),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "six"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("nine")),
+				WantStdout: []string{
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("zero")),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "one"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "two"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("four")),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "six"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("nine")),
+				},
 			},
 		},
 		{
 			name: "resets after lines if multiple matches when file is hidden",
-			args: []string{"^....$", "-f", "numbered.txt", "-h", "-a", "2"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:      command.StringListValue("^....$"),
-					afterFlag.Name():    command.IntValue(2),
-					fileArg.Name():      command.StringValue("numbered.txt"),
-					hideFileFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^....$", "-f", "numbered.txt", "-h", "-a", "2"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:      command.StringListValue("^....$"),
+						afterFlag.Name():    command.IntValue(2),
+						fileArg.Name():      command.StringValue("numbered.txt"),
+						hideFileFlag.Name(): command.BoolValue(true),
+					},
 				},
-			},
-			wantStdout: []string{
-				matchColor.Format("zero"),
-				"one",
-				"two",
-				matchColor.Format("four"),
-				matchColor.Format("five"),
-				"six",
-				"seven",
-				matchColor.Format("nine"),
+				WantStdout: []string{
+					matchColor.Format("zero"),
+					"one",
+					"two",
+					matchColor.Format("four"),
+					matchColor.Format("five"),
+					"six",
+					"seven",
+					matchColor.Format("nine"),
+				},
 			},
 		},
 		// -b flag
 		{
 			name: "returns lines before",
-			args: []string{"five", "-b", "3"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:    command.StringListValue("five"),
-					beforeFlag.Name(): command.IntValue(3),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"five", "-b", "3"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:    command.StringListValue("five"),
+						beforeFlag.Name(): command.IntValue(3),
+					},
 				},
-			},
-			wantStdout: []string{
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "two"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "three"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "four"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
+				WantStdout: []string{
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "two"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "three"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "four"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
+				},
 			},
 		},
 		{
 			name: "returns lines before when file is hidden",
-			args: []string{"five", "-h", "-b", "3"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:      command.StringListValue("five"),
-					beforeFlag.Name():   command.IntValue(3),
-					hideFileFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"five", "-h", "-b", "3"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:      command.StringListValue("five"),
+						beforeFlag.Name():   command.IntValue(3),
+						hideFileFlag.Name(): command.BoolValue(true),
+					},
 				},
-			},
-			wantStdout: []string{
-				"two",
-				"three",
-				"four",
-				matchColor.Format("five"),
+				WantStdout: []string{
+					"two",
+					"three",
+					"four",
+					matchColor.Format("five"),
+				},
 			},
 		},
 		{
 			name: "returns lines before with overlaps",
-			args: []string{"^....$", "-f", "numbered.txt", "-b", "2"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:    command.StringListValue("^....$"),
-					beforeFlag.Name(): command.IntValue(2),
-					fileArg.Name():    command.StringValue("numbered.txt"),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^....$", "-f", "numbered.txt", "-b", "2"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:    command.StringListValue("^....$"),
+						beforeFlag.Name(): command.IntValue(2),
+						fileArg.Name():    command.StringValue("numbered.txt"),
+					},
 				},
-			},
-			wantStdout: []string{
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("zero")),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "two"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "three"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("four")),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "eight"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("nine")),
+				WantStdout: []string{
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("zero")),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "two"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "three"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("four")),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "eight"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("nine")),
+				},
 			},
 		},
 		{
 			name: "returns lines before with overlaps when file is hidden",
-			args: []string{"^....$", "-f", "numbered.txt", "-h", "-b", "2"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:      command.StringListValue("^....$"),
-					beforeFlag.Name():   command.IntValue(2),
-					fileArg.Name():      command.StringValue("numbered.txt"),
-					hideFileFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^....$", "-f", "numbered.txt", "-h", "-b", "2"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:      command.StringListValue("^....$"),
+						beforeFlag.Name():   command.IntValue(2),
+						fileArg.Name():      command.StringValue("numbered.txt"),
+						hideFileFlag.Name(): command.BoolValue(true),
+					},
 				},
-			},
-			wantStdout: []string{
-				matchColor.Format("zero"),
-				"two",
-				"three",
-				matchColor.Format("four"),
-				matchColor.Format("five"),
-				"seven",
-				"eight",
-				matchColor.Format("nine"),
+				WantStdout: []string{
+					matchColor.Format("zero"),
+					"two",
+					"three",
+					matchColor.Format("four"),
+					matchColor.Format("five"),
+					"seven",
+					"eight",
+					matchColor.Format("nine"),
+				},
 			},
 		},
 		// -a and -b together
 		{
 			name: "after and before line flags work together",
-			args: []string{"^...$", "-f", "numbered.txt", "-a", "2", "-b", "3"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:    command.StringListValue("^...$"),
-					beforeFlag.Name(): command.IntValue(3),
-					afterFlag.Name():  command.IntValue(2),
-					fileArg.Name():    command.StringValue("numbered.txt"),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^...$", "-f", "numbered.txt", "-a", "2", "-b", "3"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:    command.StringListValue("^...$"),
+						beforeFlag.Name(): command.IntValue(3),
+						afterFlag.Name():  command.IntValue(2),
+						fileArg.Name():    command.StringValue("numbered.txt"),
+					},
 				},
-			},
-			wantStdout: []string{
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "zero"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("one")),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("two")),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "three"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "four"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "five"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("six")),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
-				fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "eight"),
+				WantStdout: []string{
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "zero"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("one")),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("two")),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "three"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "four"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "five"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("six")),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
+					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "eight"),
+				},
 			},
 		},
 		{
 			name: "after and before line flags work together when file is hidden",
-			args: []string{"^...$", "-f", "numbered.txt", "-h", "-a", "2", "-b", "3"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:      command.StringListValue("^...$"),
-					beforeFlag.Name():   command.IntValue(3),
-					afterFlag.Name():    command.IntValue(2),
-					fileArg.Name():      command.StringValue("numbered.txt"),
-					hideFileFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^...$", "-f", "numbered.txt", "-h", "-a", "2", "-b", "3"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:      command.StringListValue("^...$"),
+						beforeFlag.Name():   command.IntValue(3),
+						afterFlag.Name():    command.IntValue(2),
+						fileArg.Name():      command.StringValue("numbered.txt"),
+						hideFileFlag.Name(): command.BoolValue(true),
+					},
 				},
-			},
-			wantStdout: []string{
-				"zero",
-				matchColor.Format("one"),
-				matchColor.Format("two"),
-				"three",
-				"four",
-				"five",
-				matchColor.Format("six"),
-				"seven",
-				"eight",
+				WantStdout: []string{
+					"zero",
+					matchColor.Format("one"),
+					matchColor.Format("two"),
+					"three",
+					"four",
+					"five",
+					matchColor.Format("six"),
+					"seven",
+					"eight",
+				},
 			},
 		},
 		// Directory flag (-d).
 		{
 			name: "fails if unknown directory flag",
-			args: []string{"un", "-d", "dev-null"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue("un"),
-					dirFlag.Name(): command.StringValue("dev-null"),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"un", "-d", "dev-null"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName: command.StringListValue("un"),
+						dirFlag.Name(): command.StringValue("dev-null"),
+					},
 				},
+				WantStderr: []string{
+					`unknown alias: "dev-null"`,
+				},
+				WantErr: fmt.Errorf(`unknown alias: "dev-null"`),
 			},
-			wantStderr: []string{
-				`unknown alias: "dev-null"`,
-			},
-			wantErr: fmt.Errorf(`unknown alias: "dev-null"`),
 		},
 		{
 			name: "searches in aliased directory instead",
 			aliases: map[string]string{
 				"ooo": "testing/other",
 			},
-			args: []string{"alpha", "-d", "ooo"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue("alpha"),
-					dirFlag.Name(): command.StringValue("ooo"),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"alpha", "-d", "ooo"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName: command.StringListValue("alpha"),
+						dirFlag.Name(): command.StringValue("ooo"),
+					},
 				},
-			},
-			wantStdout: []string{
-				fmt.Sprintf("%s:%s zero", fileColor.Format(filepath.Join("testing", "other", "other.txt")), matchColor.Format("alpha")),
+				WantStdout: []string{
+					fmt.Sprintf("%s:%s zero", fileColor.Format(filepath.Join("testing", "other", "other.txt")), matchColor.Format("alpha")),
+				},
 			},
 		},
 	} {
@@ -535,11 +583,11 @@ func TestRecursive(t *testing.T) {
 					DirectoryAliases: test.aliases,
 				},
 			}
-			command.ExecuteTest(t, r.Node(), test.args, test.wantErr, test.want, test.wantData, test.wantStdout, test.wantStderr)
-			//commandtest.Execute(t, r.Node(), &command.WorldState{RawValues: test.args}, test.want, test.wantStdout, test.wantStderr)
+			test.etc.Node = r.Node()
+			command.ExecuteTest(t, test.etc, nil)
 
 			if r.Changed() {
-				t.Fatalf("Recursive: Execute(%v, %v) marked Changed as true; want false", r, test.args)
+				t.Fatalf("Recursive: Execute(%v, %v) marked Changed as true; want false", r, test.etc.Args)
 			}
 		})
 	}

@@ -17,7 +17,7 @@ func TestHistoryLoad(t *testing.T) {
 		name    string
 		json    string
 		want    *Grep
-		wantErr string
+		WantErr string
 	}{
 		{
 			name: "handles empty string",
@@ -28,7 +28,7 @@ func TestHistoryLoad(t *testing.T) {
 		{
 			name:    "handles invalid json",
 			json:    "}}",
-			wantErr: "failed to unmarshal json for history grep object: invalid character",
+			WantErr: "failed to unmarshal json for history grep object: invalid character",
 			want: &Grep{
 				inputSource: &history{},
 			},
@@ -44,14 +44,14 @@ func TestHistoryLoad(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			d := HistoryCLI()
 			err := d.Load(test.json)
-			if test.wantErr == "" && err != nil {
+			if test.WantErr == "" && err != nil {
 				t.Errorf("Load(%s) returned error %v; want nil", test.json, err)
 			}
-			if test.wantErr != "" && err == nil {
-				t.Errorf("Load(%s) returned nil; want err %q", test.json, test.wantErr)
+			if test.WantErr != "" && err == nil {
+				t.Errorf("Load(%s) returned nil; want err %q", test.json, test.WantErr)
 			}
-			if test.wantErr != "" && err != nil && !strings.Contains(err.Error(), test.wantErr) {
-				t.Errorf("Load(%s) returned err %q; want %q", test.json, err.Error(), test.wantErr)
+			if test.WantErr != "" && err != nil && !strings.Contains(err.Error(), test.WantErr) {
+				t.Errorf("Load(%s) returned err %q; want %q", test.json, err.Error(), test.WantErr)
 			}
 
 			opts := []cmp.Option{
@@ -67,16 +67,10 @@ func TestHistoryLoad(t *testing.T) {
 
 func TestHistory(t *testing.T) {
 	for _, test := range []struct {
-		name       string
-		args       []string
-		history    []string
-		osOpenErr  error
-		want       *command.ExecuteData
-		wantData   *command.Data
-		wantName   string
-		wantStdout []string
-		wantStderr []string
-		wantErr    error
+		name      string
+		history   []string
+		osOpenErr error
+		etc       *command.ExecuteTestCase
 	}{
 		{
 			name: "returns history",
@@ -85,62 +79,66 @@ func TestHistory(t *testing.T) {
 				"beta",
 				"delta",
 			},
-			wantName: "history.txt",
-			wantStdout: []string{
-				"alpha",
-				"beta",
-				"delta",
+			etc: &command.ExecuteTestCase{
+				WantStdout: []string{
+					"alpha",
+					"beta",
+					"delta",
+				},
 			},
 		},
 		{
 			name: "filters history",
-			args: []string{"^.e"},
 			history: []string{
 				"alpha",
 				"beta",
 				"delta",
 			},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName: command.StringListValue("^.e"),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^.e"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName: command.StringListValue("^.e"),
+					},
 				},
-			},
-			wantName: "in/some/path/history.txt",
-			wantStdout: []string{
-				fmt.Sprintf("%s%s", matchColor.Format("be"), "ta"),
-				fmt.Sprintf("%s%s", matchColor.Format("de"), "lta"),
+				WantStdout: []string{
+					fmt.Sprintf("%s%s", matchColor.Format("be"), "ta"),
+					fmt.Sprintf("%s%s", matchColor.Format("de"), "lta"),
+				},
 			},
 		},
 		{
 			name: "filters history ignoring case",
-			args: []string{"^.*a$", "-i"},
 			history: []string{
 				"alphA",
 				"beta",
 				"deltA",
 				"zero",
 			},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:  command.StringListValue("^.*a$"),
-					caseFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^.*a$", "-i"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:  command.StringListValue("^.*a$"),
+						caseFlag.Name(): command.BoolValue(true),
+					},
 				},
-			},
-			wantName: "in/some/path/history.txt",
-			wantStdout: []string{
-				matchColor.Format("alphA"),
-				matchColor.Format("beta"),
-				matchColor.Format("deltA"),
+				WantStdout: []string{
+					matchColor.Format("alphA"),
+					matchColor.Format("beta"),
+					matchColor.Format("deltA"),
+				},
 			},
 		},
 		{
 			name:      "errors on os.Open error",
 			osOpenErr: fmt.Errorf("darn"),
-			wantStderr: []string{
-				"failed to open setup output file: darn",
+			etc: &command.ExecuteTestCase{
+				WantStderr: []string{
+					"failed to open setup output file: darn",
+				},
+				WantErr: fmt.Errorf("failed to open setup output file: darn"),
 			},
-			wantErr:  fmt.Errorf("failed to open setup output file: darn"),
-			wantName: "history.txt",
 		},
 		{
 			name: "works with match only",
@@ -149,16 +147,18 @@ func TestHistory(t *testing.T) {
 				"asdTfghjTkl",
 				"TxcvbnmT",
 			},
-			args: []string{"T.*T", "-o"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:       command.StringListValue("T.*T"),
-					matchOnlyFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"T.*T", "-o"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:       command.StringListValue("T.*T"),
+						matchOnlyFlag.Name(): command.BoolValue(true),
+					},
 				},
-			},
-			wantStdout: []string{
-				"TfghjT",
-				"TxcvbnmT",
+				WantStdout: []string{
+					"TfghjT",
+					"TxcvbnmT",
+				},
 			},
 		},
 		{
@@ -168,16 +168,18 @@ func TestHistory(t *testing.T) {
 				"aSdTfghSjTkl",
 				"TxScvbSnmT",
 			},
-			args: []string{"T.*T", "S.*S", "-o"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:       command.StringListValue("T.*T", "S.*S"),
-					matchOnlyFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"T.*T", "S.*S", "-o"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:       command.StringListValue("T.*T", "S.*S"),
+						matchOnlyFlag.Name(): command.BoolValue(true),
+					},
 				},
-			},
-			wantStdout: []string{
-				"SdTfghSjT",
-				"TxScvbSnmT",
+				WantStdout: []string{
+					"SdTfghSjT",
+					"TxScvbSnmT",
+				},
 			},
 		},
 		{
@@ -187,18 +189,21 @@ func TestHistory(t *testing.T) {
 				"SaSdfTghjTkl",
 				"TzTxcvbSnmS",
 			},
-			args: []string{"T.*T", "S.*S", "-o"},
-			wantData: &command.Data{
-				Values: map[string]*command.Value{
-					patternArgName:       command.StringListValue("T.*T", "S.*S"),
-					matchOnlyFlag.Name(): command.BoolValue(true),
+			etc: &command.ExecuteTestCase{
+				Args: []string{"T.*T", "S.*S", "-o"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						patternArgName:       command.StringListValue("T.*T", "S.*S"),
+						matchOnlyFlag.Name(): command.BoolValue(true),
+					},
+				},
+				WantStdout: []string{
+					"SaS...TghjT",
+					"TzT...SnmS",
 				},
 			},
-			wantStdout: []string{
-				"SaS...TghjT",
-				"TzT...SnmS",
-			},
 		},
+		/* Useful for commenting out tests. */
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			// Stub os.Open if necessary
@@ -211,18 +216,19 @@ func TestHistory(t *testing.T) {
 			// Run test
 			h := HistoryCLI()
 			setupFile := fakeSetup(t, test.history)
-			wd := test.wantData
-			if test.wantData == nil {
-				wd = &command.Data{
+			// TODO: add this setup to commandtest.go
+			if test.etc.WantData == nil {
+				test.etc.WantData = &command.Data{
 					Values: map[string]*command.Value{},
 				}
 			}
-			wd.Values[command.SetupArgName] = command.StringValue(setupFile)
-			test.args = append([]string{setupFile}, test.args...)
-			command.ExecuteTest(t, command.SerialNodesTo(h.Node(), command.SetupArg), test.args, test.wantErr, test.want, wd, test.wantStdout, test.wantStderr)
+			test.etc.WantData.Values[command.SetupArgName] = command.StringValue(setupFile)
+			test.etc.Args = append([]string{setupFile}, test.etc.Args...)
+			test.etc.Node = command.SerialNodesTo(h.Node(), command.SetupArg)
+			command.ExecuteTest(t, test.etc, nil)
 
 			if h.Changed() {
-				t.Fatalf("History: Execute(%v, %v) marked Changed as true; want false", h, test.args)
+				t.Fatalf("History: Execute(%v, %v) marked Changed as true; want false", h, test.etc.Args)
 			}
 		})
 	}
