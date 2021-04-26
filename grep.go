@@ -107,6 +107,7 @@ type inputSource interface {
 	Name() string
 	Process(command.Output, *command.Data, filterFuncs) error
 	Flags() []command.Flag
+	PreProcessors() []command.Processor
 	Setup() []string
 	Changed() bool
 	Load(string) error
@@ -185,9 +186,13 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 func (g *Grep) Node() *command.Node {
 	flags := append(g.inputSource.Flags(), caseFlag, invertFlag, matchOnlyFlag)
 	flagNode := command.NewFlagNode(flags...)
+
 	return command.SerialNodes(
 		flagNode,
-		patternArg,
-		command.ExecutorNode(g.Execute),
+		append(
+			g.inputSource.PreProcessors(),
+			patternArg,
+			command.ExecutorNode(g.Execute),
+		)...,
 	)
 }

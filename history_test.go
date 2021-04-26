@@ -3,7 +3,6 @@ package grep
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -215,38 +214,14 @@ func TestHistory(t *testing.T) {
 
 			// Run test
 			h := HistoryCLI()
-			setupFile := fakeSetup(t, test.history)
-			// TODO: add this setup to commandtest.go
-			if test.etc.WantData == nil {
-				test.etc.WantData = &command.Data{
-					Values: map[string]*command.Value{},
-				}
-			}
-			test.etc.WantData.Values[command.SetupArgName] = command.StringValue(setupFile)
-			test.etc.Args = append([]string{setupFile}, test.etc.Args...)
-			test.etc.Node = command.SerialNodesTo(h.Node(), command.SetupArg)
-			command.ExecuteTest(t, test.etc, nil)
+			test.etc.Node = h.Node()
+			command.ExecuteTest(t, test.etc, &command.ExecuteTestOptions{RequiresSetup: true, SetupContents: test.history})
 
 			if h.Changed() {
 				t.Fatalf("History: Execute(%v, %v) marked Changed as true; want false", h, test.etc.Args)
 			}
 		})
 	}
-}
-
-// TODO: move this to command package (or create commandtest and put it there).
-// TODO: actually make "setup" a field in command.TestObject and just
-// do stuff automatically there.
-func fakeSetup(t *testing.T, contents []string) string {
-	f, err := ioutil.TempFile("", "command_test_setup")
-	if err != nil {
-		t.Fatalf("ioutil.TempFile('', 'command_test_setup') returned error: %v", err)
-	}
-	defer f.Close()
-	for _, s := range contents {
-		fmt.Fprintln(f, s)
-	}
-	return f.Name()
 }
 
 func TestHistoryMetadata(t *testing.T) {

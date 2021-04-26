@@ -17,10 +17,11 @@ func FilenameCLI() *Grep {
 
 type filename struct{}
 
-func (*filename) Name() string          { return "fp" }
-func (*filename) Changed() bool         { return false }
-func (*filename) Setup() []string       { return nil }
-func (*filename) Flags() []command.Flag { return nil }
+func (*filename) Name() string                       { return "fp" }
+func (*filename) Changed() bool                      { return false }
+func (*filename) Setup() []string                    { return nil }
+func (*filename) Flags() []command.Flag              { return nil }
+func (*filename) PreProcessors() []command.Processor { return nil }
 
 func (f *filename) Load(jsn string) error {
 	if jsn == "" {

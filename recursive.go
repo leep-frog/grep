@@ -61,6 +61,7 @@ func (*recursive) Flags() []command.Flag {
 		dirFlag,
 	}
 }
+func (*recursive) PreProcessors() []command.Processor { return nil }
 
 func (r *recursive) Load(jsn string) error {
 	if jsn == "" {
