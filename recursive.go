@@ -30,7 +30,13 @@ var (
 	// Show the matched line and the `n` lines after it.
 	afterFlag = command.IntFlag("after", 'a', nil)
 	// Directory flag to search through an aliased directory instead of pwd.
-	dirFlag = command.StringFlag("directory", 'd', nil /*todo completor*/)
+	dirFlag = command.StringFlag("directory", 'd', &command.ArgOpt{
+		Completor: &command.Completor{
+			SuggestionFetcher: &command.FileFetcher{
+				IgnoreFiles: true,
+			},
+		},
+	})
 
 	fileColor = &color.Format{
 		Color: color.Cyan,
