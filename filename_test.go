@@ -173,10 +173,7 @@ func TestFilename(t *testing.T) {
 			f := FilenameCLI()
 			test.etc.Node = f.Node()
 			command.ExecuteTest(t, test.etc, nil)
-
-			if f.Changed() {
-				t.Fatalf("Filename: Execute(%v, %v) marked Changed as true; want false", f, test.etc.Args)
-			}
+			command.ChangeTest(t, nil, f)
 		})
 	}
 }

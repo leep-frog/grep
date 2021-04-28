@@ -216,10 +216,7 @@ func TestHistory(t *testing.T) {
 			h := HistoryCLI()
 			test.etc.Node = h.Node()
 			command.ExecuteTest(t, test.etc, &command.ExecuteTestOptions{RequiresSetup: true, SetupContents: test.history})
-
-			if h.Changed() {
-				t.Fatalf("History: Execute(%v, %v) marked Changed as true; want false", h, test.etc.Args)
-			}
+			command.ChangeTest(t, nil, h)
 		})
 	}
 }

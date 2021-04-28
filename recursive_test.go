@@ -585,10 +585,7 @@ func TestRecursive(t *testing.T) {
 			}
 			test.etc.Node = r.Node()
 			command.ExecuteTest(t, test.etc, nil)
-
-			if r.Changed() {
-				t.Fatalf("Recursive: Execute(%v, %v) marked Changed as true; want false", r, test.etc.Args)
-			}
+			command.ChangeTest(t, nil, r)
 		})
 	}
 }
