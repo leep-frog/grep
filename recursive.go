@@ -18,23 +18,21 @@ var (
 	osOpen   func(s string) (io.Reader, error) = func(s string) (io.Reader, error) { return os.Open(s) }
 
 	// Only select files that match pattern.
-	fileArg = command.StringFlag("file", 'f', nil)
+	fileArg = command.StringFlag("file", 'f')
 	// Only select files that match pattern.
-	invertFileArg = command.StringFlag("invertFile", 'F', nil)
+	invertFileArg = command.StringFlag("invertFile", 'F')
 	// Don't show file names
 	hideFileFlag = command.BoolFlag("hideFile", 'h')
 	// Only show file names (hide lines).
 	fileOnlyFlag = command.BoolFlag("fileOnly", 'l')
 	// Show the matched line and the `n` lines before it.
-	beforeFlag = command.IntFlag("before", 'b', nil)
+	beforeFlag = command.IntFlag("before", 'b')
 	// Show the matched line and the `n` lines after it.
-	afterFlag = command.IntFlag("after", 'a', nil)
+	afterFlag = command.IntFlag("after", 'a')
 	// Directory flag to search through an aliased directory instead of pwd.
-	dirFlag = command.StringFlag("directory", 'd', &command.ArgOpt{
-		Completor: &command.Completor{
-			SuggestionFetcher: &command.FileFetcher{
-				IgnoreFiles: true,
-			},
+	dirFlag = command.StringFlag("directory", 'd', &command.Completor{
+		SuggestionFetcher: &command.FileFetcher{
+			IgnoreFiles: true,
 		},
 	})
 

@@ -12,9 +12,9 @@ import (
 
 var (
 	patternArgName = "pattern"
-	patternArg     = command.StringListNode(patternArgName, 0, -1, nil)
+	patternArg     = command.StringListNode(patternArgName, 0, -1)
 	caseFlag       = command.BoolFlag("ignoreCase", 'i')
-	invertFlag     = command.StringListFlag("invert", 'v', 0, command.UnboundedList, nil)
+	invertFlag     = command.StringListFlag("invert", 'v', 0, command.UnboundedList)
 	matchOnlyFlag  = command.BoolFlag("matchOnly", 'o')
 	// TODO: or pattern
 
