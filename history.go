@@ -44,7 +44,7 @@ func (*history) PreProcessors() []command.Processor {
 }
 
 func (*history) Process(output command.Output, data *command.Data, ffs filterFuncs) error {
-	f, err := osOpen(data.Values[command.SetupArgName].String())
+	f, err := osOpen(data.String(command.SetupArgName))
 	if err != nil {
 		return output.Stderr("failed to open setup output file: %v", err)
 	}

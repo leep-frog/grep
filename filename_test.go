@@ -100,9 +100,7 @@ func TestFilename(t *testing.T) {
 				},
 				WantErr: fmt.Errorf("invalid regex: error parsing regexp: unexpected ): `:)`"),
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						patternArgName: command.StringListValue(":)"),
-					},
+					patternArgName: command.StringListValue(":)"),
 				},
 			},
 		},
@@ -117,9 +115,7 @@ func TestFilename(t *testing.T) {
 					filepath.Join("testing", matchColor.Format("this.txt")),
 				},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						patternArgName: command.StringListValue(".*.txt"),
-					},
+					patternArgName: command.StringListValue(".*.txt"),
 				},
 			},
 		},
@@ -137,9 +133,7 @@ func TestFilename(t *testing.T) {
 					filepath.Join("testing", "this.txt"),
 				},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"invert": command.StringListValue(".*.go"),
-					},
+					"invert": command.StringListValue(".*.go"),
 				},
 			},
 		},
@@ -152,9 +146,7 @@ func TestFilename(t *testing.T) {
 				},
 				WantErr: fmt.Errorf("invalid invert regex: error parsing regexp: unexpected ): `:)`"),
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"invert": command.StringListValue(":)"),
-					},
+					"invert": command.StringListValue(":)"),
 				},
 			},
 		},

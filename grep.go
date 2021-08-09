@@ -65,7 +65,7 @@ func disjointMatches(ms []*match) []*match {
 }
 
 func (ffs filterFuncs) Apply(s string, data *command.Data) (string, bool) {
-	matchOnly := data.Values[matchOnlyFlag.Name()].Bool()
+	matchOnly := data.Bool(matchOnlyFlag.Name())
 	otherString := s
 
 	var matches []*match
@@ -158,10 +158,10 @@ func (g *Grep) Complete(*command.Input, *command.Data) *command.CompleteData {
 }
 
 func (g *Grep) Execute(output command.Output, data *command.Data) error {
-	ignoreCase := data.Values[caseFlag.Name()].Bool()
+	ignoreCase := data.Bool(caseFlag.Name())
 
 	var ffs filterFuncs //[]func(string) (*formatter, bool)
-	for _, pattern := range data.Values[patternArgName].StringList() {
+	for _, pattern := range data.StringList(patternArgName) {
 		if ignoreCase {
 			pattern = fmt.Sprintf("(?i)%s", pattern)
 		}
@@ -172,7 +172,7 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 		ffs = append(ffs, colorMatch(r))
 	}
 
-	for _, pattern := range data.Values[invertFlag.Name()].StringList() {
+	for _, pattern := range data.StringList(invertFlag.Name()) {
 		r, err := regexp.Compile(pattern)
 		if err != nil {
 			return output.Stderr("invalid invert regex: %v", err)

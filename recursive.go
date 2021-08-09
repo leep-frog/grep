@@ -86,31 +86,35 @@ func (r *recursive) Changed() bool {
 }
 
 func (r *recursive) Process(output command.Output, data *command.Data, ffs filterFuncs) error {
-	linesBefore := data.Values[beforeFlag.Name()].Int()
-	linesAfter := data.Values[afterFlag.Name()].Int()
+	linesBefore := data.Int(beforeFlag.Name())
+	linesAfter := data.Int(afterFlag.Name())
 
 	var fr *regexp.Regexp
-	if f := data.Values[fileArg.Name()]; f.Provided() {
+
+	if data.HasArg(fileArg.Name()) {
+		f := data.String(fileArg.Name())
 		var err error
-		if fr, err = regexp.Compile(f.String()); err != nil {
+		if fr, err = regexp.Compile(f); err != nil {
 			return output.Stderr("invalid filename regex: %v", err)
 		}
 	}
 
 	var ifr *regexp.Regexp
-	if f := data.Values[invertFileArg.Name()]; f.Provided() {
+	if data.HasArg(invertFileArg.Name()) {
+		f := data.String(invertFileArg.Name())
 		var err error
-		if ifr, err = regexp.Compile(f.String()); err != nil {
+		if ifr, err = regexp.Compile(f); err != nil {
 			return output.Stderr("invalid invert filename regex: %v", err)
 		}
 	}
 
 	dir := startDir
-	if da := data.Values[dirFlag.Name()]; da.Provided() {
+	if data.HasArg(dirFlag.Name()) {
+		da := data.String(dirFlag.Name())
 		var ok bool
-		dir, ok = r.DirectoryAliases[da.String()]
+		dir, ok = r.DirectoryAliases[da]
 		if !ok {
-			return output.Stderr("unknown alias: %q", da.String())
+			return output.Stderr("unknown alias: %q", da)
 		}
 	}
 
@@ -159,12 +163,12 @@ func (r *recursive) Process(output command.Output, data *command.Data, ffs filte
 			}
 
 			formattedPath := fileColor.Format(path)
-			if data.Values[fileOnlyFlag.Name()].Bool() {
+			if data.Bool(fileOnlyFlag.Name()) {
 				output.Stdout(formattedPath)
 				break
 			}
 
-			if data.Values[hideFileFlag.Name()].Bool() {
+			if data.Bool(hideFileFlag.Name()) {
 				for list.length > 0 {
 					output.Stdout(list.pop())
 				}

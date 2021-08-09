@@ -96,9 +96,7 @@ func TestHistory(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^.e"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						patternArgName: command.StringListValue("^.e"),
-					},
+					patternArgName: command.StringListValue("^.e"),
 				},
 				WantStdout: []string{
 					fmt.Sprintf("%s%s", matchColor.Format("be"), "ta"),
@@ -117,10 +115,8 @@ func TestHistory(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^.*a$", "-i"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						patternArgName:  command.StringListValue("^.*a$"),
-						caseFlag.Name(): command.BoolValue(true),
-					},
+					patternArgName:  command.StringListValue("^.*a$"),
+					caseFlag.Name(): command.BoolValue(true),
 				},
 				WantStdout: []string{
 					matchColor.Format("alphA"),
@@ -149,10 +145,8 @@ func TestHistory(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"T.*T", "-o"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						patternArgName:       command.StringListValue("T.*T"),
-						matchOnlyFlag.Name(): command.BoolValue(true),
-					},
+					patternArgName:       command.StringListValue("T.*T"),
+					matchOnlyFlag.Name(): command.BoolValue(true),
 				},
 				WantStdout: []string{
 					"TfghjT",
@@ -170,10 +164,8 @@ func TestHistory(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"T.*T", "S.*S", "-o"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						patternArgName:       command.StringListValue("T.*T", "S.*S"),
-						matchOnlyFlag.Name(): command.BoolValue(true),
-					},
+					patternArgName:       command.StringListValue("T.*T", "S.*S"),
+					matchOnlyFlag.Name(): command.BoolValue(true),
 				},
 				WantStdout: []string{
 					"SdTfghSjT",
@@ -191,10 +183,8 @@ func TestHistory(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"T.*T", "S.*S", "-o"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						patternArgName:       command.StringListValue("T.*T", "S.*S"),
-						matchOnlyFlag.Name(): command.BoolValue(true),
-					},
+					patternArgName:       command.StringListValue("T.*T", "S.*S"),
+					matchOnlyFlag.Name(): command.BoolValue(true),
 				},
 				WantStdout: []string{
 					"SaS...TghjT",
