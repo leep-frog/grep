@@ -510,6 +510,7 @@ func TestRecursive(t *testing.T) {
 				},
 			},
 		},
+		/* Useful for commenting out tests. */
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			// Change starting directory

@@ -84,9 +84,6 @@ func (r *recursive) Changed() bool {
 }
 
 func (r *recursive) Process(output command.Output, data *command.Data, ffs filterFuncs) error {
-	linesBefore := data.Int(beforeFlag.Name())
-	linesAfter := data.Int(afterFlag.Name())
-
 	var fr *regexp.Regexp
 
 	if data.HasArg(fileArg.Name()) {
@@ -141,25 +138,9 @@ func (r *recursive) Process(output command.Output, data *command.Data, ffs filte
 			return output.Stderr("failed to open file %q: %v", path, err)
 		}
 
-		list := &linkedList{}
-		linesSinceMatch := linesAfter
 		scanner := bufio.NewScanner(f)
-		for scanner.Scan() {
-			formattedString, ok := ffs.Apply(scanner.Text(), data)
-			if !ok {
-				linesSinceMatch++
-				if linesSinceMatch > linesAfter {
-					list.pushBack(scanner.Text())
-					if list.length > linesBefore {
-						list.pop()
-					}
-					continue
-				}
-				formattedString = scanner.Text()
-			} else {
-				linesSinceMatch = 0
-			}
-
+		list := newLinkedList(ffs, data, scanner)
+		for formattedString, ok := list.getNext(); ok; formattedString, ok = list.getNext() {
 			formattedPath := fileColor.Format(path)
 			if data.Bool(fileOnlyFlag.Name()) {
 				output.Stdout(formattedPath)
@@ -167,14 +148,8 @@ func (r *recursive) Process(output command.Output, data *command.Data, ffs filte
 			}
 
 			if data.Bool(hideFileFlag.Name()) {
-				for list.length > 0 {
-					output.Stdout(list.pop())
-				}
 				output.Stdout(formattedString)
 			} else {
-				for list.length > 0 {
-					output.Stdout("%s:%s", formattedPath, list.pop())
-				}
 				output.Stdout("%s:%s", formattedPath, formattedString)
 			}
 		}
@@ -192,6 +167,73 @@ type linkedList struct {
 	front  *element
 	back   *element
 	length int
+
+	before int
+	after  int
+	ffs    filterFuncs
+
+	data *command.Data
+
+	// lastMatch contains how many lines ago a match was found.
+	lastMatch int
+	scanner   *bufio.Scanner
+
+	clearBefores bool
+}
+
+func newLinkedList(ffs filterFuncs, data *command.Data, scanner *bufio.Scanner) *linkedList {
+	return &linkedList{
+		before:  data.Int(beforeFlag.Name()),
+		after:   data.Int(afterFlag.Name()),
+		ffs:     ffs,
+		scanner: scanner,
+
+		data: data,
+
+		lastMatch: data.Int(afterFlag.Name()),
+	}
+}
+
+func (ll *linkedList) getNext() (string, bool) {
+	for {
+		// If we have lines to print, then just return the lines.
+		if ll.clearBefores {
+			if ll.length > 0 {
+				return ll.pop(), true
+			}
+			ll.clearBefores = false
+		}
+
+		// Otherwise, look for lines to return.
+		if !ll.scanner.Scan() {
+			return "", false
+		}
+		s := ll.scanner.Text()
+
+		// If we got a match, then update lastMatch and print this line and any previous ones.
+		if formattedString, ok := ll.ffs.Apply(s, ll.data); ok {
+			ll.lastMatch = 0
+			ll.pushBack(formattedString)
+			ll.clearBefores = true
+			continue
+		}
+
+		// Otherwise, increment lastMatch.
+		ll.lastMatch++
+
+		// If we are still in the "after" window from our last match,
+		// then we want to print out this line.
+		if ll.lastMatch <= ll.after {
+			return s, true
+		}
+
+		// Otherwise, we store the string in our behind list incase
+		// we get a match later.
+		ll.pushBack(s)
+		if ll.length > ll.before {
+			ll.pop()
+		}
+	}
 }
 
 func (ll *linkedList) pushBack(s string) {
