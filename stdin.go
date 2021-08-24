@@ -47,7 +47,7 @@ func (s *stdin) Load(jsn string) error {
 
 func (si *stdin) Process(output command.Output, data *command.Data, ffs filterFuncs) error {
 	list := newLinkedList(ffs, data, si.scanner)
-	for formattedString, ok := list.getNext(); ok; formattedString, ok = list.getNext() {
+	for formattedString, _, ok := list.getNext(); ok; formattedString, _, ok = list.getNext() {
 		output.Stdout(formattedString)
 	}
 

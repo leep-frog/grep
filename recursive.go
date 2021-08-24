@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/leep-frog/command"
 	"github.com/leep-frog/command/color"
@@ -35,11 +37,21 @@ var (
 			IgnoreFiles: true,
 		},
 	})
+	// Don't include the line number in the output.
+	hideLineFlag = command.BoolFlag("hideLines", 'n')
 
 	fileColor = &color.Format{
 		Color: color.Cyan,
 	}
+
+	lineColor = &color.Format{
+		Color: color.Purple,
+	}
 )
+
+func colorLine(n int) string {
+	return lineColor.Format(strconv.Itoa(n))
+}
 
 func RecursiveCLI() *Grep {
 	return &Grep{
@@ -63,6 +75,7 @@ func (*recursive) Flags() []command.Flag {
 		beforeFlag,
 		afterFlag,
 		dirFlag,
+		hideLineFlag,
 	}
 }
 func (*recursive) PreProcessors() []command.Processor { return nil }
@@ -140,18 +153,22 @@ func (r *recursive) Process(output command.Output, data *command.Data, ffs filte
 
 		scanner := bufio.NewScanner(f)
 		list := newLinkedList(ffs, data, scanner)
-		for formattedString, ok := list.getNext(); ok; formattedString, ok = list.getNext() {
+		for formattedString, line, ok := list.getNext(); ok; formattedString, line, ok = list.getNext() {
 			formattedPath := fileColor.Format(path)
 			if data.Bool(fileOnlyFlag.Name()) {
 				output.Stdout(formattedPath)
 				break
 			}
 
-			if data.Bool(hideFileFlag.Name()) {
-				output.Stdout(formattedString)
-			} else {
-				output.Stdout("%s:%s", formattedPath, formattedString)
+			var parts []string
+			if !data.Bool(hideFileFlag.Name()) {
+				parts = append(parts, formattedPath)
 			}
+			if !data.Bool(hideLineFlag.Name()) {
+				parts = append(parts, colorLine(line))
+			}
+			parts = append(parts, formattedString)
+			output.Stdout(strings.Join(parts, ":"))
 		}
 
 		return nil
@@ -160,6 +177,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, ffs filte
 
 type element struct {
 	value string
+	n     int
 	next  *element
 }
 
@@ -167,6 +185,8 @@ type linkedList struct {
 	front  *element
 	back   *element
 	length int
+
+	lineCount int
 
 	before int
 	after  int
@@ -194,26 +214,28 @@ func newLinkedList(ffs filterFuncs, data *command.Data, scanner *bufio.Scanner) 
 	}
 }
 
-func (ll *linkedList) getNext() (string, bool) {
+func (ll *linkedList) getNext() (string, int, bool) {
 	for {
 		// If we have lines to print, then just return the lines.
 		if ll.clearBefores {
 			if ll.length > 0 {
-				return ll.pop(), true
+				s, i := ll.pop()
+				return s, i, true
 			}
 			ll.clearBefores = false
 		}
 
 		// Otherwise, look for lines to return.
+		ll.lineCount++
 		if !ll.scanner.Scan() {
-			return "", false
+			return "", 0, false
 		}
 		s := ll.scanner.Text()
 
 		// If we got a match, then update lastMatch and print this line and any previous ones.
 		if formattedString, ok := ll.ffs.Apply(s, ll.data); ok {
 			ll.lastMatch = 0
-			ll.pushBack(formattedString)
+			ll.pushBack(formattedString, ll.lineCount)
 			ll.clearBefores = true
 			continue
 		}
@@ -224,21 +246,22 @@ func (ll *linkedList) getNext() (string, bool) {
 		// If we are still in the "after" window from our last match,
 		// then we want to print out this line.
 		if ll.lastMatch <= ll.after {
-			return s, true
+			return s, ll.lineCount, true
 		}
 
 		// Otherwise, we store the string in our behind list incase
 		// we get a match later.
-		ll.pushBack(s)
+		ll.pushBack(s, ll.lineCount)
 		if ll.length > ll.before {
 			ll.pop()
 		}
 	}
 }
 
-func (ll *linkedList) pushBack(s string) {
+func (ll *linkedList) pushBack(s string, i int) {
 	newEl := &element{
 		value: s,
+		n:     i,
 	}
 	if ll.length == 0 {
 		ll.front = newEl
@@ -250,8 +273,9 @@ func (ll *linkedList) pushBack(s string) {
 	ll.length++
 }
 
-func (ll *linkedList) pop() string {
+func (ll *linkedList) pop() (string, int) {
 	r := ll.front.value
+	i := ll.front.n
 	if ll.length == 1 {
 		ll.front = nil
 		ll.back = nil
@@ -259,5 +283,5 @@ func (ll *linkedList) pop() string {
 		ll.front = ll.front.next
 	}
 	ll.length--
-	return r
+	return r, i
 }

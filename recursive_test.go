@@ -98,38 +98,40 @@ func TestRecursive(t *testing.T) {
 					patternArgName: command.StringListValue("^alpha"),
 				},
 				WantStdout: []string{
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " bravo delta")),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " hello there")),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "other", "other.txt")), fmt.Sprintf("%s%s", matchColor.Format("alpha"), " zero")),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "that.py")), matchColor.Format("alpha")),
+					withFile(withLine(1, fmt.Sprintf("%s%s", matchColor.Format("alpha"), " bravo delta")), "testing", "lots.txt"),
+					withFile(withLine(3, fmt.Sprintf("%s%s", matchColor.Format("alpha"), " hello there")), "testing", "lots.txt"),
+					withFile(withLine(1, fmt.Sprintf("%s%s", matchColor.Format("alpha"), " zero")), "testing", "other", "other.txt"),
+					withFile(withLine(1, matchColor.Format("alpha")), "testing", "that.py"),
 				},
 			},
 		},
 		{
 			name: "file flag filter works",
 			etc: &command.ExecuteTestCase{
-				Args: []string{"^alpha", "-f", ".*.py"},
+				Args: []string{"^alpha", "-n", "-f", ".*.py"},
 				WantData: &command.Data{
-					patternArgName: command.StringListValue("^alpha"),
-					fileArg.Name(): command.StringValue(".*.py"),
+					patternArgName:      command.StringListValue("^alpha"),
+					fileArg.Name():      command.StringValue(".*.py"),
+					hideLineFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "that.py")), matchColor.Format("alpha")),
+					withFile(matchColor.Format("alpha"), "testing", "that.py"),
 				},
 			},
 		},
 		{
 			name: "inverted file flag filter works",
 			etc: &command.ExecuteTestCase{
-				Args: []string{"^alpha", "-F", ".*.py"},
+				Args: []string{"^alpha", "-n", "-F", ".*.py"},
 				WantData: &command.Data{
 					patternArgName:       command.StringListValue("^alpha"),
 					invertFileArg.Name(): command.StringValue(".*.py"),
+					hideLineFlag.Name():  command.TrueValue(),
 				},
 				WantStdout: []string{
-					fmt.Sprintf("%s:%s %s", fileColor.Format(filepath.Join("testing", "lots.txt")), matchColor.Format("alpha"), "bravo delta"),
-					fmt.Sprintf("%s:%s %s", fileColor.Format(filepath.Join("testing", "lots.txt")), matchColor.Format("alpha"), "hello there"),
-					fmt.Sprintf("%s:%s %s", fileColor.Format(filepath.Join("testing", "other", "other.txt")), matchColor.Format("alpha"), "zero"),
+					withFile(fmt.Sprintf("%s %s", matchColor.Format("alpha"), "bravo delta"), "testing", "lots.txt"),
+					withFile(fmt.Sprintf("%s %s", matchColor.Format("alpha"), "hello there"), "testing", "lots.txt"),
+					withFile(fmt.Sprintf("%s %s", matchColor.Format("alpha"), "zero"), "testing", "other", "other.txt"),
 				},
 			},
 		},
@@ -148,10 +150,11 @@ func TestRecursive(t *testing.T) {
 		{
 			name: "hide file flag works",
 			etc: &command.ExecuteTestCase{
-				Args: []string{"pha[^e]*", "-h"},
+				Args: []string{"pha[^e]*", "-h", "-n"},
 				WantData: &command.Data{
 					patternArgName:      command.StringListValue("pha[^e]*"),
-					hideFileFlag.Name(): command.BoolValue(true),
+					hideFileFlag.Name(): command.TrueValue(),
+					hideLineFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
 					fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha bravo d"), "elta"), // testing/lots.txt
@@ -165,10 +168,11 @@ func TestRecursive(t *testing.T) {
 		{
 			name: "colors multiple matches properly",
 			etc: &command.ExecuteTestCase{
-				Args: []string{"alpha", "bravo", "-h"},
+				Args: []string{"alpha", "bravo", "-h", "-n"},
 				WantData: &command.Data{
 					patternArgName:      command.StringListValue("alpha", "bravo"),
-					hideFileFlag.Name(): command.BoolValue(true),
+					hideFileFlag.Name(): command.TrueValue(),
+					hideLineFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
 					strings.Join([]string{matchColor.Format("alpha"), matchColor.Format("bravo"), "delta"}, " "),
@@ -182,10 +186,10 @@ func TestRecursive(t *testing.T) {
 				Args: []string{"q.*t", "e.*u", "-h"},
 				WantData: &command.Data{
 					patternArgName:      command.StringListValue("q.*t", "e.*u"),
-					hideFileFlag.Name(): command.BoolValue(true),
+					hideFileFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
-					fmt.Sprintf("%s%s", matchColor.Format("qwertyu"), "iop"),
+					fmt.Sprintf("%s:%s%s", colorLine(7), matchColor.Format("qwertyu"), "iop"),
 				},
 			},
 		},
@@ -195,13 +199,13 @@ func TestRecursive(t *testing.T) {
 				Args: []string{"^alp", "-o"},
 				WantData: &command.Data{
 					patternArgName:       command.StringListValue("^alp"),
-					matchOnlyFlag.Name(): command.BoolValue(true),
+					matchOnlyFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "alp"),           // "alpha bravo delta"
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "alp"),           // "alpha bravo delta"
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "other", "other.txt")), "alp"), // "alpha zero"
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "that.py")), "alp"),            // "alpha"
+					withFile(withLine(1, "alp"), "testing", "lots.txt"),           // "alpha bravo delta"
+					withFile(withLine(3, "alp"), "testing", "lots.txt"),           // "alpha bravo delta"
+					withFile(withLine(1, "alp"), "testing", "other", "other.txt"), // "alpha zero"
+					withFile(withLine(1, "alp"), "testing", "that.py"),            // "alpha"
 				},
 			},
 		},
@@ -211,27 +215,28 @@ func TestRecursive(t *testing.T) {
 				Args: []string{"^alp", "-o", "-h"},
 				WantData: &command.Data{
 					patternArgName:       command.StringListValue("^alp"),
-					matchOnlyFlag.Name(): command.BoolValue(true),
-					hideFileFlag.Name():  command.BoolValue(true),
+					matchOnlyFlag.Name(): command.TrueValue(),
+					hideFileFlag.Name():  command.TrueValue(),
 				},
 				WantStdout: []string{
-					"alp",
-					"alp",
-					"alp",
-					"alp",
+					withLine(1, "alp"),
+					withLine(3, "alp"),
+					withLine(1, "alp"),
+					withLine(1, "alp"),
 				},
 			},
 		},
 		{
 			name: "match only flag works with overlapping",
 			etc: &command.ExecuteTestCase{
-				Args: []string{"qwerty", "rtyui", "-o"},
+				Args: []string{"qwerty", "rtyui", "-n", "-o"},
 				WantData: &command.Data{
 					patternArgName:       command.StringListValue("qwerty", "rtyui"),
-					matchOnlyFlag.Name(): command.BoolValue(true),
+					matchOnlyFlag.Name(): command.TrueValue(),
+					hideLineFlag.Name():  command.TrueValue(),
 				},
 				WantStdout: []string{
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "qwertyui"),
+					withFile("qwertyui", "testing", "lots.txt"),
 				},
 			},
 		},
@@ -241,10 +246,10 @@ func TestRecursive(t *testing.T) {
 				Args: []string{"qw", "op", "ty", "-o"},
 				WantData: &command.Data{
 					patternArgName:       command.StringListValue("qw", "op", "ty"),
-					matchOnlyFlag.Name(): command.BoolValue(true),
+					matchOnlyFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "lots.txt")), "qw...ty...op"),
+					withFile(withLine(7, "qw...ty...op"), "testing", "lots.txt"),
 				},
 			},
 		},
@@ -254,7 +259,7 @@ func TestRecursive(t *testing.T) {
 				Args: []string{"^alp", "-l"},
 				WantData: &command.Data{
 					patternArgName:      command.StringListValue("^alp"),
-					fileOnlyFlag.Name(): command.BoolValue(true),
+					fileOnlyFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
 					fileColor.Format(filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
@@ -287,21 +292,22 @@ func TestRecursive(t *testing.T) {
 					afterFlag.Name(): command.IntValue(3),
 				},
 				WantStdout: []string{
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "six"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "eight"),
+					withFile(withLine(6, matchColor.Format("five")), "testing", "numbered.txt"),
+					withFile(withLine(7, "six"), "testing", "numbered.txt"),
+					withFile(withLine(8, "seven"), "testing", "numbered.txt"),
+					withFile(withLine(9, "eight"), "testing", "numbered.txt"),
 				},
 			},
 		},
 		{
 			name: "returns lines after when file is hidden",
 			etc: &command.ExecuteTestCase{
-				Args: []string{"five", "-h", "-a", "3"},
+				Args: []string{"five", "-h", "-a", "3", "-n"},
 				WantData: &command.Data{
 					patternArgName:      command.StringListValue("five"),
 					afterFlag.Name():    command.IntValue(3),
-					hideFileFlag.Name(): command.BoolValue(true),
+					hideFileFlag.Name(): command.TrueValue(),
+					hideLineFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
 					matchColor.Format("five"),
@@ -314,33 +320,35 @@ func TestRecursive(t *testing.T) {
 		{
 			name: "resets after lines if multiple matches",
 			etc: &command.ExecuteTestCase{
-				Args: []string{"^....$", "-f", "numbered.txt", "-a", "2"},
+				Args: []string{"^....$", "-f", "numbered.txt", "-a", "2", "-n"},
 				WantData: &command.Data{
-					patternArgName:   command.StringListValue("^....$"),
-					afterFlag.Name(): command.IntValue(2),
-					fileArg.Name():   command.StringValue("numbered.txt"),
+					patternArgName:      command.StringListValue("^....$"),
+					afterFlag.Name():    command.IntValue(2),
+					fileArg.Name():      command.StringValue("numbered.txt"),
+					hideLineFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("zero")),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "one"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "two"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("four")),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "six"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("nine")),
+					withFile(matchColor.Format("zero"), "testing", "numbered.txt"),
+					withFile("one", "testing", "numbered.txt"),
+					withFile("two", "testing", "numbered.txt"),
+					withFile(matchColor.Format("four"), "testing", "numbered.txt"),
+					withFile(matchColor.Format("five"), "testing", "numbered.txt"),
+					withFile("six", "testing", "numbered.txt"),
+					withFile("seven", "testing", "numbered.txt"),
+					withFile(matchColor.Format("nine"), "testing", "numbered.txt"),
 				},
 			},
 		},
 		{
 			name: "resets after lines if multiple matches when file is hidden",
 			etc: &command.ExecuteTestCase{
-				Args: []string{"^....$", "-f", "numbered.txt", "-h", "-a", "2"},
+				Args: []string{"^....$", "-f", "numbered.txt", "-h", "-a", "2", "-n"},
 				WantData: &command.Data{
 					patternArgName:      command.StringListValue("^....$"),
 					afterFlag.Name():    command.IntValue(2),
 					fileArg.Name():      command.StringValue("numbered.txt"),
-					hideFileFlag.Name(): command.BoolValue(true),
+					hideFileFlag.Name(): command.TrueValue(),
+					hideLineFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
 					matchColor.Format("zero"),
@@ -358,16 +366,17 @@ func TestRecursive(t *testing.T) {
 		{
 			name: "returns lines before",
 			etc: &command.ExecuteTestCase{
-				Args: []string{"five", "-b", "3"},
+				Args: []string{"five", "-n", "-b", "3"},
 				WantData: &command.Data{
-					patternArgName:    command.StringListValue("five"),
-					beforeFlag.Name(): command.IntValue(3),
+					patternArgName:      command.StringListValue("five"),
+					beforeFlag.Name():   command.IntValue(3),
+					hideLineFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "two"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "three"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "four"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
+					withFile("two", "testing", "numbered.txt"),
+					withFile("three", "testing", "numbered.txt"),
+					withFile("four", "testing", "numbered.txt"),
+					withFile(matchColor.Format("five"), "testing", "numbered.txt"),
 				},
 			},
 		},
@@ -378,34 +387,35 @@ func TestRecursive(t *testing.T) {
 				WantData: &command.Data{
 					patternArgName:      command.StringListValue("five"),
 					beforeFlag.Name():   command.IntValue(3),
-					hideFileFlag.Name(): command.BoolValue(true),
+					hideFileFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
-					"two",
-					"three",
-					"four",
-					matchColor.Format("five"),
+					withLine(3, "two"),
+					withLine(4, "three"),
+					withLine(5, "four"),
+					withLine(6, matchColor.Format("five")),
 				},
 			},
 		},
 		{
 			name: "returns lines before with overlaps",
 			etc: &command.ExecuteTestCase{
-				Args: []string{"^....$", "-f", "numbered.txt", "-b", "2"},
+				Args: []string{"^....$", "-n", "-f", "numbered.txt", "-b", "2"},
 				WantData: &command.Data{
-					patternArgName:    command.StringListValue("^....$"),
-					beforeFlag.Name(): command.IntValue(2),
-					fileArg.Name():    command.StringValue("numbered.txt"),
+					patternArgName:      command.StringListValue("^....$"),
+					beforeFlag.Name():   command.IntValue(2),
+					fileArg.Name():      command.StringValue("numbered.txt"),
+					hideLineFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("zero")),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "two"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "three"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("four")),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("five")),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "eight"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("nine")),
+					withFile(matchColor.Format("zero"), "testing", "numbered.txt"),
+					withFile("two", "testing", "numbered.txt"),
+					withFile("three", "testing", "numbered.txt"),
+					withFile(matchColor.Format("four"), "testing", "numbered.txt"),
+					withFile(matchColor.Format("five"), "testing", "numbered.txt"),
+					withFile("seven", "testing", "numbered.txt"),
+					withFile("eight", "testing", "numbered.txt"),
+					withFile(matchColor.Format("nine"), "testing", "numbered.txt"),
 				},
 			},
 		},
@@ -417,17 +427,17 @@ func TestRecursive(t *testing.T) {
 					patternArgName:      command.StringListValue("^....$"),
 					beforeFlag.Name():   command.IntValue(2),
 					fileArg.Name():      command.StringValue("numbered.txt"),
-					hideFileFlag.Name(): command.BoolValue(true),
+					hideFileFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
-					matchColor.Format("zero"),
-					"two",
-					"three",
-					matchColor.Format("four"),
-					matchColor.Format("five"),
-					"seven",
-					"eight",
-					matchColor.Format("nine"),
+					withLine(1, matchColor.Format("zero")),
+					withLine(3, "two"),
+					withLine(4, "three"),
+					withLine(5, matchColor.Format("four")),
+					withLine(6, matchColor.Format("five")),
+					withLine(8, "seven"),
+					withLine(9, "eight"),
+					withLine(10, matchColor.Format("nine")),
 				},
 			},
 		},
@@ -443,15 +453,15 @@ func TestRecursive(t *testing.T) {
 					fileArg.Name():    command.StringValue("numbered.txt"),
 				},
 				WantStdout: []string{
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "zero"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("one")),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("two")),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "three"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "four"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "five"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), matchColor.Format("six")),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "seven"),
-					fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join("testing", "numbered.txt")), "eight"),
+					withFile(withLine(1, "zero"), "testing", "numbered.txt"),
+					withFile(withLine(2, matchColor.Format("one")), "testing", "numbered.txt"),
+					withFile(withLine(3, matchColor.Format("two")), "testing", "numbered.txt"),
+					withFile(withLine(4, "three"), "testing", "numbered.txt"),
+					withFile(withLine(5, "four"), "testing", "numbered.txt"),
+					withFile(withLine(6, "five"), "testing", "numbered.txt"),
+					withFile(withLine(7, matchColor.Format("six")), "testing", "numbered.txt"),
+					withFile(withLine(8, "seven"), "testing", "numbered.txt"),
+					withFile(withLine(9, "eight"), "testing", "numbered.txt"),
 				},
 			},
 		},
@@ -464,18 +474,18 @@ func TestRecursive(t *testing.T) {
 					beforeFlag.Name():   command.IntValue(3),
 					afterFlag.Name():    command.IntValue(2),
 					fileArg.Name():      command.StringValue("numbered.txt"),
-					hideFileFlag.Name(): command.BoolValue(true),
+					hideFileFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
-					"zero",
-					matchColor.Format("one"),
-					matchColor.Format("two"),
-					"three",
-					"four",
-					"five",
-					matchColor.Format("six"),
-					"seven",
-					"eight",
+					withLine(1, "zero"),
+					withLine(2, matchColor.Format("one")),
+					withLine(3, matchColor.Format("two")),
+					withLine(4, "three"),
+					withLine(5, "four"),
+					withLine(6, "five"),
+					withLine(7, matchColor.Format("six")),
+					withLine(8, "seven"),
+					withLine(9, "eight"),
 				},
 			},
 		},
@@ -506,7 +516,7 @@ func TestRecursive(t *testing.T) {
 					dirFlag.Name(): command.StringValue("ooo"),
 				},
 				WantStdout: []string{
-					fmt.Sprintf("%s:%s zero", fileColor.Format(filepath.Join("testing", "other", "other.txt")), matchColor.Format("alpha")),
+					fmt.Sprintf("%s:%s:%s zero", fileColor.Format(filepath.Join("testing", "other", "other.txt")), colorLine(1), matchColor.Format("alpha")),
 				},
 			},
 		},
@@ -552,4 +562,12 @@ func TestRecusriveMetadata(t *testing.T) {
 	if c.Setup() != nil {
 		t.Errorf("Recursive.Option() returned %v; want nil", c.Setup())
 	}
+}
+
+func withFile(s string, fileParts ...string) string {
+	return fmt.Sprintf("%s:%s", fileColor.Format(filepath.Join(fileParts...)), s)
+}
+
+func withLine(n int, s string) string {
+	return fmt.Sprintf("%s:%s", colorLine(n), s)
 }
