@@ -41,11 +41,11 @@ var (
 	hideLineFlag = command.BoolFlag("hideLines", 'n')
 
 	fileColor = &color.Format{
-		Color: color.Cyan,
+		Color: color.Yellow,
 	}
 
 	lineColor = &color.Format{
-		Color: color.Yellow,
+		Color: color.Cyan,
 	}
 )
 
