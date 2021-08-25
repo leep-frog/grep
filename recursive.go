@@ -45,7 +45,7 @@ var (
 	}
 
 	lineColor = &color.Format{
-		Color: color.Purple,
+		Color: color.Yellow,
 	}
 )
 
