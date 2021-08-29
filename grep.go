@@ -167,7 +167,7 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 		}
 		r, err := regexp.Compile(pattern)
 		if err != nil {
-			return output.Stderr("invalid regex: %v", err)
+			return output.Stderrf("invalid regex: %v", err)
 		}
 		ffs = append(ffs, colorMatch(r))
 	}
@@ -175,7 +175,7 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 	for _, pattern := range data.StringList(invertFlag.Name()) {
 		r, err := regexp.Compile(pattern)
 		if err != nil {
-			return output.Stderr("invalid invert regex: %v", err)
+			return output.Stderrf("invalid invert regex: %v", err)
 		}
 		ffs = append(ffs, func(s string) (*match, bool) { return nil, !r.MatchString(s) })
 	}

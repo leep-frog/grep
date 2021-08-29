@@ -106,6 +106,20 @@ func TestRecursive(t *testing.T) {
 			},
 		},
 		{
+			name: "finds matches with percentages",
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^XYZ.*", "-n", "-h"},
+				WantData: &command.Data{
+					patternArgName:      command.StringListValue("^XYZ.*"),
+					hideFileFlag.Name(): command.TrueValue(),
+					hideLineFlag.Name(): command.TrueValue(),
+				},
+				WantStdout: []string{
+					matchColor.Format("XYZ %s heyo"),
+				},
+			},
+		},
+		{
 			name: "file flag filter works",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alpha", "-n", "-f", ".*.py"},

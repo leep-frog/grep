@@ -39,9 +39,9 @@ func (*filename) Process(output command.Output, data *command.Data, ffs filterFu
 	return filepath.Walk(startDir, func(path string, fi os.FileInfo, err error) error {
 		if err != nil {
 			if os.IsNotExist(err) {
-				return output.Stderr("file not found: %s", path)
+				return output.Stderrf("file not found: %s", path)
 			}
-			return output.Stderr("failed to access path %q: %v", path, err)
+			return output.Stderrf("failed to access path %q: %v", path, err)
 		}
 
 		if formattedString, ok := ffs.Apply(fi.Name(), data); ok {

@@ -103,7 +103,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, ffs filte
 		f := data.String(fileArg.Name())
 		var err error
 		if fr, err = regexp.Compile(f); err != nil {
-			return output.Stderr("invalid filename regex: %v", err)
+			return output.Stderrf("invalid filename regex: %v", err)
 		}
 	}
 
@@ -112,7 +112,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, ffs filte
 		f := data.String(invertFileArg.Name())
 		var err error
 		if ifr, err = regexp.Compile(f); err != nil {
-			return output.Stderr("invalid invert filename regex: %v", err)
+			return output.Stderrf("invalid invert filename regex: %v", err)
 		}
 	}
 
@@ -122,16 +122,16 @@ func (r *recursive) Process(output command.Output, data *command.Data, ffs filte
 		var ok bool
 		dir, ok = r.DirectoryAliases[da]
 		if !ok {
-			return output.Stderr("unknown alias: %q", da)
+			return output.Stderrf("unknown alias: %q", da)
 		}
 	}
 
 	return filepath.Walk(dir, func(path string, fi os.FileInfo, err error) error {
 		if err != nil {
 			if os.IsNotExist(err) {
-				return output.Stderr("file not found: %s", path)
+				return output.Stderrf("file not found: %s", path)
 			}
-			return output.Stderr("failed to access path %q: %v", path, err)
+			return output.Stderrf("failed to access path %q: %v", path, err)
 		}
 
 		if fi.IsDir() {
@@ -148,7 +148,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, ffs filte
 
 		f, err := osOpen(path)
 		if err != nil {
-			return output.Stderr("failed to open file %q: %v", path, err)
+			return output.Stderrf("failed to open file %q: %v", path, err)
 		}
 
 		scanner := bufio.NewScanner(f)
