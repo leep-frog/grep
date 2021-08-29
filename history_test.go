@@ -205,10 +205,9 @@ func TestHistory(t *testing.T) {
 			// Run test
 			h := HistoryCLI()
 			test.etc.Node = h.Node()
-			command.ExecuteTest(t, test.etc, &command.ExecuteTestOptions{
-				RequiresSetup: true,
-				SetupContents: test.history,
-			})
+			test.etc.RequiresSetup = true
+			test.etc.SetupContents = test.history
+			command.ExecuteTest(t, test.etc)
 			command.ChangeTest(t, nil, h)
 		})
 	}

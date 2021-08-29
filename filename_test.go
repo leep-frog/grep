@@ -164,7 +164,7 @@ func TestFilename(t *testing.T) {
 			// Run the test.
 			f := FilenameCLI()
 			test.etc.Node = f.Node()
-			command.ExecuteTest(t, test.etc, nil)
+			command.ExecuteTest(t, test.etc)
 			command.ChangeTest(t, nil, f)
 		})
 	}

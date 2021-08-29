@@ -559,7 +559,7 @@ func TestRecursive(t *testing.T) {
 				},
 			}
 			test.etc.Node = r.Node()
-			command.ExecuteTest(t, test.etc, nil)
+			command.ExecuteTest(t, test.etc)
 			command.ChangeTest(t, nil, r)
 		})
 	}

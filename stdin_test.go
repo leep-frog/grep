@@ -212,7 +212,7 @@ func TestStdin(t *testing.T) {
 				},
 			}
 			test.etc.Node = si.Node()
-			command.ExecuteTest(t, test.etc, nil)
+			command.ExecuteTest(t, test.etc)
 			command.ChangeTest(t, nil, si)
 		})
 	}
