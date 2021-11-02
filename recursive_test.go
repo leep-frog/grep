@@ -585,3 +585,80 @@ func withFile(s string, fileParts ...string) string {
 func withLine(n int, s string) string {
 	return fmt.Sprintf("%s:%s", colorLine(n), s)
 }
+
+func TestUsage(t *testing.T) {
+	// Recursive grep
+	command.UsageTest(t, &command.UsageTestCase{
+		Node: RecursiveCLI().Node(),
+		WantString: []string{
+			"[ PATTERN ... ] --after|-a --before|-b --directory|-d --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --ignore-case|-i --invert|-v --invert-file|-F --match-only|-o",
+			"",
+			"Arguments:",
+			"  PATTERN: Pattern(s) required to be present in each line",
+			"",
+			"Flags:",
+			"  after: Show the matched line and the n lines after it",
+			"  before: Show the matched line and the n lines before it",
+			"  directory: Search through the provided directory instead of pwd",
+			"  file: Only select files that match this pattern",
+			"  file-only: Only show file names",
+			"  hide-file: Don't show file names",
+			"  hide-lines: Don't include the line number in the output",
+			"  ignore-case: Ignore character casing",
+			"  invert: Pattern(s) required to be absent in each line",
+			"  invert-file: Only select files that don't match this pattern",
+			"  match-only: Only show the matching segment",
+		},
+	})
+
+	// History grep
+	command.UsageTest(t, &command.UsageTestCase{
+		Node: HistoryCLI().Node(),
+		WantString: []string{
+			"SETUP_FILE [ PATTERN ... ] --ignore-case|-i --invert|-v --match-only|-o",
+			"",
+			"Arguments:",
+			"  PATTERN: Pattern(s) required to be present in each line",
+			"  SETUP_FILE: file used to run setup for command",
+			"",
+			"Flags:",
+			"  ignore-case: Ignore character casing",
+			"  invert: Pattern(s) required to be absent in each line",
+			"  match-only: Only show the matching segment",
+		},
+	})
+
+	// Filename grep
+	command.UsageTest(t, &command.UsageTestCase{
+		Node: FilenameCLI().Node(),
+		WantString: []string{
+			"[ PATTERN ... ] --ignore-case|-i --invert|-v --match-only|-o",
+			"",
+			"Arguments:",
+			"  PATTERN: Pattern(s) required to be present in each line",
+			"",
+			"Flags:",
+			"  ignore-case: Ignore character casing",
+			"  invert: Pattern(s) required to be absent in each line",
+			"  match-only: Only show the matching segment",
+		},
+	})
+
+	// Stdin grep
+	command.UsageTest(t, &command.UsageTestCase{
+		Node: StdinCLI().Node(),
+		WantString: []string{
+			"[ PATTERN ... ] --after|-a --before|-b --ignore-case|-i --invert|-v --match-only|-o",
+			"",
+			"Arguments:",
+			"  PATTERN: Pattern(s) required to be present in each line",
+			"",
+			"Flags:",
+			"  after: Show the matched line and the n lines after it",
+			"  before: Show the matched line and the n lines before it",
+			"  ignore-case: Ignore character casing",
+			"  invert: Pattern(s) required to be absent in each line",
+			"  match-only: Only show the matching segment",
+		},
+	})
+}

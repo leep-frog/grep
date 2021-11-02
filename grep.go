@@ -11,11 +11,11 @@ import (
 )
 
 var (
-	patternArgName = "pattern"
-	patternArg     = command.StringListNode(patternArgName, 0, -1)
-	caseFlag       = command.BoolFlag("ignoreCase", 'i')
-	invertFlag     = command.StringListFlag("invert", 'v', 0, command.UnboundedList)
-	matchOnlyFlag  = command.BoolFlag("matchOnly", 'o')
+	patternArgName = "PATTERN"
+	patternArg     = command.StringListNode(patternArgName, "Pattern(s) required to be present in each line", 0, -1)
+	caseFlag       = command.BoolFlag("ignore-case", 'i', "Ignore character casing")
+	invertFlag     = command.StringListFlag("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList)
+	matchOnlyFlag  = command.BoolFlag("match-only", 'o', "Only show the matching segment")
 	// TODO: or pattern
 
 	matchColor = &color.Format{

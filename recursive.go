@@ -19,26 +19,18 @@ var (
 	startDir                                   = "."
 	osOpen   func(s string) (io.Reader, error) = func(s string) (io.Reader, error) { return os.Open(s) }
 
-	// Only select files that match pattern.
-	fileArg = command.StringFlag("file", 'f')
-	// Only select files that match pattern.
-	invertFileArg = command.StringFlag("invertFile", 'F')
-	// Don't show file names
-	hideFileFlag = command.BoolFlag("hideFile", 'h')
-	// Only show file names (hide lines).
-	fileOnlyFlag = command.BoolFlag("fileOnly", 'l')
-	// Show the matched line and the `n` lines before it.
-	beforeFlag = command.IntFlag("before", 'b')
-	// Show the matched line and the `n` lines after it.
-	afterFlag = command.IntFlag("after", 'a')
-	// Directory flag to search through an aliased directory instead of pwd.
-	dirFlag = command.StringFlag("directory", 'd', &command.Completor{
+	fileArg       = command.StringFlag("file", 'f', "Only select files that match this pattern")
+	invertFileArg = command.StringFlag("invert-file", 'F', "Only select files that don't match this pattern")
+	hideFileFlag  = command.BoolFlag("hide-file", 'h', "Don't show file names")
+	fileOnlyFlag  = command.BoolFlag("file-only", 'l', "Only show file names")
+	beforeFlag    = command.IntFlag("before", 'b', "Show the matched line and the n lines before it")
+	afterFlag     = command.IntFlag("after", 'a', "Show the matched line and the n lines after it")
+	dirFlag       = command.StringFlag("directory", 'd', "Search through the provided directory instead of pwd", &command.Completor{
 		SuggestionFetcher: &command.FileFetcher{
 			IgnoreFiles: true,
 		},
 	})
-	// Don't include the line number in the output.
-	hideLineFlag = command.BoolFlag("hideLines", 'n')
+	hideLineFlag = command.BoolFlag("hide-lines", 'n', "Don't include the line number in the output")
 
 	fileColor = &color.Format{
 		Color: color.Yellow,
