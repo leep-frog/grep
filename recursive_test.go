@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/leep-frog/command"
 )
 
@@ -21,22 +22,22 @@ func TestRecursiveLoad(t *testing.T) {
 		{
 			name: "handles empty string",
 			want: &Grep{
-				inputSource: &recursive{},
+				InputSource: &recursive{},
 			},
 		},
 		{
 			name:    "handles invalid json",
 			json:    "}}",
-			WantErr: "failed to unmarshal json for recursive grep object: invalid character",
+			WantErr: "failed to unmarshal json for grep object: invalid character",
 			want: &Grep{
-				inputSource: &recursive{},
+				InputSource: &recursive{},
 			},
 		},
 		{
 			name: "handles valid json",
-			json: `{"Field": "Value"}`,
+			json: `{"InputSource": {"Field": "Value"}}`,
 			want: &Grep{
-				inputSource: &recursive{},
+				InputSource: &recursive{},
 			},
 		},
 	} {
@@ -66,11 +67,13 @@ func TestRecursiveLoad(t *testing.T) {
 
 func TestRecursive(t *testing.T) {
 	for _, test := range []struct {
-		name      string
-		aliases   map[string]string
-		stubDir   string
-		osOpenErr error
-		etc       *command.ExecuteTestCase
+		name           string
+		aliases        map[string]string
+		ignorePatterns map[string]bool
+		stubDir        string
+		osOpenErr      error
+		etc            *command.ExecuteTestCase
+		want           *recursive
 	}{
 		{
 			name:    "errors on walk error",
@@ -534,6 +537,118 @@ func TestRecursive(t *testing.T) {
 				},
 			},
 		},
+		// Ignore file patterns
+		{
+			name: "ignore file pattern requires argument",
+			etc: &command.ExecuteTestCase{
+				Args:       []string{"if"},
+				WantStderr: []string{"branching argument required"},
+				WantErr:    fmt.Errorf("branching argument required"),
+			},
+		},
+		{
+			name: "ignore file pattern requires valid argument",
+			etc: &command.ExecuteTestCase{
+				Args:       []string{"if", "uh"},
+				WantStderr: []string{"argument must be one of [a d l]"},
+				WantErr:    fmt.Errorf("argument must be one of [a d l]"),
+			},
+		},
+		{
+			name: "add ignore file pattern to empty map",
+			etc: &command.ExecuteTestCase{
+				Args: []string{"if", "a", ".binary$"},
+				WantData: &command.Data{
+					ignoreFilePattern.Name(): command.StringListValue(".binary$"),
+				},
+			},
+			want: &recursive{
+				IgnoreFilePatterns: map[string]bool{
+					".binary$": true,
+				},
+			},
+		},
+		{
+			name: "adds ignore file pattern to existing map",
+			ignorePatterns: map[string]bool{
+				"other": true,
+			},
+			etc: &command.ExecuteTestCase{
+				Args: []string{"if", "a", ".binary$"},
+				WantData: &command.Data{
+					ignoreFilePattern.Name(): command.StringListValue(".binary$"),
+				},
+			},
+			want: &recursive{
+				IgnoreFilePatterns: map[string]bool{
+					".binary$": true,
+					"other":    true,
+				},
+			},
+		},
+		{
+			name: "adds multiple ignore file pattern to existing map",
+			ignorePatterns: map[string]bool{
+				"other": true,
+			},
+			etc: &command.ExecuteTestCase{
+				Args: []string{"if", "a", ".bin", "ary$"},
+				WantData: &command.Data{
+					ignoreFilePattern.Name(): command.StringListValue(".bin", "ary$"),
+				},
+			},
+			want: &recursive{
+				IgnoreFilePatterns: map[string]bool{
+					".bin":  true,
+					"ary$":  true,
+					"other": true,
+				},
+			},
+		},
+		{
+			name: "deletes ignore file patterns from empty map",
+			etc: &command.ExecuteTestCase{
+				Args: []string{"if", "d", ".bin", "ary$"},
+				WantData: &command.Data{
+					ignoreFilePattern.Name(): command.StringListValue(".bin", "ary$"),
+				},
+			},
+		},
+		{
+			name: "deletes ignore file patterns map",
+			ignorePatterns: map[string]bool{
+				".bin":  true,
+				"other": true,
+			},
+			etc: &command.ExecuteTestCase{
+				Args: []string{"if", "d", ".bin", "ary$"},
+				WantData: &command.Data{
+					ignoreFilePattern.Name(): command.StringListValue(".bin", "ary$"),
+				},
+			},
+			want: &recursive{
+				IgnoreFilePatterns: map[string]bool{
+					"other": true,
+				},
+			},
+		},
+		{
+			name: "lists ignore file patterns from empty map",
+			etc: &command.ExecuteTestCase{
+				Args: []string{"if", "l"},
+			},
+		},
+		{
+			name: "lists ignore file patterns from empty map",
+			ignorePatterns: map[string]bool{
+				".bin":  true,
+				"other": true,
+			},
+			etc: &command.ExecuteTestCase{
+				Args:       []string{"if", "l"},
+				WantStdout: []string{".bin", "other"},
+			},
+		},
 		/* Useful for commenting out tests. */
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -554,13 +669,20 @@ func TestRecursive(t *testing.T) {
 			}
 
 			r := &Grep{
-				inputSource: &recursive{
-					DirectoryAliases: test.aliases,
+				InputSource: &recursive{
+					DirectoryAliases:   test.aliases,
+					IgnoreFilePatterns: test.ignorePatterns,
 				},
+			}
+			var g *Grep
+			if test.want != nil {
+				g = &Grep{
+					InputSource: test.want,
+				}
 			}
 			test.etc.Node = r.Node()
 			command.ExecuteTest(t, test.etc)
-			command.ChangeTest(t, nil, r)
+			command.ChangeTest(t, g, r, cmpopts.IgnoreUnexported(recursive{}))
 		})
 	}
 }
@@ -591,9 +713,22 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: RecursiveCLI().Node(),
 		WantString: []string{
-			"[ PATTERN ... ] --after|-a --before|-b --directory|-d --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --ignore-case|-i --invert|-v --invert-file|-F --match-only|-o",
+			"< [ PATTERN ... ] --after|-a --before|-b --directory|-d --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --ignore-case|-i --invert|-v --invert-file|-F --match-only|-o",
+			"",
+			"  Commands around global ignore file patterns",
+			"  if <",
+			"",
+			"    Add a global file ignore pattern",
+			"    a IGNORE_PATTERN [ IGNORE_PATTERN ... ]",
+			"",
+			"    Deletes a global file ignore pattern",
+			"    d IGNORE_PATTERN [ IGNORE_PATTERN ... ]",
+			"",
+			"    List global file ignore patterns",
+			"    l",
 			"",
 			"Arguments:",
+			"  IGNORE_PATTERN: Files that match these will be ignored",
 			"  PATTERN: Pattern(s) required to be present in each line",
 			"",
 			"Flags:",
@@ -608,6 +743,9 @@ func TestUsage(t *testing.T) {
 			"  invert: Pattern(s) required to be absent in each line",
 			"  invert-file: Only select files that don't match this pattern",
 			"  match-only: Only show the matching segment",
+			"",
+			"Symbols:",
+			command.BranchDesc,
 		},
 	})
 
@@ -632,13 +770,13 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: FilenameCLI().Node(),
 		WantString: []string{
-			"[ PATTERN ... ] --cat-file|-c --ignore-case|-i --invert|-v --match-only|-o",
+			"[ PATTERN ... ] --cat|-c --ignore-case|-i --invert|-v --match-only|-o",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line",
 			"",
 			"Flags:",
-			"  cat-file: Run cat command on all files that match",
+			"  cat: Run cat command on all files that match",
 			"  ignore-case: Ignore character casing",
 			"  invert: Pattern(s) required to be absent in each line",
 			"  match-only: Only show the matching segment",

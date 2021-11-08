@@ -2,8 +2,6 @@ package grep
 
 import (
 	"bufio"
-	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/leep-frog/command"
@@ -11,7 +9,7 @@ import (
 
 func StdinCLI() *Grep {
 	return &Grep{
-		inputSource: &stdin{
+		InputSource: &stdin{
 			scanner: bufio.NewScanner(os.Stdin),
 		},
 	}
@@ -32,18 +30,6 @@ func (*stdin) Flags() []command.Flag {
 }
 
 func (*stdin) MakeNode(n *command.Node) *command.Node { return n }
-
-func (s *stdin) Load(jsn string) error {
-	if jsn == "" {
-		s = &stdin{}
-		return nil
-	}
-
-	if err := json.Unmarshal([]byte(jsn), s); err != nil {
-		return fmt.Errorf("failed to unmarshal json for stdin grep object: %v", err)
-	}
-	return nil
-}
 
 func (si *stdin) Process(output command.Output, data *command.Data, ffs filterFuncs) error {
 	list := newLinkedList(ffs, data, si.scanner)

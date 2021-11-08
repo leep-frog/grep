@@ -1,6 +1,7 @@
 package grep
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"sort"
@@ -110,28 +111,32 @@ type inputSource interface {
 	MakeNode(*command.Node) *command.Node
 	Setup() []string
 	Changed() bool
-	Load(string) error
 }
 
 type Grep struct {
-	caseSensitive bool
-	inputSource   inputSource
+	InputSource inputSource
 }
 
 func (g *Grep) Load(jsn string) error {
-	return g.inputSource.Load(jsn)
+	if jsn == "" {
+		return nil
+	}
+	if err := json.Unmarshal([]byte(jsn), g); err != nil {
+		return fmt.Errorf("failed to unmarshal json for grep object: %v", err)
+	}
+	return nil
 }
 
 func (g *Grep) Changed() bool {
-	return g.inputSource.Changed()
+	return g.InputSource.Changed()
 }
 
 func (g *Grep) Name() string {
-	return g.inputSource.Name()
+	return g.InputSource.Name()
 }
 
 func (g *Grep) Setup() []string {
-	return g.inputSource.Setup()
+	return g.InputSource.Setup()
 }
 
 type match struct {
@@ -180,12 +185,12 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 		ffs = append(ffs, func(s string) (*match, bool) { return nil, !r.MatchString(s) })
 	}
 
-	return g.inputSource.Process(output, data, ffs)
+	return g.InputSource.Process(output, data, ffs)
 }
 
 func (g *Grep) Node() *command.Node {
-	flags := append(g.inputSource.Flags(), caseFlag, invertFlag, matchOnlyFlag)
+	flags := append(g.InputSource.Flags(), caseFlag, invertFlag, matchOnlyFlag)
 	flagNode := command.NewFlagNode(flags...)
 
-	return g.inputSource.MakeNode(command.SerialNodes(flagNode, patternArg, command.ExecutorNode(g.Execute)))
+	return g.InputSource.MakeNode(command.SerialNodes(flagNode, patternArg, command.ExecutorNode(g.Execute)))
 }

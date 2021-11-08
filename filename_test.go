@@ -20,22 +20,22 @@ func TestFilenameLoad(t *testing.T) {
 		{
 			name: "handles empty string",
 			want: &Grep{
-				inputSource: &filename{},
+				InputSource: &filename{},
 			},
 		},
 		{
 			name:    "handles invalid json",
 			json:    "}}",
-			WantErr: "failed to unmarshal json for filename grep object: invalid character",
+			WantErr: "failed to unmarshal json for grep object: invalid character",
 			want: &Grep{
-				inputSource: &filename{},
+				InputSource: &filename{},
 			},
 		},
 		{
 			name: "handles valid json",
 			json: `{"Field": "Value"}`,
 			want: &Grep{
-				inputSource: &filename{},
+				InputSource: &filename{},
 			},
 		},
 	} {

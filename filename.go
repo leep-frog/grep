@@ -1,8 +1,6 @@
 package grep
 
 import (
-	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,12 +9,12 @@ import (
 )
 
 var (
-	visitFlag = command.BoolFlag("cat-file", 'c', "Run cat command on all files that match")
+	visitFlag = command.BoolFlag("cat", 'c', "Run cat command on all files that match")
 )
 
 func FilenameCLI() *Grep {
 	return &Grep{
-		inputSource: &filename{},
+		InputSource: &filename{},
 	}
 }
 
@@ -31,18 +29,6 @@ func (*filename) Flags() []command.Flag {
 	}
 }
 func (*filename) MakeNode(n *command.Node) *command.Node { return n }
-
-func (f *filename) Load(jsn string) error {
-	if jsn == "" {
-		f = &filename{}
-		return nil
-	}
-
-	if err := json.Unmarshal([]byte(jsn), f); err != nil {
-		return fmt.Errorf("failed to unmarshal json for filename grep object: %v", err)
-	}
-	return nil
-}
 
 func (*filename) Process(output command.Output, data *command.Data, ffs filterFuncs) error {
 	cat := data.Bool(visitFlag.Name())

@@ -21,22 +21,22 @@ func TestStdinLoad(t *testing.T) {
 		{
 			name: "handles empty string",
 			want: &Grep{
-				inputSource: &stdin{},
+				InputSource: &stdin{},
 			},
 		},
 		{
 			name:    "handles invalid json",
 			json:    "}}",
-			WantErr: "failed to unmarshal json for stdin grep object: invalid character",
+			WantErr: "failed to unmarshal json for grep object: invalid character",
 			want: &Grep{
-				inputSource: &stdin{},
+				InputSource: &stdin{},
 			},
 		},
 		{
 			name: "handles valid json",
-			json: `{"Field": "Value"}`,
+			json: `{"InputSource": {"Field": "Value"}}`,
 			want: &Grep{
-				inputSource: &stdin{},
+				InputSource: &stdin{},
 			},
 		},
 	} {
@@ -207,7 +207,7 @@ func TestStdin(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			si := &Grep{
-				inputSource: &stdin{
+				InputSource: &stdin{
 					scanner: bufio.NewScanner(strings.NewReader(strings.Join(test.input, "\n"))),
 				},
 			}

@@ -2,12 +2,11 @@ package grep
 
 import (
 	"bufio"
-	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -18,6 +17,8 @@ import (
 var (
 	startDir                                   = "."
 	osOpen   func(s string) (io.Reader, error) = func(s string) (io.Reader, error) { return os.Open(s) }
+
+	ignoreFilePattern = command.StringListNode("IGNORE_PATTERN", "Files that match these will be ignored", 1, command.UnboundedList)
 
 	fileArg       = command.StringFlag("file", 'f', "Only select files that match this pattern")
 	invertFileArg = command.StringFlag("invert-file", 'F', "Only select files that don't match this pattern")
@@ -47,15 +48,16 @@ func colorLine(n int) string {
 
 func RecursiveCLI() *Grep {
 	return &Grep{
-		inputSource: &recursive{},
+		InputSource: &recursive{},
 	}
 }
 
 type recursive struct {
+	// TODO: add way to get this from other command
 	DirectoryAliases map[string]string
 	// TODO: add commands for add/view/deleting this and ignore files of this type when grepping (specifically for binary files)
-	IgnoreFileTypes map[string]bool
-	changed         bool
+	IgnoreFilePatterns map[string]bool
+	changed            bool
 }
 
 func (*recursive) Name() string    { return "rp" }
@@ -73,18 +75,60 @@ func (*recursive) Flags() []command.Flag {
 	}
 }
 
-func (*recursive) MakeNode(n *command.Node) *command.Node { return n }
+// TODO: make add/delete/list/search/get (adlsg) stuff generic when type parameters are a thing.
+func (r *recursive) addIgnorePattern(output command.Output, data *command.Data) error {
+	if r.IgnoreFilePatterns == nil {
+		r.IgnoreFilePatterns = map[string]bool{}
+	}
+	for _, pattern := range data.StringList(ignoreFilePattern.Name()) {
+		r.IgnoreFilePatterns[pattern] = true
+	}
+	r.changed = true
+	return nil
+}
 
-func (r *recursive) Load(jsn string) error {
-	if jsn == "" {
-		r = &recursive{}
+func (r *recursive) deleteIgnorePattern(output command.Output, data *command.Data) error {
+	if r.IgnoreFilePatterns == nil {
 		return nil
 	}
+	for _, pattern := range data.StringList(ignoreFilePattern.Name()) {
+		delete(r.IgnoreFilePatterns, pattern)
+	}
+	r.changed = true
+	return nil
+}
 
-	if err := json.Unmarshal([]byte(jsn), r); err != nil {
-		return fmt.Errorf("failed to unmarshal json for recursive grep object: %v", err)
+func (r *recursive) listIgnorePattern(output command.Output, data *command.Data) error {
+	var patterns []string
+	for p := range r.IgnoreFilePatterns {
+		patterns = append(patterns, p)
+	}
+	sort.Strings(patterns)
+	for _, p := range patterns {
+		output.Stdout(p)
 	}
 	return nil
+}
+
+func (r *recursive) MakeNode(n *command.Node) *command.Node {
+	return command.BranchNode(map[string]*command.Node{
+		"if": command.SerialNodesTo(command.BranchNode(map[string]*command.Node{
+			"a": command.SerialNodes(
+				command.Description("Add a global file ignore pattern"),
+				ignoreFilePattern,
+				command.ExecutorNode(r.addIgnorePattern),
+			),
+			"d": command.SerialNodes(
+				command.Description("Deletes a global file ignore pattern"),
+				ignoreFilePattern,
+				command.ExecutorNode(r.deleteIgnorePattern),
+			),
+			"l": command.SerialNodes(
+				command.Description("List global file ignore patterns"),
+				command.ExecutorNode(r.listIgnorePattern),
+			),
+		}, nil, true), command.Description("Commands around global ignore file patterns")),
+	}, n, true)
 }
 
 func (r *recursive) Changed() bool {
