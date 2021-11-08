@@ -120,6 +120,46 @@ func TestFilename(t *testing.T) {
 			},
 		},
 		{
+			name: "gets files and directories",
+			etc: &command.ExecuteTestCase{
+				Args: []string{"oth.*"},
+				WantStdout: []string{
+					filepath.Join("testing", matchColor.Format("other")),
+					filepath.Join("testing", "other", matchColor.Format("other.txt")),
+				},
+				WantData: &command.Data{
+					patternArgName: command.StringListValue("oth.*"),
+				},
+			},
+		},
+		{
+			name: "cats files but not directories",
+			etc: &command.ExecuteTestCase{
+				Args: []string{"oth.*", "-c"},
+				WantStdout: []string{
+					"alpha zero\necho bravo\n",
+				},
+				WantData: &command.Data{
+					patternArgName:   command.StringListValue("oth.*"),
+					visitFlag.Name(): command.TrueValue(),
+				},
+			},
+		},
+		{
+			name: "cats multiple files",
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^th", "-c"},
+				WantStdout: []string{
+					"alpha\n",
+					"bravo\n",
+				},
+				WantData: &command.Data{
+					patternArgName:   command.StringListValue("^th"),
+					visitFlag.Name(): command.TrueValue(),
+				},
+			},
+		},
+		{
 			name: "invert filter",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"-v", ".*.go"},

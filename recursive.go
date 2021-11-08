@@ -53,7 +53,9 @@ func RecursiveCLI() *Grep {
 
 type recursive struct {
 	DirectoryAliases map[string]string
-	changed          bool
+	// TODO: add commands for add/view/deleting this and ignore files of this type when grepping (specifically for binary files)
+	IgnoreFileTypes map[string]bool
+	changed         bool
 }
 
 func (*recursive) Name() string    { return "rp" }

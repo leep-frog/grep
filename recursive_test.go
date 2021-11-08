@@ -632,12 +632,13 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: FilenameCLI().Node(),
 		WantString: []string{
-			"[ PATTERN ... ] --ignore-case|-i --invert|-v --match-only|-o",
+			"[ PATTERN ... ] --cat-file|-c --ignore-case|-i --invert|-v --match-only|-o",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line",
 			"",
 			"Flags:",
+			"  cat-file: Run cat command on all files that match",
 			"  ignore-case: Ignore character casing",
 			"  invert: Pattern(s) required to be absent in each line",
 			"  match-only: Only show the matching segment",
