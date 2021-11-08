@@ -72,7 +72,8 @@ func (*recursive) Flags() []command.Flag {
 		hideLineFlag,
 	}
 }
-func (*recursive) PreProcessors() []command.Processor { return nil }
+
+func (*recursive) MakeNode(n *command.Node) *command.Node { return n }
 
 func (r *recursive) Load(jsn string) error {
 	if jsn == "" {

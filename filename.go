@@ -30,7 +30,7 @@ func (*filename) Flags() []command.Flag {
 		visitFlag,
 	}
 }
-func (*filename) PreProcessors() []command.Processor { return nil }
+func (*filename) MakeNode(n *command.Node) *command.Node { return n }
 
 func (f *filename) Load(jsn string) error {
 	if jsn == "" {

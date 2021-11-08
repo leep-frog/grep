@@ -31,7 +31,7 @@ func (*stdin) Flags() []command.Flag {
 	}
 }
 
-func (*stdin) PreProcessors() []command.Processor { return nil }
+func (*stdin) MakeNode(n *command.Node) *command.Node { return n }
 
 func (s *stdin) Load(jsn string) error {
 	if jsn == "" {

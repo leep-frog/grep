@@ -37,10 +37,8 @@ func (h *history) Load(jsn string) error {
 func (*history) Flags() []command.Flag { return nil }
 func (*history) Changed() bool         { return false }
 
-func (*history) PreProcessors() []command.Processor {
-	return []command.Processor{
-		command.SetupArg,
-	}
+func (*history) MakeNode(n *command.Node) *command.Node {
+	return command.SerialNodesTo(n, command.SetupArg)
 }
 
 func (*history) Process(output command.Output, data *command.Data, ffs filterFuncs) error {
