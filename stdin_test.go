@@ -104,7 +104,7 @@ func TestStdin(t *testing.T) {
 					fmt.Sprintf("delt%s", matchColor.Format("a")),
 				},
 				WantData: &command.Data{
-					patternArgName: command.StringListValue("a$"),
+					patternArg.Name(): command.StringListValue("a$"),
 				},
 			},
 		},
@@ -135,7 +135,7 @@ func TestStdin(t *testing.T) {
 					matchColor.Format("ten"),
 				},
 				WantData: &command.Data{
-					patternArgName:    command.StringListValue("^...$"),
+					patternArg.Name(): command.StringListValue("^...$"),
 					beforeFlag.Name(): command.IntValue(1),
 				},
 			},
@@ -167,8 +167,8 @@ func TestStdin(t *testing.T) {
 					"ten",
 				},
 				WantData: &command.Data{
-					patternArgName:   command.StringListValue("^.....$"),
-					afterFlag.Name(): command.IntValue(2),
+					patternArg.Name(): command.StringListValue("^.....$"),
+					afterFlag.Name():  command.IntValue(2),
 				},
 			},
 		},
@@ -198,7 +198,7 @@ func TestStdin(t *testing.T) {
 					"seven",
 				},
 				WantData: &command.Data{
-					patternArgName:    command.StringListValue("five"),
+					patternArg.Name(): command.StringListValue("five"),
 					afterFlag.Name():  command.IntValue(2),
 					beforeFlag.Name(): command.IntValue(3),
 				},

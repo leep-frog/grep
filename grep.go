@@ -12,11 +12,12 @@ import (
 )
 
 var (
-	patternArgName = "PATTERN"
-	patternArg     = command.StringListNode(patternArgName, "Pattern(s) required to be present in each line", 0, -1)
-	caseFlag       = command.BoolFlag("ignore-case", 'i', "Ignore character casing")
-	invertFlag     = command.StringListFlag("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList)
-	matchOnlyFlag  = command.BoolFlag("match-only", 'o', "Only show the matching segment")
+	// TODO: make a BreakListAt function for unbounded lists.  For example,
+	// PATTERN ... [ | PATTERN ... | PATTERN ... ]
+	patternArg    = command.StringListNode("PATTERN", "Pattern(s) required to be present in each line", 0, -1)
+	caseFlag      = command.BoolFlag("ignore-case", 'i', "Ignore character casing")
+	invertFlag    = command.StringListFlag("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList)
+	matchOnlyFlag = command.BoolFlag("match-only", 'o', "Only show the matching segment")
 	// TODO: or pattern
 
 	matchColor = &color.Format{
@@ -166,7 +167,7 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 	ignoreCase := data.Bool(caseFlag.Name())
 
 	var ffs filterFuncs //[]func(string) (*formatter, bool)
-	for _, pattern := range data.StringList(patternArgName) {
+	for _, pattern := range data.StringList(patternArg.Name()) {
 		if ignoreCase {
 			pattern = fmt.Sprintf("(?i)%s", pattern)
 		}

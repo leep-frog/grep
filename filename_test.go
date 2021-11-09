@@ -100,7 +100,7 @@ func TestFilename(t *testing.T) {
 				},
 				WantErr: fmt.Errorf("invalid regex: error parsing regexp: unexpected ): `:)`"),
 				WantData: &command.Data{
-					patternArgName: command.StringListValue(":)"),
+					patternArg.Name(): command.StringListValue(":)"),
 				},
 			},
 		},
@@ -115,7 +115,7 @@ func TestFilename(t *testing.T) {
 					filepath.Join("testing", matchColor.Format("this.txt")),
 				},
 				WantData: &command.Data{
-					patternArgName: command.StringListValue(".*.txt"),
+					patternArg.Name(): command.StringListValue(".*.txt"),
 				},
 			},
 		},
@@ -128,7 +128,7 @@ func TestFilename(t *testing.T) {
 					filepath.Join("testing", "other", matchColor.Format("other.txt")),
 				},
 				WantData: &command.Data{
-					patternArgName: command.StringListValue("oth.*"),
+					patternArg.Name(): command.StringListValue("oth.*"),
 				},
 			},
 		},
@@ -140,8 +140,8 @@ func TestFilename(t *testing.T) {
 					"alpha zero\necho bravo\n",
 				},
 				WantData: &command.Data{
-					patternArgName:   command.StringListValue("oth.*"),
-					visitFlag.Name(): command.TrueValue(),
+					patternArg.Name(): command.StringListValue("oth.*"),
+					visitFlag.Name():  command.TrueValue(),
 				},
 			},
 		},
@@ -154,8 +154,8 @@ func TestFilename(t *testing.T) {
 					"bravo\n",
 				},
 				WantData: &command.Data{
-					patternArgName:   command.StringListValue("^th"),
-					visitFlag.Name(): command.TrueValue(),
+					patternArg.Name(): command.StringListValue("^th"),
+					visitFlag.Name():  command.TrueValue(),
 				},
 			},
 		},

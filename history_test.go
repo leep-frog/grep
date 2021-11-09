@@ -96,7 +96,7 @@ func TestHistory(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^.e"},
 				WantData: &command.Data{
-					patternArgName: command.StringListValue("^.e"),
+					patternArg.Name(): command.StringListValue("^.e"),
 				},
 				WantStdout: []string{
 					fmt.Sprintf("%s%s", matchColor.Format("be"), "ta"),
@@ -115,8 +115,8 @@ func TestHistory(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^.*a$", "-i"},
 				WantData: &command.Data{
-					patternArgName:  command.StringListValue("^.*a$"),
-					caseFlag.Name(): command.TrueValue(),
+					patternArg.Name(): command.StringListValue("^.*a$"),
+					caseFlag.Name():   command.TrueValue(),
 				},
 				WantStdout: []string{
 					matchColor.Format("alphA"),
@@ -145,7 +145,7 @@ func TestHistory(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"T.*T", "-o"},
 				WantData: &command.Data{
-					patternArgName:       command.StringListValue("T.*T"),
+					patternArg.Name():    command.StringListValue("T.*T"),
 					matchOnlyFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
@@ -164,7 +164,7 @@ func TestHistory(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"T.*T", "S.*S", "-o"},
 				WantData: &command.Data{
-					patternArgName:       command.StringListValue("T.*T", "S.*S"),
+					patternArg.Name():    command.StringListValue("T.*T", "S.*S"),
 					matchOnlyFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
@@ -183,7 +183,7 @@ func TestHistory(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"T.*T", "S.*S", "-o"},
 				WantData: &command.Data{
-					patternArgName:       command.StringListValue("T.*T", "S.*S"),
+					patternArg.Name():    command.StringListValue("T.*T", "S.*S"),
 					matchOnlyFlag.Name(): command.TrueValue(),
 				},
 				WantStdout: []string{
