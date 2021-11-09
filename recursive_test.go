@@ -286,6 +286,23 @@ func TestRecursive(t *testing.T) {
 			},
 		},
 		{
+			name: "ignore relevant file types",
+			ignorePatterns: map[string]bool{
+				`\.py$`: true,
+			},
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^alp", "-l"},
+				WantData: &command.Data{
+					patternArgName:      command.StringListValue("^alp"),
+					fileOnlyFlag.Name(): command.TrueValue(),
+				},
+				WantStdout: []string{
+					fileColor.Format(filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
+					fileColor.Format(filepath.Join("testing", "other", "other.txt")), // "alpha zero"
+				},
+			},
+		},
+		{
 			name: "errors on invalid regex in file flag",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alpha", "-f", ":)"},
@@ -555,6 +572,17 @@ func TestRecursive(t *testing.T) {
 			},
 		},
 		{
+			name: "add ignore file requires valid regex",
+			etc: &command.ExecuteTestCase{
+				Args: []string{"if", "a", "*"},
+				WantData: &command.Data{
+					ignoreFilePattern.Name(): command.StringListValue("*"),
+				},
+				WantStderr: []string{"validation failed: [ListIsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"},
+				WantErr:    fmt.Errorf("validation failed: [ListIsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"),
+			},
+		},
+		{
 			name: "add ignore file pattern to empty map",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"if", "a", ".binary$"},
@@ -603,6 +631,17 @@ func TestRecursive(t *testing.T) {
 					"ary$":  true,
 					"other": true,
 				},
+			},
+		},
+		{
+			name: "delete ignore file requires valid regex",
+			etc: &command.ExecuteTestCase{
+				Args: []string{"if", "d", "*"},
+				WantData: &command.Data{
+					ignoreFilePattern.Name(): command.StringListValue("*"),
+				},
+				WantStderr: []string{"validation failed: [ListIsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"},
+				WantErr:    fmt.Errorf("validation failed: [ListIsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"),
 			},
 		},
 		{

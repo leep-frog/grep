@@ -18,7 +18,7 @@ var (
 	startDir                                   = "."
 	osOpen   func(s string) (io.Reader, error) = func(s string) (io.Reader, error) { return os.Open(s) }
 
-	ignoreFilePattern = command.StringListNode("IGNORE_PATTERN", "Files that match these will be ignored", 1, command.UnboundedList)
+	ignoreFilePattern = command.StringListNode("IGNORE_PATTERN", "Files that match these will be ignored", 1, command.UnboundedList, command.ListIsRegex())
 
 	fileArg       = command.StringFlag("file", 'f', "Only select files that match this pattern")
 	invertFileArg = command.StringFlag("invert-file", 'F', "Only select files that don't match this pattern")
@@ -136,6 +136,11 @@ func (r *recursive) Changed() bool {
 }
 
 func (r *recursive) Process(output command.Output, data *command.Data, ffs filterFuncs) error {
+	var nameRegexes []*regexp.Regexp
+	for ifp := range r.IgnoreFilePatterns {
+		// ListIsRegex ArgOption ensures that these regexes are valid, so it's okay to use MustCompile here.
+		nameRegexes = append(nameRegexes, regexp.MustCompile(ifp))
+	}
 	var fr *regexp.Regexp
 
 	if data.HasArg(fileArg.Name()) {
@@ -183,6 +188,12 @@ func (r *recursive) Process(output command.Output, data *command.Data, ffs filte
 
 		if ifr != nil && ifr.MatchString(fi.Name()) {
 			return nil
+		}
+
+		for _, r := range nameRegexes {
+			if r.MatchString(fi.Name()) {
+				return nil
+			}
 		}
 
 		f, err := osOpen(path)
