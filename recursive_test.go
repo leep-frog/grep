@@ -559,16 +559,16 @@ func TestRecursive(t *testing.T) {
 			name: "ignore file pattern requires argument",
 			etc: &command.ExecuteTestCase{
 				Args:       []string{"if"},
-				WantStderr: []string{"branching argument required"},
-				WantErr:    fmt.Errorf("branching argument required"),
+				WantStderr: []string{"Branching argument must be one of [a d l]"},
+				WantErr:    fmt.Errorf("Branching argument must be one of [a d l]"),
 			},
 		},
 		{
 			name: "ignore file pattern requires valid argument",
 			etc: &command.ExecuteTestCase{
 				Args:       []string{"if", "uh"},
-				WantStderr: []string{"argument must be one of [a d l]"},
-				WantErr:    fmt.Errorf("argument must be one of [a d l]"),
+				WantStderr: []string{"Branching argument must be one of [a d l]"},
+				WantErr:    fmt.Errorf("Branching argument must be one of [a d l]"),
 			},
 		},
 		{

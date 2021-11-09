@@ -4,5 +4,5 @@ go 1.14
 
 require (
 	github.com/google/go-cmp v0.5.5
-	github.com/leep-frog/command v0.0.0-20211109014031-2afc0b14f28c
+	github.com/leep-frog/command v0.0.0-20211109024656-24ba467c6f12
 )
