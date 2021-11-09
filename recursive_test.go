@@ -726,6 +726,38 @@ func TestRecursive(t *testing.T) {
 	}
 }
 
+func TestAutocomplete(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		r    *recursive
+		ctc  *command.CompleteTestCase
+	}{
+		{
+			name: "delete completes ignore file patterns",
+			r: &recursive{
+				IgnoreFilePatterns: map[string]bool{
+					"abc": true,
+					"def": true,
+					"ghi": true,
+				},
+			},
+			ctc: &command.CompleteTestCase{
+				Args: "cmd if d ",
+				Want: []string{"abc", "def", "ghi"},
+				WantData: &command.Data{
+					ignoreFilePattern.Name(): command.StringListValue(""),
+				},
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			g := &Grep{test.r}
+			test.ctc.Node = g.Node()
+			command.CompleteTest(t, test.ctc)
+		})
+	}
+}
+
 func TestRecusriveMetadata(t *testing.T) {
 	c := RecursiveCLI()
 

@@ -126,12 +126,12 @@ func (r *recursive) MakeNode(n *command.Node) *command.Node {
 		"if": command.SerialNodesTo(command.BranchNode(map[string]*command.Node{
 			"a": command.SerialNodes(
 				command.Description("Add a global file ignore pattern"),
-				ignoreFilePattern.AddOptions(f),
+				ignoreFilePattern,
 				command.ExecutorNode(r.addIgnorePattern),
 			),
 			"d": command.SerialNodes(
 				command.Description("Deletes a global file ignore pattern"),
-				ignoreFilePattern,
+				ignoreFilePattern.AddOptions(f),
 				command.ExecutorNode(r.deleteIgnorePattern),
 			),
 			"l": command.SerialNodes(
