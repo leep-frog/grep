@@ -158,9 +158,8 @@ func colorMatch(r *regexp.Regexp) func(string) (*match, bool) {
 	}
 }
 
-func (g *Grep) Complete(*command.Input, *command.Data) *command.CompleteData {
-	// Currently no way to autocomplete regular expressions.
-	return nil
+func (g *Grep) Complete(*command.Input, *command.Data) (*command.Completion, error) {
+	return nil, nil
 }
 
 func (g *Grep) Execute(output command.Output, data *command.Data) error {
