@@ -95,9 +95,9 @@ func TestHistory(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^.e"},
-				WantData: &command.Data{
-					patternArg.Name(): command.StringListValue("^.e"),
-				},
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName: command.StringListValue("^.e"),
+				}},
 				WantStdout: []string{
 					fmt.Sprintf("%s%s", matchColor.Format("be"), "ta"),
 					fmt.Sprintf("%s%s", matchColor.Format("de"), "lta"),
@@ -114,10 +114,10 @@ func TestHistory(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^.*a$", "-i"},
-				WantData: &command.Data{
-					patternArg.Name(): command.StringListValue("^.*a$"),
-					caseFlag.Name():   command.TrueValue(),
-				},
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:  command.StringListValue("^.*a$"),
+					caseFlag.Name(): command.TrueValue(),
+				}},
 				WantStdout: []string{
 					matchColor.Format("alphA"),
 					matchColor.Format("beta"),
@@ -144,10 +144,10 @@ func TestHistory(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"T.*T", "-o"},
-				WantData: &command.Data{
-					patternArg.Name():    command.StringListValue("T.*T"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:       command.StringListValue("T.*T"),
 					matchOnlyFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					"TfghjT",
 					"TxcvbnmT",
@@ -163,10 +163,10 @@ func TestHistory(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"T.*T", "S.*S", "-o"},
-				WantData: &command.Data{
-					patternArg.Name():    command.StringListValue("T.*T", "S.*S"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:       command.StringListValue("T.*T", "S.*S"),
 					matchOnlyFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					"SdTfghSjT",
 					"TxScvbSnmT",
@@ -182,10 +182,10 @@ func TestHistory(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"T.*T", "S.*S", "-o"},
-				WantData: &command.Data{
-					patternArg.Name():    command.StringListValue("T.*T", "S.*S"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:       command.StringListValue("T.*T", "S.*S"),
 					matchOnlyFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					"SaS...TghjT",
 					"TzT...SnmS",

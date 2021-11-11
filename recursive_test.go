@@ -97,9 +97,9 @@ func TestRecursive(t *testing.T) {
 			name: "finds matches",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alpha"},
-				WantData: &command.Data{
-					patternArg.Name(): command.StringListValue("^alpha"),
-				},
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName: command.StringListValue("^alpha"),
+				}},
 				WantStdout: []string{
 					withFile(withLine(1, fmt.Sprintf("%s%s", matchColor.Format("alpha"), " bravo delta")), "testing", "lots.txt"),
 					withFile(withLine(3, fmt.Sprintf("%s%s", matchColor.Format("alpha"), " hello there")), "testing", "lots.txt"),
@@ -112,11 +112,11 @@ func TestRecursive(t *testing.T) {
 			name: "finds matches with percentages",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^XYZ.*", "-n", "-h"},
-				WantData: &command.Data{
-					patternArg.Name():   command.StringListValue("^XYZ.*"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("^XYZ.*"),
 					hideFileFlag.Name(): command.TrueValue(),
 					hideLineFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					matchColor.Format("XYZ %s heyo"),
 				},
@@ -126,11 +126,11 @@ func TestRecursive(t *testing.T) {
 			name: "file flag filter works",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alpha", "-n", "-f", ".*.py"},
-				WantData: &command.Data{
-					patternArg.Name():   command.StringListValue("^alpha"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("^alpha"),
 					fileArg.Name():      command.StringValue(".*.py"),
 					hideLineFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					withFile(matchColor.Format("alpha"), "testing", "that.py"),
 				},
@@ -140,11 +140,11 @@ func TestRecursive(t *testing.T) {
 			name: "inverted file flag filter works",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alpha", "-n", "-F", ".*.py"},
-				WantData: &command.Data{
-					patternArg.Name():    command.StringListValue("^alpha"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:       command.StringListValue("^alpha"),
 					invertFileArg.Name(): command.StringValue(".*.py"),
 					hideLineFlag.Name():  command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					withFile(fmt.Sprintf("%s %s", matchColor.Format("alpha"), "bravo delta"), "testing", "lots.txt"),
 					withFile(fmt.Sprintf("%s %s", matchColor.Format("alpha"), "hello there"), "testing", "lots.txt"),
@@ -156,10 +156,10 @@ func TestRecursive(t *testing.T) {
 			name: "failure if invalid invert file flag",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alpha", "-F", ":)"},
-				WantData: &command.Data{
-					patternArg.Name():    command.StringListValue("^alpha"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:       command.StringListValue("^alpha"),
 					invertFileArg.Name(): command.StringValue(":)"),
-				},
+				}},
 				WantErr:    fmt.Errorf("invalid invert filename regex: error parsing regexp: unexpected ): `:)`"),
 				WantStderr: []string{"invalid invert filename regex: error parsing regexp: unexpected ): `:)`"},
 			},
@@ -168,11 +168,11 @@ func TestRecursive(t *testing.T) {
 			name: "hide file flag works",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"pha[^e]*", "-h", "-n"},
-				WantData: &command.Data{
-					patternArg.Name():   command.StringListValue("pha[^e]*"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("pha[^e]*"),
 					hideFileFlag.Name(): command.TrueValue(),
 					hideLineFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha bravo d"), "elta"), // testing/lots.txt
 					fmt.Sprintf("%s%s", "bravo delta al", matchColor.Format("pha")),       // testing/lots.txt
@@ -186,11 +186,11 @@ func TestRecursive(t *testing.T) {
 			name: "colors multiple matches properly",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"alpha", "bravo", "-h", "-n"},
-				WantData: &command.Data{
-					patternArg.Name():   command.StringListValue("alpha", "bravo"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("alpha", "bravo"),
 					hideFileFlag.Name(): command.TrueValue(),
 					hideLineFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					strings.Join([]string{matchColor.Format("alpha"), matchColor.Format("bravo"), "delta"}, " "),
 					strings.Join([]string{matchColor.Format("bravo"), "delta", matchColor.Format("alpha")}, " "),
@@ -201,10 +201,10 @@ func TestRecursive(t *testing.T) {
 			name: "colors overlapping matches properly",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"q.*t", "e.*u", "-h"},
-				WantData: &command.Data{
-					patternArg.Name():   command.StringListValue("q.*t", "e.*u"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("q.*t", "e.*u"),
 					hideFileFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					fmt.Sprintf("%s:%s%s", colorLine(7), matchColor.Format("qwertyu"), "iop"),
 				},
@@ -214,10 +214,10 @@ func TestRecursive(t *testing.T) {
 			name: "match only flag works",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alp", "-o"},
-				WantData: &command.Data{
-					patternArg.Name():    command.StringListValue("^alp"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:       command.StringListValue("^alp"),
 					matchOnlyFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					withFile(withLine(1, "alp"), "testing", "lots.txt"),           // "alpha bravo delta"
 					withFile(withLine(3, "alp"), "testing", "lots.txt"),           // "alpha bravo delta"
@@ -230,11 +230,11 @@ func TestRecursive(t *testing.T) {
 			name: "match only flag and no file flag works",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alp", "-o", "-h"},
-				WantData: &command.Data{
-					patternArg.Name():    command.StringListValue("^alp"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:       command.StringListValue("^alp"),
 					matchOnlyFlag.Name(): command.TrueValue(),
 					hideFileFlag.Name():  command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					withLine(1, "alp"),
 					withLine(3, "alp"),
@@ -247,11 +247,11 @@ func TestRecursive(t *testing.T) {
 			name: "match only flag works with overlapping",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"qwerty", "rtyui", "-n", "-o"},
-				WantData: &command.Data{
-					patternArg.Name():    command.StringListValue("qwerty", "rtyui"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:       command.StringListValue("qwerty", "rtyui"),
 					matchOnlyFlag.Name(): command.TrueValue(),
 					hideLineFlag.Name():  command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					withFile("qwertyui", "testing", "lots.txt"),
 				},
@@ -261,10 +261,10 @@ func TestRecursive(t *testing.T) {
 			name: "match only flag works with non-overlapping",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"qw", "op", "ty", "-o"},
-				WantData: &command.Data{
-					patternArg.Name():    command.StringListValue("qw", "op", "ty"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:       command.StringListValue("qw", "op", "ty"),
 					matchOnlyFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					withFile(withLine(7, "qw...ty...op"), "testing", "lots.txt"),
 				},
@@ -274,10 +274,10 @@ func TestRecursive(t *testing.T) {
 			name: "file only flag works",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alp", "-l"},
-				WantData: &command.Data{
-					patternArg.Name():   command.StringListValue("^alp"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("^alp"),
 					fileOnlyFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					fileColor.Format(filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
 					fileColor.Format(filepath.Join("testing", "other", "other.txt")), // "alpha zero"
@@ -292,10 +292,10 @@ func TestRecursive(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alp", "-l"},
-				WantData: &command.Data{
-					patternArg.Name():   command.StringListValue("^alp"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("^alp"),
 					fileOnlyFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					fileColor.Format(filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
 					fileColor.Format(filepath.Join("testing", "other", "other.txt")), // "alpha zero"
@@ -306,10 +306,10 @@ func TestRecursive(t *testing.T) {
 			name: "errors on invalid regex in file flag",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alpha", "-f", ":)"},
-				WantData: &command.Data{
-					patternArg.Name(): command.StringListValue("^alpha"),
-					fileArg.Name():    command.StringValue(":)"),
-				},
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName: command.StringListValue("^alpha"),
+					fileArg.Name(): command.StringValue(":)"),
+				}},
 				WantStderr: []string{
 					"invalid filename regex: error parsing regexp: unexpected ): `:)`",
 				},
@@ -321,10 +321,10 @@ func TestRecursive(t *testing.T) {
 			name: "returns lines after",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"five", "-a", "3"},
-				WantData: &command.Data{
-					patternArg.Name(): command.StringListValue("five"),
-					afterFlag.Name():  command.IntValue(3),
-				},
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:   command.StringListValue("five"),
+					afterFlag.Name(): command.IntValue(3),
+				}},
 				WantStdout: []string{
 					withFile(withLine(6, matchColor.Format("five")), "testing", "numbered.txt"),
 					withFile(withLine(7, "six"), "testing", "numbered.txt"),
@@ -337,12 +337,12 @@ func TestRecursive(t *testing.T) {
 			name: "returns lines after when file is hidden",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"five", "-h", "-a", "3", "-n"},
-				WantData: &command.Data{
-					patternArg.Name():   command.StringListValue("five"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("five"),
 					afterFlag.Name():    command.IntValue(3),
 					hideFileFlag.Name(): command.TrueValue(),
 					hideLineFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					matchColor.Format("five"),
 					"six",
@@ -355,12 +355,12 @@ func TestRecursive(t *testing.T) {
 			name: "resets after lines if multiple matches",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^....$", "-f", "numbered.txt", "-a", "2", "-n"},
-				WantData: &command.Data{
-					patternArg.Name():   command.StringListValue("^....$"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("^....$"),
 					afterFlag.Name():    command.IntValue(2),
 					fileArg.Name():      command.StringValue("numbered.txt"),
 					hideLineFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					withFile(matchColor.Format("zero"), "testing", "numbered.txt"),
 					withFile("one", "testing", "numbered.txt"),
@@ -377,13 +377,13 @@ func TestRecursive(t *testing.T) {
 			name: "resets after lines if multiple matches when file is hidden",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^....$", "-f", "numbered.txt", "-h", "-a", "2", "-n"},
-				WantData: &command.Data{
-					patternArg.Name():   command.StringListValue("^....$"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("^....$"),
 					afterFlag.Name():    command.IntValue(2),
 					fileArg.Name():      command.StringValue("numbered.txt"),
 					hideFileFlag.Name(): command.TrueValue(),
 					hideLineFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					matchColor.Format("zero"),
 					"one",
@@ -401,11 +401,11 @@ func TestRecursive(t *testing.T) {
 			name: "returns lines before",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"five", "-n", "-b", "3"},
-				WantData: &command.Data{
-					patternArg.Name():   command.StringListValue("five"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("five"),
 					beforeFlag.Name():   command.IntValue(3),
 					hideLineFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					withFile("two", "testing", "numbered.txt"),
 					withFile("three", "testing", "numbered.txt"),
@@ -418,11 +418,11 @@ func TestRecursive(t *testing.T) {
 			name: "returns lines before when file is hidden",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"five", "-h", "-b", "3"},
-				WantData: &command.Data{
-					patternArg.Name():   command.StringListValue("five"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("five"),
 					beforeFlag.Name():   command.IntValue(3),
 					hideFileFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					withLine(3, "two"),
 					withLine(4, "three"),
@@ -435,12 +435,12 @@ func TestRecursive(t *testing.T) {
 			name: "returns lines before with overlaps",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^....$", "-n", "-f", "numbered.txt", "-b", "2"},
-				WantData: &command.Data{
-					patternArg.Name():   command.StringListValue("^....$"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("^....$"),
 					beforeFlag.Name():   command.IntValue(2),
 					fileArg.Name():      command.StringValue("numbered.txt"),
 					hideLineFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					withFile(matchColor.Format("zero"), "testing", "numbered.txt"),
 					withFile("two", "testing", "numbered.txt"),
@@ -457,12 +457,12 @@ func TestRecursive(t *testing.T) {
 			name: "returns lines before with overlaps when file is hidden",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^....$", "-f", "numbered.txt", "-h", "-b", "2"},
-				WantData: &command.Data{
-					patternArg.Name():   command.StringListValue("^....$"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("^....$"),
 					beforeFlag.Name():   command.IntValue(2),
 					fileArg.Name():      command.StringValue("numbered.txt"),
 					hideFileFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					withLine(1, matchColor.Format("zero")),
 					withLine(3, "two"),
@@ -480,12 +480,12 @@ func TestRecursive(t *testing.T) {
 			name: "after and before line flags work together",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^...$", "-f", "numbered.txt", "-a", "2", "-b", "3"},
-				WantData: &command.Data{
-					patternArg.Name(): command.StringListValue("^...$"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:    command.StringListValue("^...$"),
 					beforeFlag.Name(): command.IntValue(3),
 					afterFlag.Name():  command.IntValue(2),
 					fileArg.Name():    command.StringValue("numbered.txt"),
-				},
+				}},
 				WantStdout: []string{
 					withFile(withLine(1, "zero"), "testing", "numbered.txt"),
 					withFile(withLine(2, matchColor.Format("one")), "testing", "numbered.txt"),
@@ -503,13 +503,13 @@ func TestRecursive(t *testing.T) {
 			name: "after and before line flags work together when file is hidden",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^...$", "-f", "numbered.txt", "-h", "-a", "2", "-b", "3"},
-				WantData: &command.Data{
-					patternArg.Name():   command.StringListValue("^...$"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:      command.StringListValue("^...$"),
 					beforeFlag.Name():   command.IntValue(3),
 					afterFlag.Name():    command.IntValue(2),
 					fileArg.Name():      command.StringValue("numbered.txt"),
 					hideFileFlag.Name(): command.TrueValue(),
-				},
+				}},
 				WantStdout: []string{
 					withLine(1, "zero"),
 					withLine(2, matchColor.Format("one")),
@@ -528,10 +528,10 @@ func TestRecursive(t *testing.T) {
 			name: "fails if unknown directory flag",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"un", "-d", "dev-null"},
-				WantData: &command.Data{
-					patternArg.Name(): command.StringListValue("un"),
-					dirFlag.Name():    command.StringValue("dev-null"),
-				},
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName: command.StringListValue("un"),
+					dirFlag.Name(): command.StringValue("dev-null"),
+				}},
 				WantStderr: []string{
 					`unknown alias: "dev-null"`,
 				},
@@ -545,10 +545,10 @@ func TestRecursive(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"alpha", "-d", "ooo"},
-				WantData: &command.Data{
-					patternArg.Name(): command.StringListValue("alpha"),
-					dirFlag.Name():    command.StringValue("ooo"),
-				},
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName: command.StringListValue("alpha"),
+					dirFlag.Name(): command.StringValue("ooo"),
+				}},
 				WantStdout: []string{
 					fmt.Sprintf("%s:%s:%s zero", fileColor.Format(filepath.Join("testing", "other", "other.txt")), colorLine(1), matchColor.Format("alpha")),
 				},
@@ -575,9 +575,9 @@ func TestRecursive(t *testing.T) {
 			name: "add ignore file requires valid regex",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"if", "a", "*"},
-				WantData: &command.Data{
+				WantData: &command.Data{Values: map[string]*command.Value{
 					ignoreFilePattern.Name(): command.StringListValue("*"),
-				},
+				}},
 				WantStderr: []string{"validation failed: [ListIsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"},
 				WantErr:    fmt.Errorf("validation failed: [ListIsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"),
 			},
@@ -586,9 +586,9 @@ func TestRecursive(t *testing.T) {
 			name: "add ignore file pattern to empty map",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"if", "a", ".binary$"},
-				WantData: &command.Data{
+				WantData: &command.Data{Values: map[string]*command.Value{
 					ignoreFilePattern.Name(): command.StringListValue(".binary$"),
-				},
+				}},
 			},
 			want: &recursive{
 				IgnoreFilePatterns: map[string]bool{
@@ -603,9 +603,9 @@ func TestRecursive(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"if", "a", ".binary$"},
-				WantData: &command.Data{
+				WantData: &command.Data{Values: map[string]*command.Value{
 					ignoreFilePattern.Name(): command.StringListValue(".binary$"),
-				},
+				}},
 			},
 			want: &recursive{
 				IgnoreFilePatterns: map[string]bool{
@@ -621,9 +621,9 @@ func TestRecursive(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"if", "a", ".bin", "ary$"},
-				WantData: &command.Data{
+				WantData: &command.Data{Values: map[string]*command.Value{
 					ignoreFilePattern.Name(): command.StringListValue(".bin", "ary$"),
-				},
+				}},
 			},
 			want: &recursive{
 				IgnoreFilePatterns: map[string]bool{
@@ -637,9 +637,9 @@ func TestRecursive(t *testing.T) {
 			name: "delete ignore file requires valid regex",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"if", "d", "*"},
-				WantData: &command.Data{
+				WantData: &command.Data{Values: map[string]*command.Value{
 					ignoreFilePattern.Name(): command.StringListValue("*"),
-				},
+				}},
 				WantStderr: []string{"validation failed: [ListIsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"},
 				WantErr:    fmt.Errorf("validation failed: [ListIsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"),
 			},
@@ -648,9 +648,9 @@ func TestRecursive(t *testing.T) {
 			name: "deletes ignore file patterns from empty map",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"if", "d", ".bin", "ary$"},
-				WantData: &command.Data{
+				WantData: &command.Data{Values: map[string]*command.Value{
 					ignoreFilePattern.Name(): command.StringListValue(".bin", "ary$"),
-				},
+				}},
 			},
 		},
 		{
@@ -661,9 +661,9 @@ func TestRecursive(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"if", "d", ".bin", "ary$"},
-				WantData: &command.Data{
+				WantData: &command.Data{Values: map[string]*command.Value{
 					ignoreFilePattern.Name(): command.StringListValue(".bin", "ary$"),
-				},
+				}},
 			},
 			want: &recursive{
 				IgnoreFilePatterns: map[string]bool{
@@ -744,9 +744,9 @@ func TestAutocomplete(t *testing.T) {
 			ctc: &command.CompleteTestCase{
 				Args: "cmd if d ",
 				Want: []string{"abc", "def", "ghi"},
-				WantData: &command.Data{
+				WantData: &command.Data{Values: map[string]*command.Value{
 					ignoreFilePattern.Name(): command.StringListValue(""),
-				},
+				}},
 			},
 		},
 	} {
@@ -800,7 +800,7 @@ func TestUsage(t *testing.T) {
 			"",
 			"Arguments:",
 			"  IGNORE_PATTERN: Files that match these will be ignored",
-			"  PATTERN: Pattern(s) required to be present in each line",
+			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
 			"",
 			"Flags:",
 			"  after: Show the matched line and the n lines after it",
@@ -827,7 +827,7 @@ func TestUsage(t *testing.T) {
 			"SETUP_FILE [ PATTERN ... ] --ignore-case|-i --invert|-v --match-only|-o",
 			"",
 			"Arguments:",
-			"  PATTERN: Pattern(s) required to be present in each line",
+			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
 			"  SETUP_FILE: file used to run setup for command",
 			"",
 			"Flags:",
@@ -844,7 +844,7 @@ func TestUsage(t *testing.T) {
 			"[ PATTERN ... ] --cat|-c --ignore-case|-i --invert|-v --match-only|-o",
 			"",
 			"Arguments:",
-			"  PATTERN: Pattern(s) required to be present in each line",
+			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
 			"",
 			"Flags:",
 			"  cat: Run cat command on all files that match",
@@ -861,7 +861,7 @@ func TestUsage(t *testing.T) {
 			"[ PATTERN ... ] --after|-a --before|-b --ignore-case|-i --invert|-v --match-only|-o",
 			"",
 			"Arguments:",
-			"  PATTERN: Pattern(s) required to be present in each line",
+			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
 			"",
 			"Flags:",
 			"  after: Show the matched line and the n lines after it",

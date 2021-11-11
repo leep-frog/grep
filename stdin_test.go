@@ -103,9 +103,9 @@ func TestStdin(t *testing.T) {
 					fmt.Sprintf("alph%s", matchColor.Format("a")),
 					fmt.Sprintf("delt%s", matchColor.Format("a")),
 				},
-				WantData: &command.Data{
-					patternArg.Name(): command.StringListValue("a$"),
-				},
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName: command.StringListValue("a$"),
+				}},
 			},
 		},
 		{
@@ -134,10 +134,10 @@ func TestStdin(t *testing.T) {
 					"nine",
 					matchColor.Format("ten"),
 				},
-				WantData: &command.Data{
-					patternArg.Name(): command.StringListValue("^...$"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:    command.StringListValue("^...$"),
 					beforeFlag.Name(): command.IntValue(1),
-				},
+				}},
 			},
 		},
 		{
@@ -166,10 +166,10 @@ func TestStdin(t *testing.T) {
 					"nine",
 					"ten",
 				},
-				WantData: &command.Data{
-					patternArg.Name(): command.StringListValue("^.....$"),
-					afterFlag.Name():  command.IntValue(2),
-				},
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:   command.StringListValue("^.....$"),
+					afterFlag.Name(): command.IntValue(2),
+				}},
 			},
 		},
 		{
@@ -197,11 +197,11 @@ func TestStdin(t *testing.T) {
 					"six",
 					"seven",
 				},
-				WantData: &command.Data{
-					patternArg.Name(): command.StringListValue("five"),
+				WantData: &command.Data{Values: map[string]*command.Value{
+					patternArgName:    command.StringListValue("five"),
 					afterFlag.Name():  command.IntValue(2),
 					beforeFlag.Name(): command.IntValue(3),
-				},
+				}},
 			},
 		},
 	} {
