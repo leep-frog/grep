@@ -30,7 +30,7 @@ func (*filename) Flags() []command.Flag {
 }
 func (*filename) MakeNode(n *command.Node) *command.Node { return n }
 
-func (*filename) Process(output command.Output, data *command.Data, ffs filterFuncs) error {
+func (*filename) Process(output command.Output, data *command.Data, f filter) error {
 	cat := data.Bool(visitFlag.Name())
 	return filepath.Walk(startDir, func(path string, fi os.FileInfo, err error) error {
 		if err != nil {
@@ -40,7 +40,7 @@ func (*filename) Process(output command.Output, data *command.Data, ffs filterFu
 			return output.Stderrf("failed to access path %q: %v", path, err)
 		}
 
-		formattedString, ok := ffs.Apply(fi.Name(), data)
+		formattedString, ok := apply(f, fi.Name(), data)
 
 		if !ok {
 			return nil

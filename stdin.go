@@ -31,8 +31,8 @@ func (*stdin) Flags() []command.Flag {
 
 func (*stdin) MakeNode(n *command.Node) *command.Node { return n }
 
-func (si *stdin) Process(output command.Output, data *command.Data, ffs filterFuncs) error {
-	list := newLinkedList(ffs, data, si.scanner)
+func (si *stdin) Process(output command.Output, data *command.Data, f filter) error {
+	list := newLinkedList(f, data, si.scanner)
 	for formattedString, _, ok := list.getNext(); ok; formattedString, _, ok = list.getNext() {
 		output.Stdout(formattedString)
 	}

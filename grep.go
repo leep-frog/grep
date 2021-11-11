@@ -26,9 +26,38 @@ var (
 	}
 )
 
-type filterFunc func(string) (*match, bool)
+type filter interface {
+	filter(string) ([]*match, bool)
+}
 
-type filterFuncs []filterFunc
+type andFilter struct {
+	filters []filter
+}
+
+func (af *andFilter) filter(s string) ([]*match, bool) {
+	var ms []*match
+	for _, f := range af.filters {
+		if m, ok := f.filter(s); ok {
+			ms = append(ms, m...)
+		} else {
+			return nil, false
+		}
+	}
+	return ms, true
+}
+
+type orFilter struct {
+	filters []filter
+}
+
+func (of *orFilter) filter(s string) ([]*match, bool) {
+	for _, f := range of.filters {
+		if m, ok := f.filter(s); ok {
+			return m, true
+		}
+	}
+	return nil, false
+}
 
 // Used to determine how to color overlapping matches
 type event struct {
@@ -66,19 +95,13 @@ func disjointMatches(ms []*match) []*match {
 	return ums
 }
 
-func (ffs filterFuncs) Apply(s string, data *command.Data) (string, bool) {
+func apply(f filter, s string, data *command.Data) (string, bool) {
 	matchOnly := data.Bool(matchOnlyFlag.Name())
 	otherString := s
 
-	var matches []*match
-	for _, ff := range ffs {
-		m, ok := ff(s)
-		if !ok {
-			return "", false
-		}
-		if m != nil {
-			matches = append(matches, m)
-		}
+	matches, ok := f.filter(s)
+	if !ok {
+		return "", false
 	}
 	matches = disjointMatches(matches)
 
@@ -107,7 +130,7 @@ func (ffs filterFuncs) Apply(s string, data *command.Data) (string, bool) {
 
 type inputSource interface {
 	Name() string
-	Process(command.Output, *command.Data, filterFuncs) error
+	Process(command.Output, *command.Data, filter) error
 	Flags() []command.Flag
 	MakeNode(*command.Node) *command.Node
 	Setup() []string
@@ -145,7 +168,30 @@ type match struct {
 	end   int
 }
 
-func colorMatch(r *regexp.Regexp) func(string) (*match, bool) {
+type colorMatcher struct {
+	r *regexp.Regexp
+}
+
+func (cm *colorMatcher) filter(s string) ([]*match, bool) {
+	indices := cm.r.FindStringIndex(s)
+	if indices == nil {
+		return nil, false
+	}
+	return []*match{&match{
+		start: indices[0],
+		end:   indices[1],
+	}}, true
+}
+
+type invertMatcher struct {
+	r *regexp.Regexp
+}
+
+func (im *invertMatcher) filter(s string) ([]*match, bool) {
+	return nil, !im.r.MatchString(s)
+}
+
+/*func colorMatch(r *regexp.Regexp) func(string) (*match, bool) {
 	return func(s string) (*match, bool) {
 		indices := r.FindStringIndex(s)
 		if indices == nil {
@@ -156,6 +202,9 @@ func colorMatch(r *regexp.Regexp) func(string) (*match, bool) {
 			end:   indices[1],
 		}, true
 	}
+}*/
+func colorMatch(r *regexp.Regexp) filter {
+	return &colorMatcher{r}
 }
 
 func (g *Grep) Complete(*command.Input, *command.Data) (*command.Completion, error) {
@@ -165,22 +214,22 @@ func (g *Grep) Complete(*command.Input, *command.Data) (*command.Completion, err
 func (g *Grep) Execute(output command.Output, data *command.Data) error {
 	ignoreCase := data.Bool(caseFlag.Name())
 
-	var ffs filterFuncs
+	var filters []filter
 	for _, pattern := range data.StringList(patternArgName) {
 		if ignoreCase {
 			pattern = fmt.Sprintf("(?i)%s", pattern)
 		}
 		// ListIsRegex ensures that only valid regexes reach this point.
-		ffs = append(ffs, colorMatch(regexp.MustCompile(pattern)))
+		filters = append(filters, colorMatch(regexp.MustCompile(pattern)))
 	}
 
 	for _, pattern := range data.StringList(invertFlag.Name()) {
 		// ListIsRegex ensures that only valid regexes reach this point.
 		r := regexp.MustCompile(pattern)
-		ffs = append(ffs, func(s string) (*match, bool) { return nil, !r.MatchString(s) })
+		filters = append(filters, &invertMatcher{r})
 	}
 
-	return g.InputSource.Process(output, data, ffs)
+	return g.InputSource.Process(output, data, &andFilter{filters})
 }
 
 func (g *Grep) Node() *command.Node {

@@ -26,16 +26,16 @@ func (*history) MakeNode(n *command.Node) *command.Node {
 	return command.SerialNodesTo(n, command.SetupArg)
 }
 
-func (*history) Process(output command.Output, data *command.Data, ffs filterFuncs) error {
-	f, err := osOpen(data.String(command.SetupArgName))
+func (*history) Process(output command.Output, data *command.Data, f filter) error {
+	s, err := osOpen(data.String(command.SetupArgName))
 	if err != nil {
 		return output.Stderrf("failed to open setup output file: %v", err)
 	}
 
-	scanner := bufio.NewScanner(f)
+	scanner := bufio.NewScanner(s)
 	scanner.Split(bufio.ScanLines)
 	for scanner.Scan() {
-		formattedString, ok := ffs.Apply(scanner.Text(), data)
+		formattedString, ok := apply(f, scanner.Text(), data)
 		if !ok {
 			continue
 		}

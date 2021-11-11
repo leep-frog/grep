@@ -145,7 +145,7 @@ func (r *recursive) Changed() bool {
 	return r.changed
 }
 
-func (r *recursive) Process(output command.Output, data *command.Data, ffs filterFuncs) error {
+func (r *recursive) Process(output command.Output, data *command.Data, fltr filter) error {
 	var nameRegexes []*regexp.Regexp
 	for ifp := range r.IgnoreFilePatterns {
 		// ListIsRegex ArgOption ensures that these regexes are valid, so it's okay to use MustCompile here.
@@ -212,7 +212,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, ffs filte
 		}
 
 		scanner := bufio.NewScanner(f)
-		list := newLinkedList(ffs, data, scanner)
+		list := newLinkedList(fltr, data, scanner)
 		for formattedString, line, ok := list.getNext(); ok; formattedString, line, ok = list.getNext() {
 			formattedPath := fileColor.Format(path)
 			if data.Bool(fileOnlyFlag.Name()) {
@@ -250,7 +250,7 @@ type linkedList struct {
 
 	before int
 	after  int
-	ffs    filterFuncs
+	filter filter
 
 	data *command.Data
 
@@ -261,11 +261,11 @@ type linkedList struct {
 	clearBefores bool
 }
 
-func newLinkedList(ffs filterFuncs, data *command.Data, scanner *bufio.Scanner) *linkedList {
+func newLinkedList(fltr filter, data *command.Data, scanner *bufio.Scanner) *linkedList {
 	return &linkedList{
 		before:  data.Int(beforeFlag.Name()),
 		after:   data.Int(afterFlag.Name()),
-		ffs:     ffs,
+		filter:  fltr,
 		scanner: scanner,
 
 		data: data,
@@ -293,7 +293,7 @@ func (ll *linkedList) getNext() (string, int, bool) {
 		s := ll.scanner.Text()
 
 		// If we got a match, then update lastMatch and print this line and any previous ones.
-		if formattedString, ok := ll.ffs.Apply(s, ll.data); ok {
+		if formattedString, ok := apply(ll.filter, s, ll.data); ok {
 			ll.lastMatch = 0
 			ll.pushBack(formattedString, ll.lineCount)
 			ll.clearBefores = true
