@@ -96,9 +96,9 @@ func TestFilename(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{":)"},
 				WantStderr: []string{
-					"invalid regex: error parsing regexp: unexpected ): `:)`",
+					"validation failed: [ListIsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`",
 				},
-				WantErr: fmt.Errorf("invalid regex: error parsing regexp: unexpected ): `:)`"),
+				WantErr: fmt.Errorf("validation failed: [ListIsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`"),
 				WantData: &command.Data{Values: map[string]*command.Value{
 					patternArgName: command.StringListValue(":)"),
 				}},
@@ -182,9 +182,9 @@ func TestFilename(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"-v", ":)"},
 				WantStderr: []string{
-					"invalid invert regex: error parsing regexp: unexpected ): `:)`",
+					"validation failed: [ListIsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`",
 				},
-				WantErr: fmt.Errorf("invalid invert regex: error parsing regexp: unexpected ): `:)`"),
+				WantErr: fmt.Errorf("validation failed: [ListIsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`"),
 				WantData: &command.Data{Values: map[string]*command.Value{
 					"invert": command.StringListValue(":)"),
 				}},
