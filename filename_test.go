@@ -99,8 +99,8 @@ func TestFilename(t *testing.T) {
 					"validation failed: [ListIsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`",
 				},
 				WantErr: fmt.Errorf("validation failed: [ListIsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`"),
-				WantData: &command.Data{Values: map[string]*command.Value{
-					patternArgName: command.StringListValue(":)"),
+				WantData: &command.Data{Interfaces: map[string]interface{}{
+					patternArgName: [][]string{{":)"}},
 				}},
 			},
 		},
@@ -114,8 +114,8 @@ func TestFilename(t *testing.T) {
 					filepath.Join("testing", "other", matchColor.Format("other.txt")),
 					filepath.Join("testing", matchColor.Format("this.txt")),
 				},
-				WantData: &command.Data{Values: map[string]*command.Value{
-					patternArgName: command.StringListValue(".*.txt"),
+				WantData: &command.Data{Interfaces: map[string]interface{}{
+					patternArgName: [][]string{{".*.txt"}},
 				}},
 			},
 		},
@@ -127,8 +127,8 @@ func TestFilename(t *testing.T) {
 					filepath.Join("testing", matchColor.Format("other")),
 					filepath.Join("testing", "other", matchColor.Format("other.txt")),
 				},
-				WantData: &command.Data{Values: map[string]*command.Value{
-					patternArgName: command.StringListValue("oth.*"),
+				WantData: &command.Data{Interfaces: map[string]interface{}{
+					patternArgName: [][]string{{"oth.*"}},
 				}},
 			},
 		},
@@ -139,10 +139,14 @@ func TestFilename(t *testing.T) {
 				WantStdout: []string{
 					"alpha zero\necho bravo\n",
 				},
-				WantData: &command.Data{Values: map[string]*command.Value{
-					patternArgName:   command.StringListValue("oth.*"),
-					visitFlag.Name(): command.TrueValue(),
-				}},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						visitFlag.Name(): command.TrueValue(),
+					},
+					Interfaces: map[string]interface{}{
+						patternArgName: [][]string{{"oth.*"}},
+					},
+				},
 			},
 		},
 		{
@@ -153,10 +157,14 @@ func TestFilename(t *testing.T) {
 					"alpha\n",
 					"bravo\n",
 				},
-				WantData: &command.Data{Values: map[string]*command.Value{
-					patternArgName:   command.StringListValue("^th"),
-					visitFlag.Name(): command.TrueValue(),
-				}},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						visitFlag.Name(): command.TrueValue(),
+					},
+					Interfaces: map[string]interface{}{
+						patternArgName: [][]string{{"^th"}},
+					},
+				},
 			},
 		},
 		{

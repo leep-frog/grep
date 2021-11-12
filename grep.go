@@ -13,11 +13,10 @@ import (
 
 var (
 	patternArgName = "PATTERN"
-	//patternArg     = command.StringListListNode(patternArgName, "Pattern(s) required to be present in each line. The list breaker acts as an or operator for groups of regexes", "|", 0, command.UnboundedList)
-	patternArg    = command.StringListNode(patternArgName, "Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes", 0, command.UnboundedList, command.ListIsRegex())
-	caseFlag      = command.BoolFlag("ignore-case", 'i', "Ignore character casing")
-	invertFlag    = command.StringListFlag("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList, command.ListIsRegex())
-	matchOnlyFlag = command.BoolFlag("match-only", 'o', "Only show the matching segment")
+	patternArg     = command.StringListListNode(patternArgName, "Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes", "|", 0, command.UnboundedList, command.ListIsRegex())
+	caseFlag       = command.BoolFlag("ignore-case", 'i', "Ignore character casing")
+	invertFlag     = command.StringListFlag("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList, command.ListIsRegex())
+	matchOnlyFlag  = command.BoolFlag("match-only", 'o', "Only show the matching segment")
 	// TODO: or pattern
 
 	matchColor = &color.Format{
@@ -215,12 +214,17 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 	ignoreCase := data.Bool(caseFlag.Name())
 
 	var filters []filter
-	for _, pattern := range data.StringList(patternArgName) {
-		if ignoreCase {
-			pattern = fmt.Sprintf("(?i)%s", pattern)
+	ps := data.GetI(patternArgName)
+	if ps != nil {
+		for _, patternGroup := range data.GetI(patternArgName).([][]string) {
+			for _, pattern := range patternGroup {
+				if ignoreCase {
+					pattern = fmt.Sprintf("(?i)%s", pattern)
+				}
+				// ListIsRegex ensures that only valid regexes reach this point.
+				filters = append(filters, colorMatch(regexp.MustCompile(pattern)))
+			}
 		}
-		// ListIsRegex ensures that only valid regexes reach this point.
-		filters = append(filters, colorMatch(regexp.MustCompile(pattern)))
 	}
 
 	for _, pattern := range data.StringList(invertFlag.Name()) {
