@@ -947,12 +947,10 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: HistoryCLI().Node(),
 		WantString: []string{
-			// TODO: hide setup file argument
-			"SETUP_FILE { [ PATTERN ... ] | } ... --ignore-case|-i --invert|-v --match-only|-o",
+			"{ [ PATTERN ... ] | } ... --ignore-case|-i --invert|-v --match-only|-o",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
-			"  SETUP_FILE: file used to run setup for command",
 			"",
 			"Flags:",
 			"  ignore-case: Ignore character casing",
