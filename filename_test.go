@@ -120,6 +120,23 @@ func TestFilename(t *testing.T) {
 			},
 		},
 		{
+			name: "works with OR operator",
+			etc: &command.ExecuteTestCase{
+				Args: []string{"\\.txt$", ".*s\\.", "|", ".*\\.py$"},
+				WantStdout: []string{
+					filepath.Join("testing", matchColor.Format("lots.txt")),
+					filepath.Join("testing", matchColor.Format("that.py")),
+					filepath.Join("testing", matchColor.Format("this.txt")),
+				},
+				WantData: &command.Data{Interfaces: map[string]interface{}{
+					patternArgName: [][]string{
+						{"\\.txt$", ".*s\\."},
+						{".*\\.py$"},
+					},
+				}},
+			},
+		},
+		{
 			name: "gets files and directories",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"oth.*"},

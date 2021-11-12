@@ -216,14 +216,20 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 	var filters []filter
 	ps := data.GetI(patternArgName)
 	if ps != nil {
+		of := &orFilter{}
 		for _, patternGroup := range data.GetI(patternArgName).([][]string) {
+			af := &andFilter{}
 			for _, pattern := range patternGroup {
 				if ignoreCase {
 					pattern = fmt.Sprintf("(?i)%s", pattern)
 				}
 				// ListIsRegex ensures that only valid regexes reach this point.
-				filters = append(filters, colorMatch(regexp.MustCompile(pattern)))
+				af.filters = append(af.filters, colorMatch(regexp.MustCompile(pattern)))
 			}
+			of.filters = append(of.filters, af)
+		}
+		if len(of.filters) > 0 {
+			filters = append(filters, of)
 		}
 	}
 
