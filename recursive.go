@@ -74,7 +74,7 @@ func (*recursive) Flags() []command.Flag {
 	}
 }
 
-// TODO: make add/delete/list/search/get (adlsg) stuff generic when type parameters are a thing.
+// TODO: Use store CLI for this
 func (r *recursive) addIgnorePattern(output command.Output, data *command.Data) error {
 	if r.IgnoreFilePatterns == nil {
 		r.IgnoreFilePatterns = map[string]bool{}
@@ -111,14 +111,14 @@ func (r *recursive) listIgnorePattern(output command.Output, data *command.Data)
 
 func (r *recursive) MakeNode(n *command.Node) *command.Node {
 	f := &command.Completor{
-		SuggestionFetcher: command.SimpleFetcher(func(v *command.Value, d *command.Data) *command.Completion {
+		SuggestionFetcher: command.SimpleFetcher(func(v *command.Value, d *command.Data) (*command.Completion, error) {
 			var s []string
 			for p := range r.IgnoreFilePatterns {
 				s = append(s, p)
 			}
 			return &command.Completion{
 				Suggestions: s,
-			}
+			}, nil
 		}),
 	}
 	return command.BranchNode(map[string]*command.Node{
