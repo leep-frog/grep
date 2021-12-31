@@ -75,7 +75,7 @@ func (*recursive) Flags() []command.Flag {
 }
 
 // TODO: Use store CLI for this
-func (r *recursive) addIgnorePattern(output command.Output, data *command.Data) error {
+func (r *recursive) addIgnorePattern(output command.Output, data *command.Data) {
 	if r.IgnoreFilePatterns == nil {
 		r.IgnoreFilePatterns = map[string]bool{}
 	}
@@ -83,21 +83,19 @@ func (r *recursive) addIgnorePattern(output command.Output, data *command.Data) 
 		r.IgnoreFilePatterns[pattern] = true
 	}
 	r.changed = true
-	return nil
 }
 
-func (r *recursive) deleteIgnorePattern(output command.Output, data *command.Data) error {
+func (r *recursive) deleteIgnorePattern(output command.Output, data *command.Data) {
 	if r.IgnoreFilePatterns == nil {
-		return nil
+		return
 	}
 	for _, pattern := range data.StringList(ignoreFilePattern.Name()) {
 		delete(r.IgnoreFilePatterns, pattern)
 	}
 	r.changed = true
-	return nil
 }
 
-func (r *recursive) listIgnorePattern(output command.Output, data *command.Data) error {
+func (r *recursive) listIgnorePattern(output command.Output, data *command.Data) {
 	var patterns []string
 	for p := range r.IgnoreFilePatterns {
 		patterns = append(patterns, p)
@@ -106,7 +104,6 @@ func (r *recursive) listIgnorePattern(output command.Output, data *command.Data)
 	for _, p := range patterns {
 		output.Stdout(p)
 	}
-	return nil
 }
 
 func (r *recursive) MakeNode(n *command.Node) *command.Node {

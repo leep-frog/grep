@@ -245,5 +245,5 @@ func (g *Grep) Node() *command.Node {
 	flags := append(g.InputSource.Flags(), caseFlag, invertFlag, matchOnlyFlag)
 	flagNode := command.NewFlagNode(flags...)
 
-	return g.InputSource.MakeNode(command.SerialNodes(flagNode, patternArg, command.ExecutorNode(g.Execute)))
+	return g.InputSource.MakeNode(command.SerialNodes(flagNode, patternArg, command.ExecuteErrNode(g.Execute)))
 }
