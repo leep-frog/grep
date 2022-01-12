@@ -134,8 +134,8 @@ func (r *recursive) MakeNode(n *command.Node) *command.Node {
 				command.Description("List global file ignore patterns"),
 				command.ExecutorNode(r.listIgnorePattern),
 			),
-		}, nil, true), command.Description("Commands around global ignore file patterns")),
-	}, n, true)
+		}, nil), command.Description("Commands around global ignore file patterns")),
+	}, n)
 }
 
 func (r *recursive) Changed() bool {
