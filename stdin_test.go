@@ -104,7 +104,7 @@ func TestStdin(t *testing.T) {
 					fmt.Sprintf("delt%s", matchColor.Format("a")),
 				},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
+					Values: map[string]interface{}{
 						patternArgName: [][]string{{"a$"}},
 					},
 				},
@@ -137,11 +137,9 @@ func TestStdin(t *testing.T) {
 					matchColor.Format("ten"),
 				},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^...$"}},
-					},
-					Values: map[string]*command.Value{
-						beforeFlag.Name(): command.IntValue(1),
+					Values: map[string]interface{}{
+						patternArgName:    [][]string{{"^...$"}},
+						beforeFlag.Name(): 1,
 					},
 				},
 			},
@@ -173,11 +171,9 @@ func TestStdin(t *testing.T) {
 					"ten",
 				},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^.....$"}},
-					},
-					Values: map[string]*command.Value{
-						afterFlag.Name(): command.IntValue(2),
+					Values: map[string]interface{}{
+						patternArgName:   [][]string{{"^.....$"}},
+						afterFlag.Name(): 2,
 					},
 				},
 			},
@@ -208,12 +204,10 @@ func TestStdin(t *testing.T) {
 					"seven",
 				},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"five"}},
-					},
-					Values: map[string]*command.Value{
-						afterFlag.Name():  command.IntValue(2),
-						beforeFlag.Name(): command.IntValue(3),
+					Values: map[string]interface{}{
+						patternArgName:    [][]string{{"five"}},
+						afterFlag.Name():  2,
+						beforeFlag.Name(): 3,
 					},
 				},
 			},

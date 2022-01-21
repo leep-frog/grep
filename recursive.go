@@ -18,16 +18,16 @@ var (
 	startDir                                   = "."
 	osOpen   func(s string) (io.Reader, error) = func(s string) (io.Reader, error) { return os.Open(s) }
 
-	ignoreFilePattern = command.StringListNode("IGNORE_PATTERN", "Files that match these will be ignored", 1, command.UnboundedList, command.ListIsRegex())
+	ignoreFilePattern = command.ListArg[string]("IGNORE_PATTERN", "Files that match these will be ignored", 1, command.UnboundedList, command.ValidatorList(command.IsRegex()))
 
-	fileArg       = command.StringFlag("file", 'f', "Only select files that match this pattern")
-	invertFileArg = command.StringFlag("invert-file", 'F', "Only select files that don't match this pattern")
+	fileArg       = command.NewFlag[string]("file", 'f', "Only select files that match this pattern")
+	invertFileArg = command.NewFlag[string]("invert-file", 'F', "Only select files that don't match this pattern")
 	hideFileFlag  = command.BoolFlag("hide-file", 'h', "Don't show file names")
 	fileOnlyFlag  = command.BoolFlag("file-only", 'l', "Only show file names")
-	beforeFlag    = command.IntFlag("before", 'b', "Show the matched line and the n lines before it")
-	afterFlag     = command.IntFlag("after", 'a', "Show the matched line and the n lines after it")
-	dirFlag       = command.StringFlag("directory", 'd', "Search through the provided directory instead of pwd", &command.Completor{
-		SuggestionFetcher: &command.FileFetcher{
+	beforeFlag    = command.NewFlag[int]("before", 'b', "Show the matched line and the n lines before it")
+	afterFlag     = command.NewFlag[int]("after", 'a', "Show the matched line and the n lines after it")
+	dirFlag       = command.NewFlag[string]("directory", 'd', "Search through the provided directory instead of pwd", &command.Completor[string]{
+		SuggestionFetcher: &command.FileFetcher[string]{
 			IgnoreFiles: true,
 		},
 	})
@@ -107,8 +107,8 @@ func (r *recursive) listIgnorePattern(output command.Output, data *command.Data)
 }
 
 func (r *recursive) MakeNode(n *command.Node) *command.Node {
-	f := &command.Completor{
-		SuggestionFetcher: command.SimpleFetcher(func(v *command.Value, d *command.Data) (*command.Completion, error) {
+	f := &command.Completor[[]string]{
+		SuggestionFetcher: command.SimpleFetcher[[]string](func(v []string, d *command.Data) (*command.Completion, error) {
 			var s []string
 			for p := range r.IgnoreFilePatterns {
 				s = append(s, p)
@@ -150,7 +150,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 	}
 	var fr *regexp.Regexp
 
-	if data.HasArg(fileArg.Name()) {
+	if data.Has(fileArg.Name()) {
 		f := data.String(fileArg.Name())
 		var err error
 		if fr, err = regexp.Compile(f); err != nil {
@@ -159,7 +159,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 	}
 
 	var ifr *regexp.Regexp
-	if data.HasArg(invertFileArg.Name()) {
+	if data.Has(invertFileArg.Name()) {
 		f := data.String(invertFileArg.Name())
 		var err error
 		if ifr, err = regexp.Compile(f); err != nil {
@@ -168,7 +168,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 	}
 
 	dir := startDir
-	if data.HasArg(dirFlag.Name()) {
+	if data.Has(dirFlag.Name()) {
 		da := data.String(dirFlag.Name())
 		var ok bool
 		dir, ok = r.DirectoryAliases[da]

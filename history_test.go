@@ -95,7 +95,7 @@ func TestHistory(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^.e"},
-				WantData: &command.Data{Interfaces: map[string]interface{}{
+				WantData: &command.Data{Values: map[string]interface{}{
 					patternArgName: [][]string{{"^.e"}},
 				}},
 				WantStdout: []string{
@@ -115,11 +115,9 @@ func TestHistory(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^.*a$", "-i"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						caseFlag.Name(): command.TrueValue(),
-					},
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^.*a$"}},
+					Values: map[string]interface{}{
+						caseFlag.Name(): true,
+						patternArgName:  [][]string{{"^.*a$"}},
 					},
 				},
 				WantStdout: []string{
@@ -149,11 +147,9 @@ func TestHistory(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"T.*T", "-o"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						matchOnlyFlag.Name(): command.TrueValue(),
-					},
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"T.*T"}},
+					Values: map[string]interface{}{
+						matchOnlyFlag.Name(): true,
+						patternArgName:       [][]string{{"T.*T"}},
 					},
 				},
 				WantStdout: []string{
@@ -172,11 +168,9 @@ func TestHistory(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"T.*T", "S.*S", "-o"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						matchOnlyFlag.Name(): command.TrueValue(),
-					},
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"T.*T", "S.*S"}},
+					Values: map[string]interface{}{
+						matchOnlyFlag.Name(): true,
+						patternArgName:       [][]string{{"T.*T", "S.*S"}},
 					},
 				},
 				WantStdout: []string{
@@ -195,11 +189,9 @@ func TestHistory(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"T.*T", "S.*S", "-o"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						matchOnlyFlag.Name(): command.TrueValue(),
-					},
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"T.*T", "S.*S"}},
+					Values: map[string]interface{}{
+						matchOnlyFlag.Name(): true,
+						patternArgName:       [][]string{{"T.*T", "S.*S"}},
 					},
 				},
 				WantStdout: []string{

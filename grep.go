@@ -13,9 +13,9 @@ import (
 
 var (
 	patternArgName = "PATTERN"
-	patternArg     = command.StringListListNode(patternArgName, "Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes", "|", 0, command.UnboundedList, command.ListIsRegex())
+	patternArg     = command.StringListListNode(patternArgName, "Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes", "|", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
 	caseFlag       = command.BoolFlag("ignore-case", 'i', "Ignore character casing")
-	invertFlag     = command.StringListFlag("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList, command.ListIsRegex())
+	invertFlag     = command.NewListFlag[string]("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
 	matchOnlyFlag  = command.BoolFlag("match-only", 'o', "Only show the matching segment")
 
 	matchColor = &color.Format{
@@ -213,10 +213,10 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 	ignoreCase := data.Bool(caseFlag.Name())
 
 	var filters []filter
-	ps := data.GetI(patternArgName)
+	ps := data.Values[patternArgName]
 	if ps != nil {
 		of := &orFilter{}
-		for _, patternGroup := range data.GetI(patternArgName).([][]string) {
+		for _, patternGroup := range command.GetData[[][]string](data, patternArgName) {
 			af := &andFilter{}
 			for _, pattern := range patternGroup {
 				if ignoreCase {

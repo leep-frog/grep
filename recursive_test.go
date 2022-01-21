@@ -98,7 +98,7 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alpha"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
+					Values: map[string]interface{}{
 						patternArgName: [][]string{{"^alpha"}},
 					},
 				},
@@ -115,12 +115,10 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^XYZ.*", "-n", "-h"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						hideFileFlag.Name(): command.TrueValue(),
-						hideLineFlag.Name(): command.TrueValue(),
-					},
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^XYZ.*"}},
+					Values: map[string]interface{}{
+						hideFileFlag.Name(): true,
+						hideLineFlag.Name(): true,
+						patternArgName:      [][]string{{"^XYZ.*"}},
 					},
 				},
 				WantStdout: []string{
@@ -133,12 +131,10 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alpha", "-n", "-f", ".*.py"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^alpha"}},
-					},
-					Values: map[string]*command.Value{
-						fileArg.Name():      command.StringValue(".*.py"),
-						hideLineFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:      [][]string{{"^alpha"}},
+						fileArg.Name():      ".*.py",
+						hideLineFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -151,12 +147,10 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alpha", "-n", "-F", ".*.py"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^alpha"}},
-					},
-					Values: map[string]*command.Value{
-						invertFileArg.Name(): command.StringValue(".*.py"),
-						hideLineFlag.Name():  command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:       [][]string{{"^alpha"}},
+						invertFileArg.Name(): ".*.py",
+						hideLineFlag.Name():  true,
 					},
 				},
 				WantStdout: []string{
@@ -171,11 +165,9 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alpha", "-F", ":)"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^alpha"}},
-					},
-					Values: map[string]*command.Value{
-						invertFileArg.Name(): command.StringValue(":)"),
+					Values: map[string]interface{}{
+						patternArgName:       [][]string{{"^alpha"}},
+						invertFileArg.Name(): ":)",
 					},
 				},
 				WantErr:    fmt.Errorf("invalid invert filename regex: error parsing regexp: unexpected ): `:)`"),
@@ -187,12 +179,10 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"pha[^e]*", "-h", "-n"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"pha[^e]*"}},
-					},
-					Values: map[string]*command.Value{
-						hideFileFlag.Name(): command.TrueValue(),
-						hideLineFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:      [][]string{{"pha[^e]*"}},
+						hideFileFlag.Name(): true,
+						hideLineFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -209,12 +199,10 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"alpha", "bravo", "-h", "-n"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"alpha", "bravo"}},
-					},
-					Values: map[string]*command.Value{
-						hideFileFlag.Name(): command.TrueValue(),
-						hideLineFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:      [][]string{{"alpha", "bravo"}},
+						hideFileFlag.Name(): true,
+						hideLineFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -228,11 +216,9 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"q.*t", "e.*u", "-h"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"q.*t", "e.*u"}},
-					},
-					Values: map[string]*command.Value{
-						hideFileFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:      [][]string{{"q.*t", "e.*u"}},
+						hideFileFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -245,11 +231,9 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alp", "-o"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^alp"}},
-					},
-					Values: map[string]*command.Value{
-						matchOnlyFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:       [][]string{{"^alp"}},
+						matchOnlyFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -265,12 +249,10 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alp", "-o", "-h"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^alp"}},
-					},
-					Values: map[string]*command.Value{
-						matchOnlyFlag.Name(): command.TrueValue(),
-						hideFileFlag.Name():  command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:       [][]string{{"^alp"}},
+						matchOnlyFlag.Name(): true,
+						hideFileFlag.Name():  true,
 					},
 				},
 				WantStdout: []string{
@@ -286,12 +268,10 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"qwerty", "rtyui", "-n", "-o"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"qwerty", "rtyui"}},
-					},
-					Values: map[string]*command.Value{
-						matchOnlyFlag.Name(): command.TrueValue(),
-						hideLineFlag.Name():  command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:       [][]string{{"qwerty", "rtyui"}},
+						matchOnlyFlag.Name(): true,
+						hideLineFlag.Name():  true,
 					},
 				},
 				WantStdout: []string{
@@ -304,11 +284,9 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"qw", "op", "ty", "-o"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"qw", "op", "ty"}},
-					},
-					Values: map[string]*command.Value{
-						matchOnlyFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:       [][]string{{"qw", "op", "ty"}},
+						matchOnlyFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -321,11 +299,9 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alp", "-l"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^alp"}},
-					},
-					Values: map[string]*command.Value{
-						fileOnlyFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:      [][]string{{"^alp"}},
+						fileOnlyFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -343,11 +319,9 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alp", "-l"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^alp"}},
-					},
-					Values: map[string]*command.Value{
-						fileOnlyFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:      [][]string{{"^alp"}},
+						fileOnlyFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -361,11 +335,9 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alpha", "-f", ":)"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
+					Values: map[string]interface{}{
 						patternArgName: [][]string{{"^alpha"}},
-					},
-					Values: map[string]*command.Value{
-						fileArg.Name(): command.StringValue(":)"),
+						fileArg.Name(): ":)",
 					},
 				},
 				WantStderr: []string{
@@ -380,11 +352,9 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"five", "-a", "3"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"five"}},
-					},
-					Values: map[string]*command.Value{
-						afterFlag.Name(): command.IntValue(3),
+					Values: map[string]interface{}{
+						patternArgName:   [][]string{{"five"}},
+						afterFlag.Name(): 3,
 					},
 				},
 				WantStdout: []string{
@@ -400,13 +370,11 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"five", "-h", "-a", "3", "-n"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"five"}},
-					},
-					Values: map[string]*command.Value{
-						afterFlag.Name():    command.IntValue(3),
-						hideFileFlag.Name(): command.TrueValue(),
-						hideLineFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:      [][]string{{"five"}},
+						afterFlag.Name():    3,
+						hideFileFlag.Name(): true,
+						hideLineFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -422,13 +390,11 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^....$", "-f", "numbered.txt", "-a", "2", "-n"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^....$"}},
-					},
-					Values: map[string]*command.Value{
-						afterFlag.Name():    command.IntValue(2),
-						fileArg.Name():      command.StringValue("numbered.txt"),
-						hideLineFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:      [][]string{{"^....$"}},
+						afterFlag.Name():    2,
+						fileArg.Name():      "numbered.txt",
+						hideLineFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -448,14 +414,12 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^....$", "-f", "numbered.txt", "-h", "-a", "2", "-n"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^....$"}},
-					},
-					Values: map[string]*command.Value{
-						afterFlag.Name():    command.IntValue(2),
-						fileArg.Name():      command.StringValue("numbered.txt"),
-						hideFileFlag.Name(): command.TrueValue(),
-						hideLineFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:      [][]string{{"^....$"}},
+						afterFlag.Name():    2,
+						fileArg.Name():      "numbered.txt",
+						hideFileFlag.Name(): true,
+						hideLineFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -476,12 +440,10 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"five", "-n", "-b", "3"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"five"}},
-					},
-					Values: map[string]*command.Value{
-						beforeFlag.Name():   command.IntValue(3),
-						hideLineFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:      [][]string{{"five"}},
+						beforeFlag.Name():   3,
+						hideLineFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -497,12 +459,10 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"five", "-h", "-b", "3"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"five"}},
-					},
-					Values: map[string]*command.Value{
-						beforeFlag.Name():   command.IntValue(3),
-						hideFileFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:      [][]string{{"five"}},
+						beforeFlag.Name():   3,
+						hideFileFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -518,13 +478,11 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^....$", "-n", "-f", "numbered.txt", "-b", "2"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^....$"}},
-					},
-					Values: map[string]*command.Value{
-						beforeFlag.Name():   command.IntValue(2),
-						fileArg.Name():      command.StringValue("numbered.txt"),
-						hideLineFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:      [][]string{{"^....$"}},
+						beforeFlag.Name():   2,
+						fileArg.Name():      "numbered.txt",
+						hideLineFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -544,13 +502,11 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^....$", "-f", "numbered.txt", "-h", "-b", "2"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^....$"}},
-					},
-					Values: map[string]*command.Value{
-						beforeFlag.Name():   command.IntValue(2),
-						fileArg.Name():      command.StringValue("numbered.txt"),
-						hideFileFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:      [][]string{{"^....$"}},
+						beforeFlag.Name():   2,
+						fileArg.Name():      "numbered.txt",
+						hideFileFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -571,13 +527,11 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^...$", "-f", "numbered.txt", "-a", "2", "-b", "3"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^...$"}},
-					},
-					Values: map[string]*command.Value{
-						beforeFlag.Name(): command.IntValue(3),
-						afterFlag.Name():  command.IntValue(2),
-						fileArg.Name():    command.StringValue("numbered.txt"),
+					Values: map[string]interface{}{
+						patternArgName:    [][]string{{"^...$"}},
+						beforeFlag.Name(): 3,
+						afterFlag.Name():  2,
+						fileArg.Name():    "numbered.txt",
 					},
 				},
 				WantStdout: []string{
@@ -598,14 +552,12 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^...$", "-f", "numbered.txt", "-h", "-a", "2", "-b", "3"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^...$"}},
-					},
-					Values: map[string]*command.Value{
-						beforeFlag.Name():   command.IntValue(3),
-						afterFlag.Name():    command.IntValue(2),
-						fileArg.Name():      command.StringValue("numbered.txt"),
-						hideFileFlag.Name(): command.TrueValue(),
+					Values: map[string]interface{}{
+						patternArgName:      [][]string{{"^...$"}},
+						beforeFlag.Name():   3,
+						afterFlag.Name():    2,
+						fileArg.Name():      "numbered.txt",
+						hideFileFlag.Name(): true,
 					},
 				},
 				WantStdout: []string{
@@ -627,11 +579,9 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"un", "-d", "dev-null"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
+					Values: map[string]interface{}{
 						patternArgName: [][]string{{"un"}},
-					},
-					Values: map[string]*command.Value{
-						dirFlag.Name(): command.StringValue("dev-null"),
+						dirFlag.Name(): "dev-null",
 					},
 				},
 				WantStderr: []string{
@@ -648,11 +598,9 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"alpha", "-d", "ooo"},
 				WantData: &command.Data{
-					Interfaces: map[string]interface{}{
+					Values: map[string]interface{}{
 						patternArgName: [][]string{{"alpha"}},
-					},
-					Values: map[string]*command.Value{
-						dirFlag.Name(): command.StringValue("ooo"),
+						dirFlag.Name(): "ooo",
 					},
 				},
 				WantStdout: []string{
@@ -682,12 +630,12 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"if", "a", "*"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						ignoreFilePattern.Name(): command.StringListValue("*"),
+					Values: map[string]interface{}{
+						ignoreFilePattern.Name(): []string{"*"},
 					},
 				},
-				WantStderr: []string{"validation failed: [ListIsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"},
-				WantErr:    fmt.Errorf("validation failed: [ListIsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"),
+				WantStderr: []string{"validation failed: [IsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"},
+				WantErr:    fmt.Errorf("validation failed: [IsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"),
 			},
 		},
 		{
@@ -695,8 +643,8 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"if", "a", ".binary$"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						ignoreFilePattern.Name(): command.StringListValue(".binary$"),
+					Values: map[string]interface{}{
+						ignoreFilePattern.Name(): []string{".binary$"},
 					},
 				},
 			},
@@ -714,8 +662,8 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"if", "a", ".binary$"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						ignoreFilePattern.Name(): command.StringListValue(".binary$"),
+					Values: map[string]interface{}{
+						ignoreFilePattern.Name(): []string{".binary$"},
 					},
 				},
 			},
@@ -734,8 +682,8 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"if", "a", ".bin", "ary$"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						ignoreFilePattern.Name(): command.StringListValue(".bin", "ary$"),
+					Values: map[string]interface{}{
+						ignoreFilePattern.Name(): []string{".bin", "ary$"},
 					},
 				},
 			},
@@ -752,12 +700,12 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"if", "d", "*"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						ignoreFilePattern.Name(): command.StringListValue("*"),
+					Values: map[string]interface{}{
+						ignoreFilePattern.Name(): []string{"*"},
 					},
 				},
-				WantStderr: []string{"validation failed: [ListIsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"},
-				WantErr:    fmt.Errorf("validation failed: [ListIsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"),
+				WantStderr: []string{"validation failed: [IsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"},
+				WantErr:    fmt.Errorf("validation failed: [IsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"),
 			},
 		},
 		{
@@ -765,8 +713,8 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"if", "d", ".bin", "ary$"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						ignoreFilePattern.Name(): command.StringListValue(".bin", "ary$"),
+					Values: map[string]interface{}{
+						ignoreFilePattern.Name(): []string{".bin", "ary$"},
 					},
 				},
 			},
@@ -780,8 +728,8 @@ func TestRecursive(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"if", "d", ".bin", "ary$"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						ignoreFilePattern.Name(): command.StringListValue(".bin", "ary$"),
+					Values: map[string]interface{}{
+						ignoreFilePattern.Name(): []string{".bin", "ary$"},
 					},
 				},
 			},
@@ -865,8 +813,8 @@ func TestAutocomplete(t *testing.T) {
 				Args: "cmd if d ",
 				Want: []string{"abc", "def", "ghi"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						ignoreFilePattern.Name(): command.StringListValue(""),
+					Values: map[string]interface{}{
+						ignoreFilePattern.Name(): []string{""},
 					},
 				},
 			},

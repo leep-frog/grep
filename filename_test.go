@@ -96,10 +96,10 @@ func TestFilename(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{":)"},
 				WantStderr: []string{
-					"validation failed: [ListIsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`",
+					"validation failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`",
 				},
-				WantErr: fmt.Errorf("validation failed: [ListIsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`"),
-				WantData: &command.Data{Interfaces: map[string]interface{}{
+				WantErr: fmt.Errorf("validation failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`"),
+				WantData: &command.Data{Values: map[string]interface{}{
 					patternArgName: [][]string{{":)"}},
 				}},
 			},
@@ -114,7 +114,7 @@ func TestFilename(t *testing.T) {
 					filepath.Join("testing", "other", matchColor.Format("other.txt")),
 					filepath.Join("testing", matchColor.Format("this.txt")),
 				},
-				WantData: &command.Data{Interfaces: map[string]interface{}{
+				WantData: &command.Data{Values: map[string]interface{}{
 					patternArgName: [][]string{{".*.txt"}},
 				}},
 			},
@@ -128,7 +128,7 @@ func TestFilename(t *testing.T) {
 					filepath.Join("testing", matchColor.Format("that.py")),
 					filepath.Join("testing", matchColor.Format("this.txt")),
 				},
-				WantData: &command.Data{Interfaces: map[string]interface{}{
+				WantData: &command.Data{Values: map[string]interface{}{
 					patternArgName: [][]string{
 						{"\\.txt$", ".*s\\."},
 						{".*\\.py$"},
@@ -144,7 +144,7 @@ func TestFilename(t *testing.T) {
 					filepath.Join("testing", matchColor.Format("other")),
 					filepath.Join("testing", "other", matchColor.Format("other.txt")),
 				},
-				WantData: &command.Data{Interfaces: map[string]interface{}{
+				WantData: &command.Data{Values: map[string]interface{}{
 					patternArgName: [][]string{{"oth.*"}},
 				}},
 			},
@@ -157,11 +157,9 @@ func TestFilename(t *testing.T) {
 					"alpha zero\necho bravo\n",
 				},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						visitFlag.Name(): command.TrueValue(),
-					},
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"oth.*"}},
+					Values: map[string]interface{}{
+						visitFlag.Name(): true,
+						patternArgName:   [][]string{{"oth.*"}},
 					},
 				},
 			},
@@ -175,11 +173,9 @@ func TestFilename(t *testing.T) {
 					"bravo\n",
 				},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						visitFlag.Name(): command.TrueValue(),
-					},
-					Interfaces: map[string]interface{}{
-						patternArgName: [][]string{{"^th"}},
+					Values: map[string]interface{}{
+						visitFlag.Name(): true,
+						patternArgName:   [][]string{{"^th"}},
 					},
 				},
 			},
@@ -197,8 +193,8 @@ func TestFilename(t *testing.T) {
 					filepath.Join("testing", "that.py"),
 					filepath.Join("testing", "this.txt"),
 				},
-				WantData: &command.Data{Values: map[string]*command.Value{
-					"invert": command.StringListValue(".*.go"),
+				WantData: &command.Data{Values: map[string]interface{}{
+					"invert": []string{".*.go"},
 				}},
 			},
 		},
@@ -207,11 +203,11 @@ func TestFilename(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"-v", ":)"},
 				WantStderr: []string{
-					"validation failed: [ListIsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`",
+					"validation failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`",
 				},
-				WantErr: fmt.Errorf("validation failed: [ListIsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`"),
-				WantData: &command.Data{Values: map[string]*command.Value{
-					"invert": command.StringListValue(":)"),
+				WantErr: fmt.Errorf("validation failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`"),
+				WantData: &command.Data{Values: map[string]interface{}{
+					"invert": []string{":)"},
 				}},
 			},
 		},
