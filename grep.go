@@ -14,7 +14,7 @@ import (
 var (
 	patternArgName = "PATTERN"
 	patternArg     = command.StringListListNode(patternArgName, "Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes", "|", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
-	caseFlag       = command.BoolFlag("ignore-case", 'i', "Ignore character casing")
+	caseFlag       = command.BoolFlag("case", 'i', "Don't ignore character casing")
 	invertFlag     = command.NewListFlag[string]("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
 	matchOnlyFlag  = command.BoolFlag("match-only", 'o', "Only show the matching segment")
 
@@ -210,7 +210,7 @@ func (g *Grep) Complete(*command.Input, *command.Data) (*command.Completion, err
 }
 
 func (g *Grep) Execute(output command.Output, data *command.Data) error {
-	ignoreCase := data.Bool(caseFlag.Name())
+	ignoreCase := !data.Bool(caseFlag.Name())
 
 	var filters []filter
 	ps := data.Values[patternArgName]

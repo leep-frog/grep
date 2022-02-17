@@ -105,7 +105,7 @@ func TestHistory(t *testing.T) {
 			},
 		},
 		{
-			name: "filters history ignoring case",
+			name: "filters history considering case",
 			history: []string{
 				"alphA",
 				"beta",
@@ -113,16 +113,16 @@ func TestHistory(t *testing.T) {
 				"zero",
 			},
 			etc: &command.ExecuteTestCase{
-				Args: []string{"^.*a$", "-i"},
+				Args: []string{"^.*A$", "-i"},
 				WantData: &command.Data{
 					Values: map[string]interface{}{
 						caseFlag.Name(): true,
-						patternArgName:  [][]string{{"^.*a$"}},
+						patternArgName:  [][]string{{"^.*A$"}},
 					},
 				},
 				WantStdout: []string{
 					matchColor.Format("alphA"),
-					matchColor.Format("beta"),
+					// matchColor.Format("beta"),
 					matchColor.Format("deltA"),
 				},
 			},

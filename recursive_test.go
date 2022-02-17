@@ -854,7 +854,7 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: RecursiveCLI().Node(),
 		WantString: []string{
-			"< { [ PATTERN ... ] | } ... --after|-a --before|-b --directory|-d --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --ignore-case|-i --invert|-v --invert-file|-F --match-only|-o",
+			"< { [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --directory|-d --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --invert|-v --invert-file|-F --match-only|-o",
 			"",
 			"  Commands around global ignore file patterns",
 			"  if <",
@@ -875,12 +875,12 @@ func TestUsage(t *testing.T) {
 			"Flags:",
 			"  [a] after: Show the matched line and the n lines after it",
 			"  [b] before: Show the matched line and the n lines before it",
+			"  [i] case: Don't ignore character casing",
 			"  [d] directory: Search through the provided directory instead of pwd",
 			"  [f] file: Only select files that match this pattern",
 			"  [l] file-only: Only show file names",
 			"  [h] hide-file: Don't show file names",
 			"  [n] hide-lines: Don't include the line number in the output",
-			"  [i] ignore-case: Ignore character casing",
 			"  [v] invert: Pattern(s) required to be absent in each line",
 			"  [F] invert-file: Only select files that don't match this pattern",
 			"  [o] match-only: Only show the matching segment",
@@ -895,13 +895,13 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: HistoryCLI().Node(),
 		WantString: []string{
-			"{ [ PATTERN ... ] | } ... --ignore-case|-i --invert|-v --match-only|-o",
+			"{ [ PATTERN ... ] | } ... --case|-i --invert|-v --match-only|-o",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
 			"",
 			"Flags:",
-			"  [i] ignore-case: Ignore character casing",
+			"  [i] case: Don't ignore character casing",
 			"  [v] invert: Pattern(s) required to be absent in each line",
 			"  [o] match-only: Only show the matching segment",
 			"",
@@ -914,14 +914,14 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: FilenameCLI().Node(),
 		WantString: []string{
-			"{ [ PATTERN ... ] | } ... --cat|-c --ignore-case|-i --invert|-v --match-only|-o",
+			"{ [ PATTERN ... ] | } ... --case|-i --cat|-c --invert|-v --match-only|-o",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
 			"",
 			"Flags:",
+			"  [i] case: Don't ignore character casing",
 			"  [c] cat: Run cat command on all files that match",
-			"  [i] ignore-case: Ignore character casing",
 			"  [v] invert: Pattern(s) required to be absent in each line",
 			"  [o] match-only: Only show the matching segment",
 			"",
@@ -934,7 +934,7 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: StdinCLI().Node(),
 		WantString: []string{
-			"{ [ PATTERN ... ] | } ... --after|-a --before|-b --ignore-case|-i --invert|-v --match-only|-o",
+			"{ [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --invert|-v --match-only|-o",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
@@ -942,7 +942,7 @@ func TestUsage(t *testing.T) {
 			"Flags:",
 			"  [a] after: Show the matched line and the n lines after it",
 			"  [b] before: Show the matched line and the n lines before it",
-			"  [i] ignore-case: Ignore character casing",
+			"  [i] case: Don't ignore character casing",
 			"  [v] invert: Pattern(s) required to be absent in each line",
 			"  [o] match-only: Only show the matching segment",
 			"",
