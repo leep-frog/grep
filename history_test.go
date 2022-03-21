@@ -3,66 +3,12 @@ package grep
 import (
 	"fmt"
 	"io"
-	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/leep-frog/command"
 )
-
-func TestHistoryLoad(t *testing.T) {
-	for _, test := range []struct {
-		name    string
-		json    string
-		want    *Grep
-		WantErr string
-	}{
-		{
-			name: "handles empty string",
-			want: &Grep{
-				InputSource: &history{},
-			},
-		},
-		{
-			name:    "handles invalid json",
-			json:    "}}",
-			WantErr: "failed to unmarshal json for grep object: invalid character",
-			want: &Grep{
-				InputSource: &history{},
-			},
-		},
-		{
-			name: "handles valid json",
-			json: `{"Field": "Value"}`,
-			want: &Grep{
-				InputSource: &history{},
-			},
-		},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			d := HistoryCLI()
-			err := d.Load(test.json)
-			if test.WantErr == "" && err != nil {
-				t.Errorf("Load(%s) returned error %v; want nil", test.json, err)
-			}
-			if test.WantErr != "" && err == nil {
-				t.Errorf("Load(%s) returned nil; want err %q", test.json, test.WantErr)
-			}
-			if test.WantErr != "" && err != nil && !strings.Contains(err.Error(), test.WantErr) {
-				t.Errorf("Load(%s) returned err %q; want %q", test.json, err.Error(), test.WantErr)
-			}
-
-			opts := []cmp.Option{
-				cmp.AllowUnexported(history{}),
-				cmp.AllowUnexported(Grep{}),
-			}
-			if diff := cmp.Diff(test.want, d, opts...); diff != "" {
-				t.Errorf("Load(%s) produced diff:\n%s", test.json, diff)
-			}
-		})
-	}
-}
 
 func TestHistory(t *testing.T) {
 	for _, test := range []struct {

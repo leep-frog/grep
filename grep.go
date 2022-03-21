@@ -1,7 +1,6 @@
 package grep
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"sort"
@@ -137,16 +136,6 @@ type inputSource interface {
 
 type Grep struct {
 	InputSource inputSource
-}
-
-func (g *Grep) Load(jsn string) error {
-	if jsn == "" {
-		return nil
-	}
-	if err := json.Unmarshal([]byte(jsn), g); err != nil {
-		return fmt.Errorf("failed to unmarshal json for grep object: %v", err)
-	}
-	return nil
 }
 
 func (g *Grep) Changed() bool {

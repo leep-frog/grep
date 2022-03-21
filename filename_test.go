@@ -3,65 +3,10 @@ package grep
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/leep-frog/command"
 )
-
-func TestFilenameLoad(t *testing.T) {
-	for _, test := range []struct {
-		name    string
-		json    string
-		want    *Grep
-		WantErr string
-	}{
-		{
-			name: "handles empty string",
-			want: &Grep{
-				InputSource: &filename{},
-			},
-		},
-		{
-			name:    "handles invalid json",
-			json:    "}}",
-			WantErr: "failed to unmarshal json for grep object: invalid character",
-			want: &Grep{
-				InputSource: &filename{},
-			},
-		},
-		{
-			name: "handles valid json",
-			json: `{"Field": "Value"}`,
-			want: &Grep{
-				InputSource: &filename{},
-			},
-		},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			d := FilenameCLI()
-			err := d.Load(test.json)
-			if test.WantErr == "" && err != nil {
-				t.Errorf("Load(%s) returned error %v; want nil", test.json, err)
-			}
-			if test.WantErr != "" && err == nil {
-				t.Errorf("Load(%s) returned nil; want err %q", test.json, test.WantErr)
-			}
-			if test.WantErr != "" && err != nil && !strings.Contains(err.Error(), test.WantErr) {
-				t.Errorf("Load(%s) returned err %q; want %q", test.json, err.Error(), test.WantErr)
-			}
-
-			opts := []cmp.Option{
-				cmp.AllowUnexported(filename{}),
-				cmp.AllowUnexported(Grep{}),
-			}
-			if diff := cmp.Diff(test.want, d, opts...); diff != "" {
-				t.Errorf("Load(%s) produced diff:\n%s", test.json, diff)
-			}
-		})
-	}
-}
 
 func TestFilename(t *testing.T) {
 	for _, test := range []struct {
