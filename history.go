@@ -27,7 +27,7 @@ func (*history) MakeNode(n *command.Node) *command.Node {
 }
 
 func (*history) Process(output command.Output, data *command.Data, f filter) error {
-	s, err := osOpen(data.String(command.SetupArgName))
+	s, err := osOpen(data.SetupOutputFile())
 	if err != nil {
 		return output.Stderrf("failed to open setup output file: %v", err)
 	}
