@@ -27,7 +27,7 @@ var (
 	beforeFlag    = command.NewFlag[int]("before", 'b', "Show the matched line and the n lines before it")
 	afterFlag     = command.NewFlag[int]("after", 'a', "Show the matched line and the n lines after it")
 	dirFlag       = command.NewFlag[string]("directory", 'd', "Search through the provided directory instead of pwd", &command.Completor[string]{
-		SuggestionFetcher: &command.FileFetcher[string]{
+		Fetcher: &command.FileFetcher[string]{
 			IgnoreFiles: true,
 		},
 	})
@@ -108,7 +108,7 @@ func (r *recursive) listIgnorePattern(output command.Output, data *command.Data)
 
 func (r *recursive) MakeNode(n *command.Node) *command.Node {
 	f := &command.Completor[[]string]{
-		SuggestionFetcher: command.SimpleFetcher[[]string](func(v []string, d *command.Data) (*command.Completion, error) {
+		Fetcher: command.SimpleFetcher[[]string](func(v []string, d *command.Data) (*command.Completion, error) {
 			var s []string
 			for p := range r.IgnoreFilePatterns {
 				s = append(s, p)
