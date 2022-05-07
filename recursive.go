@@ -26,12 +26,8 @@ var (
 	fileOnlyFlag  = command.BoolFlag("file-only", 'l', "Only show file names")
 	beforeFlag    = command.NewFlag[int]("before", 'b', "Show the matched line and the n lines before it")
 	afterFlag     = command.NewFlag[int]("after", 'a', "Show the matched line and the n lines after it")
-	dirFlag       = command.NewFlag[string]("directory", 'd', "Search through the provided directory instead of pwd", &command.Completor[string]{
-		Fetcher: &command.FileFetcher[string]{
-			IgnoreFiles: true,
-		},
-	})
-	hideLineFlag = command.BoolFlag("hide-lines", 'n', "Don't include the line number in the output")
+	dirFlag       = command.NewFlag[string]("directory", 'd', "Search through the provided directory instead of pwd", &command.FileCompletor[string]{IgnoreFiles: true})
+	hideLineFlag  = command.BoolFlag("hide-lines", 'n', "Don't include the line number in the output")
 
 	fileColor = &color.Format{
 		Color: color.Yellow,
@@ -107,17 +103,15 @@ func (r *recursive) listIgnorePattern(output command.Output, data *command.Data)
 }
 
 func (r *recursive) MakeNode(n *command.Node) *command.Node {
-	f := &command.Completor[[]string]{
-		Fetcher: command.SimpleFetcher[[]string](func(v []string, d *command.Data) (*command.Completion, error) {
-			var s []string
-			for p := range r.IgnoreFilePatterns {
-				s = append(s, p)
-			}
-			return &command.Completion{
-				Suggestions: s,
-			}, nil
-		}),
-	}
+	f := command.CompletorFromFunc(func(v []string, d *command.Data) (*command.Completion, error) {
+		var s []string
+		for p := range r.IgnoreFilePatterns {
+			s = append(s, p)
+		}
+		return &command.Completion{
+			Suggestions: s,
+		}, nil
+	})
 	return command.BranchNode(map[string]*command.Node{
 		"if": command.SerialNodesTo(command.BranchNode(map[string]*command.Node{
 			"a": command.SerialNodes(
