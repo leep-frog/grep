@@ -277,6 +277,27 @@ func TestRecursive(t *testing.T) {
 			},
 		},
 		{
+			name: "ignore ignore patterns",
+			ignorePatterns: map[string]bool{
+				`\.py$`: true,
+			},
+			etc: &command.ExecuteTestCase{
+				Args: []string{"^alp", "-l", "-x"},
+				WantData: &command.Data{
+					Values: map[string]interface{}{
+						patternArgName:           [][]string{{"^alp"}},
+						fileOnlyFlag.Name():      true,
+						ignoreIgnoreFiles.Name(): true,
+					},
+				},
+				WantStdout: []string{
+					fileColor.Format(filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
+					fileColor.Format(filepath.Join("testing", "other", "other.txt")), // "alpha zero"
+					fileColor.Format(filepath.Join("testing", "that.py")),            // "alpha"
+				},
+			},
+		},
+		{
 			name: "errors on invalid regex in file flag",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^alpha", "-f", ":)"},
@@ -800,7 +821,7 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: RecursiveCLI().Node(),
 		WantString: []string{
-			"< { [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --directory|-d --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --invert|-v --invert-file|-F --match-only|-o",
+			"< { [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --directory|-d --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --ignore-ignore-files|-x --invert|-v --invert-file|-F --match-only|-o",
 			"",
 			"  Commands around global ignore file patterns",
 			"  if <",
@@ -827,6 +848,7 @@ func TestUsage(t *testing.T) {
 			"  [l] file-only: Only show file names",
 			"  [h] hide-file: Don't show file names",
 			"  [n] hide-lines: Don't include the line number in the output",
+			"  [x] ignore-ignore-files: Ignore the provided IGNORE_PATTERNS",
 			"  [v] invert: Pattern(s) required to be absent in each line",
 			"  [F] invert-file: Only select files that don't match this pattern",
 			"  [o] match-only: Only show the matching segment",

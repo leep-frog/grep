@@ -21,14 +21,15 @@ var (
 
 	ignoreFilePattern = command.ListArg[string]("IGNORE_PATTERN", "Files that match these will be ignored", 1, command.UnboundedList, command.ValidatorList(command.IsRegex()))
 
-	fileArg       = command.NewFlag[string]("file", 'f', "Only select files that match this pattern")
-	invertFileArg = command.NewFlag[string]("invert-file", 'F', "Only select files that don't match this pattern")
-	hideFileFlag  = command.BoolFlag("hide-file", 'h', "Don't show file names")
-	fileOnlyFlag  = command.BoolFlag("file-only", 'l', "Only show file names")
-	beforeFlag    = command.NewFlag[int]("before", 'b', "Show the matched line and the n lines before it")
-	afterFlag     = command.NewFlag[int]("after", 'a', "Show the matched line and the n lines after it")
-	dirFlag       = command.NewFlag[string]("directory", 'd', "Search through the provided directory instead of pwd", &command.FileCompletor[string]{IgnoreFiles: true})
-	hideLineFlag  = command.BoolFlag("hide-lines", 'n', "Don't include the line number in the output")
+	ignoreIgnoreFiles = command.BoolFlag("ignore-ignore-files", 'x', "Ignore the provided IGNORE_PATTERNS")
+	fileArg           = command.NewFlag[string]("file", 'f', "Only select files that match this pattern")
+	invertFileArg     = command.NewFlag[string]("invert-file", 'F', "Only select files that don't match this pattern")
+	hideFileFlag      = command.BoolFlag("hide-file", 'h', "Don't show file names")
+	fileOnlyFlag      = command.BoolFlag("file-only", 'l', "Only show file names")
+	beforeFlag        = command.NewFlag[int]("before", 'b', "Show the matched line and the n lines before it")
+	afterFlag         = command.NewFlag[int]("after", 'a', "Show the matched line and the n lines after it")
+	dirFlag           = command.NewFlag[string]("directory", 'd', "Search through the provided directory instead of pwd", &command.FileCompletor[string]{IgnoreFiles: true})
+	hideLineFlag      = command.BoolFlag("hide-lines", 'n', "Don't include the line number in the output")
 
 	fileColor = &color.Format{
 		Color: color.Yellow,
@@ -68,6 +69,7 @@ func (*recursive) Flags() []command.Flag {
 		afterFlag,
 		dirFlag,
 		hideLineFlag,
+		ignoreIgnoreFiles,
 	}
 }
 
@@ -139,9 +141,12 @@ func (r *recursive) Changed() bool {
 
 func (r *recursive) Process(output command.Output, data *command.Data, fltr filter) error {
 	var nameRegexes []*regexp.Regexp
-	for ifp := range r.IgnoreFilePatterns {
-		// ListIsRegex ArgOption ensures that these regexes are valid, so it's okay to use MustCompile here.
-		nameRegexes = append(nameRegexes, regexp.MustCompile(ifp))
+
+	if !ignoreIgnoreFiles.Get(data) {
+		for ifp := range r.IgnoreFilePatterns {
+			// ListIsRegex ArgOption ensures that these regexes are valid, so it's okay to use MustCompile here.
+			nameRegexes = append(nameRegexes, regexp.MustCompile(ifp))
+		}
 	}
 	var fr *regexp.Regexp
 
