@@ -29,6 +29,45 @@ func TestFilename(t *testing.T) {
 			},
 		},
 		{
+			name: "returns only files",
+			etc: &command.ExecuteTestCase{
+				Args: []string{"-f"},
+				WantStdout: []string{
+					filepath.Join("testing", "lots.txt"),
+					filepath.Join("testing", "numbered.txt"),
+					filepath.Join("testing", "other", "other.txt"),
+					filepath.Join("testing", "that.py"),
+					filepath.Join("testing", "this.txt"),
+				},
+				WantData: &command.Data{Values: map[string]interface{}{
+					filesOnlyFlag.Name(): true,
+				}},
+			},
+		},
+		{
+			name: "returns only dirs",
+			etc: &command.ExecuteTestCase{
+				Args: []string{"-d"},
+				WantStdout: []string{
+					"testing",
+					filepath.Join("testing", "other"),
+				},
+				WantData: &command.Data{Values: map[string]interface{}{
+					dirsOnlyFlag.Name(): true,
+				}},
+			},
+		},
+		{
+			name: "returns nothing if only files and only dirs",
+			etc: &command.ExecuteTestCase{
+				Args: []string{"-d", "-f"},
+				WantData: &command.Data{Values: map[string]interface{}{
+					filesOnlyFlag.Name(): true,
+					dirsOnlyFlag.Name():  true,
+				}},
+			},
+		},
+		{
 			name:    "errors on walk error",
 			stubDir: "does-not-exist",
 			etc: &command.ExecuteTestCase{

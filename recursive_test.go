@@ -860,7 +860,7 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: FilenameCLI().Node(),
 		WantString: []string{
-			"{ [ PATTERN ... ] | } ... --case|-i --cat|-c --invert|-v --match-only|-o",
+			"{ [ PATTERN ... ] | } ... --case|-i --cat|-c --dir-only|-d --file-only|-f --invert|-v --match-only|-o",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
@@ -868,6 +868,8 @@ func TestUsage(t *testing.T) {
 			"Flags:",
 			"  [i] case: Don't ignore character casing",
 			"  [c] cat: Run cat command on all files that match",
+			"  [d] dir-only: Only check directory names",
+			"  [f] file-only: Only check file names",
 			"  [v] invert: Pattern(s) required to be absent in each line",
 			"  [o] match-only: Only show the matching segment",
 			"",

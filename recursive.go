@@ -3,6 +3,7 @@ package grep
 import (
 	"bufio"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -171,7 +172,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 		}
 	}
 
-	return filepath.Walk(dir, func(path string, fi os.FileInfo, err error) error {
+	return filepath.WalkDir(dir, func(path string, de fs.DirEntry, err error) error {
 		if err != nil {
 			if os.IsNotExist(err) {
 				return output.Stderrf("file not found: %s", path)
@@ -179,20 +180,20 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 			return output.Stderrf("failed to access path %q: %v", path, err)
 		}
 
-		if fi.IsDir() {
+		if de.IsDir() {
 			return nil
 		}
 
-		if fr != nil && !fr.MatchString(fi.Name()) {
+		if fr != nil && !fr.MatchString(de.Name()) {
 			return nil
 		}
 
-		if ifr != nil && ifr.MatchString(fi.Name()) {
+		if ifr != nil && ifr.MatchString(de.Name()) {
 			return nil
 		}
 
 		for _, r := range nameRegexes {
-			if r.MatchString(fi.Name()) {
+			if r.MatchString(de.Name()) {
 				return nil
 			}
 		}

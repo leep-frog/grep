@@ -1,6 +1,7 @@
 package grep
 
 import (
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -9,7 +10,9 @@ import (
 )
 
 var (
-	visitFlag = command.BoolFlag("cat", 'c', "Run cat command on all files that match")
+	visitFlag     = command.BoolFlag("cat", 'c', "Run cat command on all files that match")
+	filesOnlyFlag = command.BoolFlag("file-only", 'f', "Only check file names")
+	dirsOnlyFlag  = command.BoolFlag("dir-only", 'd', "Only check directory names")
 )
 
 func FilenameCLI() *Grep {
@@ -26,13 +29,15 @@ func (*filename) Setup() []string { return nil }
 func (*filename) Flags() []command.Flag {
 	return []command.Flag{
 		visitFlag,
+		filesOnlyFlag,
+		dirsOnlyFlag,
 	}
 }
 func (*filename) MakeNode(n *command.Node) *command.Node { return n }
 
 func (*filename) Process(output command.Output, data *command.Data, f filter) error {
 	cat := data.Bool(visitFlag.Name())
-	return filepath.Walk(startDir, func(path string, fi os.FileInfo, err error) error {
+	return filepath.WalkDir(startDir, func(path string, de fs.DirEntry, err error) error {
 		if err != nil {
 			if os.IsNotExist(err) {
 				return output.Stderrf("file not found: %s", path)
@@ -40,14 +45,17 @@ func (*filename) Process(output command.Output, data *command.Data, f filter) er
 			return output.Stderrf("failed to access path %q: %v", path, err)
 		}
 
-		formattedString, ok := apply(f, fi.Name(), data)
-
+		formattedString, ok := apply(f, de.Name(), data)
 		if !ok {
 			return nil
 		}
 
+		if (de.IsDir() && filesOnlyFlag.Get(data)) || (!de.IsDir() && dirsOnlyFlag.Get(data)) {
+			return nil
+		}
+
 		if cat {
-			if !fi.IsDir() {
+			if !de.IsDir() {
 				contents, err := ioutil.ReadFile(path)
 				if err != nil {
 					return output.Stderrf("failed to read file: %v", err)
