@@ -71,7 +71,6 @@ func (*recursive) Flags() []command.Flag {
 		dirFlag,
 		hideLineFlag,
 		ignoreIgnoreFiles,
-		//wholeFile,
 	}
 }
 
