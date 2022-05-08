@@ -164,7 +164,7 @@ func (cm *colorMatcher) filter(s string) ([]*match, bool) {
 	if indices == nil {
 		return nil, false
 	}
-	return []*match{&match{
+	return []*match{{
 		start: indices[0],
 		end:   indices[1],
 	}}, true

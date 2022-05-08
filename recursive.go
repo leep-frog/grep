@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	startDir                                   = "."
-	osOpen   func(s string) (io.Reader, error) = func(s string) (io.Reader, error) { return os.Open(s) }
+	startDir = "."
+	osOpen   = func(s string) (io.Reader, error) { return os.Open(s) }
 
 	ignoreFilePattern = command.ListArg[string]("IGNORE_PATTERN", "Files that match these will be ignored", 1, command.UnboundedList, command.ValidatorList(command.IsRegex()))
 
@@ -30,6 +30,7 @@ var (
 	afterFlag         = command.NewFlag[int]("after", 'a', "Show the matched line and the n lines after it")
 	dirFlag           = command.NewFlag[string]("directory", 'd', "Search through the provided directory instead of pwd", &command.FileCompletor[string]{IgnoreFiles: true})
 	hideLineFlag      = command.BoolFlag("hide-lines", 'n', "Don't include the line number in the output")
+	wholeFile         = command.BoolFlag("whole-file", 'w', "Whether or not to search the whole file (i.e. multi-wrap searching) in one regex")
 
 	fileColor = &color.Format{
 		Color: color.Yellow,
@@ -70,6 +71,7 @@ func (*recursive) Flags() []command.Flag {
 		dirFlag,
 		hideLineFlag,
 		ignoreIgnoreFiles,
+		//wholeFile,
 	}
 }
 
