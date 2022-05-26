@@ -117,22 +117,25 @@ func (r *recursive) MakeNode(n *command.Node) *command.Node {
 		}, nil
 	})
 	return command.BranchNode(map[string]*command.Node{
-		"if": command.SerialNodesTo(command.BranchNode(map[string]*command.Node{
-			"a": command.SerialNodes(
-				command.Description("Add a global file ignore pattern"),
-				ignoreFilePattern,
-				command.ExecutorNode(r.addIgnorePattern),
-			),
-			"d": command.SerialNodes(
-				command.Description("Deletes a global file ignore pattern"),
-				ignoreFilePattern.AddOptions(f),
-				command.ExecutorNode(r.deleteIgnorePattern),
-			),
-			"l": command.SerialNodes(
-				command.Description("List global file ignore patterns"),
-				command.ExecutorNode(r.listIgnorePattern),
-			),
-		}, nil), command.Description("Commands around global ignore file patterns")),
+		"if": command.SerialNodes(
+			command.Description("Commands around global ignore file patterns"),
+			command.BranchNode(map[string]*command.Node{
+				"a": command.SerialNodes(
+					command.Description("Add a global file ignore pattern"),
+					ignoreFilePattern,
+					command.ExecutorNode(r.addIgnorePattern),
+				),
+				"d": command.SerialNodes(
+					command.Description("Deletes a global file ignore pattern"),
+					ignoreFilePattern.AddOptions(f),
+					command.ExecutorNode(r.deleteIgnorePattern),
+				),
+				"l": command.SerialNodes(
+					command.Description("List global file ignore patterns"),
+					command.ExecutorNode(r.listIgnorePattern),
+				),
+			}, nil),
+		),
 	}, n)
 }
 
