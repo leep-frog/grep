@@ -727,19 +727,15 @@ func TestRecursive(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			// Change starting directory
-			oldStart := startDir
-			if test.stubDir == "" {
-				startDir = "testing"
-			} else {
-				startDir = test.stubDir
+			tmpStart := "testing"
+			if test.stubDir != "" {
+				tmpStart = test.stubDir
 			}
-			defer func() { startDir = oldStart }()
+			command.StubValue(t, &startDir, tmpStart)
 
 			// Stub os.Open if necessary
 			if test.osOpenErr != nil {
-				oldOpen := osOpen
-				osOpen = func(s string) (io.Reader, error) { return nil, test.osOpenErr }
-				defer func() { osOpen = oldOpen }()
+				command.StubValue(t, &osOpen, func(s string) (io.Reader, error) { return nil, test.osOpenErr })
 			}
 
 			r := &Grep{

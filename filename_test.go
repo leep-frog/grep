@@ -198,13 +198,11 @@ func TestFilename(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			// Change starting directory
-			oldStart := startDir
-			if test.stubDir == "" {
-				startDir = "testing"
-			} else {
-				startDir = test.stubDir
+			tmpStart := "testing"
+			if test.stubDir != "" {
+				tmpStart = test.stubDir
 			}
-			defer func() { startDir = oldStart }()
+			command.StubValue(t, &startDir, tmpStart)
 
 			// Run the test.
 			f := FilenameCLI()
