@@ -4,6 +4,12 @@ github.com/leep-frog/command v0.0.0-20220526151014-aa1ee03979ad h1:NdC90jFXcYGV2
 github.com/leep-frog/command v0.0.0-20220526151014-aa1ee03979ad/go.mod h1:fENOaVkhnQ/AKhBy7Pbkpd2l65h9R5ZQEspLn6bjNIE=
 github.com/leep-frog/command v0.0.0-20220529184927-b1b2ed676f3a h1:OHpOh6VIjl3xF66M1yVFVlwcFf3fIcx8mUG+Q8yGWkA=
 github.com/leep-frog/command v0.0.0-20220529184927-b1b2ed676f3a/go.mod h1:fENOaVkhnQ/AKhBy7Pbkpd2l65h9R5ZQEspLn6bjNIE=
+github.com/leep-frog/command v0.0.0-20220619235513-376698484ddb h1:L/NhcEL1FVuhgUL2MI1YVl3vYspL/sh56BkMaoFjQkQ=
+github.com/leep-frog/command v0.0.0-20220619235513-376698484ddb/go.mod h1:Rd1Wj9R6mxmO2cPMosUt72SwGFr68HOdykDbwVMwWE4=
+github.com/leep-frog/command v0.0.0-20220620122158-5dcc065e4509 h1:XCo1WbLB/inKMb9cau8H2acb21NnfZGXHcCWNeHyiOI=
+github.com/leep-frog/command v0.0.0-20220620122158-5dcc065e4509/go.mod h1:Rd1Wj9R6mxmO2cPMosUt72SwGFr68HOdykDbwVMwWE4=
+github.com/leep-frog/command v0.0.0-20220620122925-6d423a9af212 h1:xYNj6FfHiHTCSX1AEfpUmY4SG7VPkGTW3b+BlypD9eQ=
+github.com/leep-frog/command v0.0.0-20220620122925-6d423a9af212/go.mod h1:Rd1Wj9R6mxmO2cPMosUt72SwGFr68HOdykDbwVMwWE4=
 golang.org/x/exp v0.0.0-20220321124402-2d6d886f8a82 h1:P3h2IfqHFILVjDaCKXyuKMprdEyIbrbKevbf2EB6lQI=
 golang.org/x/exp v0.0.0-20220321124402-2d6d886f8a82/go.mod h1:lgLbSvA5ygNOMpwM/9anMpWVlVJ7Z+cHWq/eFuinpGE=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=

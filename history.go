@@ -23,8 +23,7 @@ func (*history) Flags() []command.Flag { return nil }
 func (*history) Changed() bool         { return false }
 
 func (*history) MakeNode(n *command.Node) *command.Node {
-	// TODO: If Setup() isn't empty, we should verify this arg is provided (or just insert it automatically).
-	return command.SerialNodes(command.SetupArg, n)
+	return n
 }
 
 func (*history) Process(output command.Output, data *command.Data, f filter) error {
