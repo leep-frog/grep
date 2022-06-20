@@ -74,7 +74,6 @@ func (*recursive) Flags() []command.Flag {
 	}
 }
 
-// TODO: Use store CLI for this
 func (r *recursive) addIgnorePattern(output command.Output, data *command.Data) {
 	if r.IgnoreFilePatterns == nil {
 		r.IgnoreFilePatterns = map[string]bool{}
