@@ -3,6 +3,7 @@ package grep
 import (
 	"fmt"
 	"io"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -25,11 +26,12 @@ func TestHistory(t *testing.T) {
 				"delta",
 			},
 			etc: &command.ExecuteTestCase{
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					"alpha",
 					"beta",
 					"delta",
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -44,10 +46,11 @@ func TestHistory(t *testing.T) {
 				WantData: &command.Data{Values: map[string]interface{}{
 					patternArgName: [][]string{{"^.e"}},
 				}},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					fmt.Sprintf("%s%s", matchColor.Format("be"), "ta"),
 					fmt.Sprintf("%s%s", matchColor.Format("de"), "lta"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -66,21 +69,20 @@ func TestHistory(t *testing.T) {
 						patternArgName:  [][]string{{"^.*A$"}},
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					matchColor.Format("alphA"),
 					// matchColor.Format("beta"),
 					matchColor.Format("deltA"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
 			name:      "errors on os.Open error",
 			osOpenErr: fmt.Errorf("darn"),
 			etc: &command.ExecuteTestCase{
-				WantStderr: []string{
-					"failed to open setup output file: darn",
-				},
-				WantErr: fmt.Errorf("failed to open setup output file: darn"),
+				WantStderr: "failed to open setup output file: darn\n",
+				WantErr:    fmt.Errorf("failed to open setup output file: darn"),
 			},
 		},
 		{
@@ -98,10 +100,11 @@ func TestHistory(t *testing.T) {
 						patternArgName:       [][]string{{"T.*T"}},
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					"TfghjT",
 					"TxcvbnmT",
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -119,10 +122,11 @@ func TestHistory(t *testing.T) {
 						patternArgName:       [][]string{{"T.*T", "S.*S"}},
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					"SdTfghSjT",
 					"TxScvbSnmT",
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -140,10 +144,11 @@ func TestHistory(t *testing.T) {
 						patternArgName:       [][]string{{"T.*T", "S.*S"}},
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					"SaS...TghjT",
 					"TzT...SnmS",
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		/* Useful for commenting out tests. */

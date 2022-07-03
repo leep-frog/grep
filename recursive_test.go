@@ -25,7 +25,7 @@ func TestRecursive(t *testing.T) {
 			name:    "errors on walk error",
 			stubDir: "does-not-exist",
 			etc: &command.ExecuteTestCase{
-				WantStderr: []string{`file not found: does-not-exist`},
+				WantStderr: "file not found: does-not-exist\n",
 				WantErr:    fmt.Errorf(`file not found: does-not-exist`),
 			},
 		},
@@ -33,10 +33,8 @@ func TestRecursive(t *testing.T) {
 			name:      "errors on open error",
 			osOpenErr: fmt.Errorf("oops"),
 			etc: &command.ExecuteTestCase{
-				WantStderr: []string{
-					fmt.Sprintf(`failed to open file %q: oops`, filepath.Join("testing", "lots.txt")),
-				},
-				WantErr: fmt.Errorf(`failed to open file %q: oops`, filepath.Join("testing", "lots.txt")),
+				WantStderr: fmt.Sprintf("failed to open file %q: oops\n", filepath.Join("testing", "lots.txt")),
+				WantErr:    fmt.Errorf(`failed to open file %q: oops`, filepath.Join("testing", "lots.txt")),
 			},
 		},
 		{
@@ -48,12 +46,13 @@ func TestRecursive(t *testing.T) {
 						patternArgName: [][]string{{"^alpha"}},
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					withFile(withLine(1, fmt.Sprintf("%s%s", matchColor.Format("alpha"), " bravo delta")), "testing", "lots.txt"),
 					withFile(withLine(3, fmt.Sprintf("%s%s", matchColor.Format("alpha"), " hello there")), "testing", "lots.txt"),
 					withFile(withLine(1, fmt.Sprintf("%s%s", matchColor.Format("alpha"), " zero")), "testing", "other", "other.txt"),
 					withFile(withLine(1, matchColor.Format("alpha")), "testing", "that.py"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -67,9 +66,10 @@ func TestRecursive(t *testing.T) {
 						patternArgName:      [][]string{{"^XYZ.*"}},
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					matchColor.Format("XYZ %s heyo"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -83,9 +83,10 @@ func TestRecursive(t *testing.T) {
 						hideLineFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					withFile(matchColor.Format("alpha"), "testing", "that.py"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -99,11 +100,12 @@ func TestRecursive(t *testing.T) {
 						hideLineFlag.Name():  true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					withFile(fmt.Sprintf("%s %s", matchColor.Format("alpha"), "bravo delta"), "testing", "lots.txt"),
 					withFile(fmt.Sprintf("%s %s", matchColor.Format("alpha"), "hello there"), "testing", "lots.txt"),
 					withFile(fmt.Sprintf("%s %s", matchColor.Format("alpha"), "zero"), "testing", "other", "other.txt"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -117,7 +119,7 @@ func TestRecursive(t *testing.T) {
 					},
 				},
 				WantErr:    fmt.Errorf("invalid invert filename regex: error parsing regexp: unexpected ): `:)`"),
-				WantStderr: []string{"invalid invert filename regex: error parsing regexp: unexpected ): `:)`"},
+				WantStderr: "invalid invert filename regex: error parsing regexp: unexpected ): `:)`\n",
 			},
 		},
 		{
@@ -131,13 +133,14 @@ func TestRecursive(t *testing.T) {
 						hideLineFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha bravo d"), "elta"), // testing/lots.txt
 					fmt.Sprintf("%s%s", "bravo delta al", matchColor.Format("pha")),       // testing/lots.txt
 					fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha h"), "ello there"), // testing/lots.txt
 					fmt.Sprintf("%s%s%s", "al", matchColor.Format("pha z"), "ero"),        // testing/other/other.txt
 					fmt.Sprintf("%s%s", "al", matchColor.Format("pha")),                   //testing/that.py
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -151,10 +154,11 @@ func TestRecursive(t *testing.T) {
 						hideLineFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					strings.Join([]string{matchColor.Format("alpha"), matchColor.Format("bravo"), "delta"}, " "),
 					strings.Join([]string{matchColor.Format("bravo"), "delta", matchColor.Format("alpha")}, " "),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -167,9 +171,10 @@ func TestRecursive(t *testing.T) {
 						hideFileFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					fmt.Sprintf("%s:%s%s", colorLine(7), matchColor.Format("qwertyu"), "iop"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -182,12 +187,13 @@ func TestRecursive(t *testing.T) {
 						matchOnlyFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					withFile(withLine(1, "alp"), "testing", "lots.txt"),           // "alpha bravo delta"
 					withFile(withLine(3, "alp"), "testing", "lots.txt"),           // "alpha bravo delta"
 					withFile(withLine(1, "alp"), "testing", "other", "other.txt"), // "alpha zero"
 					withFile(withLine(1, "alp"), "testing", "that.py"),            // "alpha"
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -201,12 +207,13 @@ func TestRecursive(t *testing.T) {
 						hideFileFlag.Name():  true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					withLine(1, "alp"),
 					withLine(3, "alp"),
 					withLine(1, "alp"),
 					withLine(1, "alp"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -220,9 +227,10 @@ func TestRecursive(t *testing.T) {
 						hideLineFlag.Name():  true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					withFile("qwertyui", "testing", "lots.txt"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -235,9 +243,10 @@ func TestRecursive(t *testing.T) {
 						matchOnlyFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					withFile(withLine(7, "qw...ty...op"), "testing", "lots.txt"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -250,11 +259,12 @@ func TestRecursive(t *testing.T) {
 						fileOnlyFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					fileColor.Format(filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
 					fileColor.Format(filepath.Join("testing", "other", "other.txt")), // "alpha zero"
 					fileColor.Format(filepath.Join("testing", "that.py")),            // "alpha"
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -270,10 +280,11 @@ func TestRecursive(t *testing.T) {
 						fileOnlyFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					fileColor.Format(filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
 					fileColor.Format(filepath.Join("testing", "other", "other.txt")), // "alpha zero"
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -290,11 +301,12 @@ func TestRecursive(t *testing.T) {
 						ignoreIgnoreFiles.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					fileColor.Format(filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
 					fileColor.Format(filepath.Join("testing", "other", "other.txt")), // "alpha zero"
 					fileColor.Format(filepath.Join("testing", "that.py")),            // "alpha"
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -307,10 +319,8 @@ func TestRecursive(t *testing.T) {
 						fileArg.Name(): ":)",
 					},
 				},
-				WantStderr: []string{
-					"invalid filename regex: error parsing regexp: unexpected ): `:)`",
-				},
-				WantErr: fmt.Errorf("invalid filename regex: error parsing regexp: unexpected ): `:)`"),
+				WantStderr: "invalid filename regex: error parsing regexp: unexpected ): `:)`\n",
+				WantErr:    fmt.Errorf("invalid filename regex: error parsing regexp: unexpected ): `:)`"),
 			},
 		},
 		// -a flag
@@ -324,12 +334,13 @@ func TestRecursive(t *testing.T) {
 						afterFlag.Name(): 3,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					withFile(withLine(6, matchColor.Format("five")), "testing", "numbered.txt"),
 					withFile(withLine(7, "six"), "testing", "numbered.txt"),
 					withFile(withLine(8, "seven"), "testing", "numbered.txt"),
 					withFile(withLine(9, "eight"), "testing", "numbered.txt"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -344,12 +355,13 @@ func TestRecursive(t *testing.T) {
 						hideLineFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					matchColor.Format("five"),
 					"six",
 					"seven",
 					"eight",
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -364,7 +376,7 @@ func TestRecursive(t *testing.T) {
 						hideLineFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					withFile(matchColor.Format("zero"), "testing", "numbered.txt"),
 					withFile("one", "testing", "numbered.txt"),
 					withFile("two", "testing", "numbered.txt"),
@@ -373,7 +385,8 @@ func TestRecursive(t *testing.T) {
 					withFile("six", "testing", "numbered.txt"),
 					withFile("seven", "testing", "numbered.txt"),
 					withFile(matchColor.Format("nine"), "testing", "numbered.txt"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -389,7 +402,7 @@ func TestRecursive(t *testing.T) {
 						hideLineFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					matchColor.Format("zero"),
 					"one",
 					"two",
@@ -398,7 +411,8 @@ func TestRecursive(t *testing.T) {
 					"six",
 					"seven",
 					matchColor.Format("nine"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		// -b flag
@@ -413,12 +427,13 @@ func TestRecursive(t *testing.T) {
 						hideLineFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					withFile("two", "testing", "numbered.txt"),
 					withFile("three", "testing", "numbered.txt"),
 					withFile("four", "testing", "numbered.txt"),
 					withFile(matchColor.Format("five"), "testing", "numbered.txt"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -432,12 +447,13 @@ func TestRecursive(t *testing.T) {
 						hideFileFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					withLine(3, "two"),
 					withLine(4, "three"),
 					withLine(5, "four"),
 					withLine(6, matchColor.Format("five")),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -452,7 +468,7 @@ func TestRecursive(t *testing.T) {
 						hideLineFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					withFile(matchColor.Format("zero"), "testing", "numbered.txt"),
 					withFile("two", "testing", "numbered.txt"),
 					withFile("three", "testing", "numbered.txt"),
@@ -461,7 +477,8 @@ func TestRecursive(t *testing.T) {
 					withFile("seven", "testing", "numbered.txt"),
 					withFile("eight", "testing", "numbered.txt"),
 					withFile(matchColor.Format("nine"), "testing", "numbered.txt"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -476,7 +493,7 @@ func TestRecursive(t *testing.T) {
 						hideFileFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					withLine(1, matchColor.Format("zero")),
 					withLine(3, "two"),
 					withLine(4, "three"),
@@ -485,7 +502,8 @@ func TestRecursive(t *testing.T) {
 					withLine(8, "seven"),
 					withLine(9, "eight"),
 					withLine(10, matchColor.Format("nine")),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		// -a and -b together
@@ -501,7 +519,7 @@ func TestRecursive(t *testing.T) {
 						fileArg.Name():    "numbered.txt",
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					withFile(withLine(1, "zero"), "testing", "numbered.txt"),
 					withFile(withLine(2, matchColor.Format("one")), "testing", "numbered.txt"),
 					withFile(withLine(3, matchColor.Format("two")), "testing", "numbered.txt"),
@@ -511,7 +529,8 @@ func TestRecursive(t *testing.T) {
 					withFile(withLine(7, matchColor.Format("six")), "testing", "numbered.txt"),
 					withFile(withLine(8, "seven"), "testing", "numbered.txt"),
 					withFile(withLine(9, "eight"), "testing", "numbered.txt"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -527,7 +546,7 @@ func TestRecursive(t *testing.T) {
 						hideFileFlag.Name(): true,
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					withLine(1, "zero"),
 					withLine(2, matchColor.Format("one")),
 					withLine(3, matchColor.Format("two")),
@@ -537,7 +556,8 @@ func TestRecursive(t *testing.T) {
 					withLine(7, matchColor.Format("six")),
 					withLine(8, "seven"),
 					withLine(9, "eight"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		// Directory flag (-d).
@@ -551,10 +571,8 @@ func TestRecursive(t *testing.T) {
 						dirFlag.Name(): "dev-null",
 					},
 				},
-				WantStderr: []string{
-					`unknown alias: "dev-null"`,
-				},
-				WantErr: fmt.Errorf(`unknown alias: "dev-null"`),
+				WantStderr: "unknown alias: \"dev-null\"\n",
+				WantErr:    fmt.Errorf(`unknown alias: "dev-null"`),
 			},
 		},
 		{
@@ -570,9 +588,10 @@ func TestRecursive(t *testing.T) {
 						dirFlag.Name(): "ooo",
 					},
 				},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					fmt.Sprintf("%s:%s:%s zero", fileColor.Format(filepath.Join("testing", "other", "other.txt")), colorLine(1), matchColor.Format("alpha")),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		// Ignore file patterns
@@ -580,7 +599,7 @@ func TestRecursive(t *testing.T) {
 			name: "ignore file pattern requires argument",
 			etc: &command.ExecuteTestCase{
 				Args:       []string{"if"},
-				WantStderr: []string{"Branching argument must be one of [a d l]"},
+				WantStderr: "Branching argument must be one of [a d l]\n",
 				WantErr:    fmt.Errorf("Branching argument must be one of [a d l]"),
 			},
 		},
@@ -588,7 +607,7 @@ func TestRecursive(t *testing.T) {
 			name: "ignore file pattern requires valid argument",
 			etc: &command.ExecuteTestCase{
 				Args:       []string{"if", "uh"},
-				WantStderr: []string{"Branching argument must be one of [a d l]"},
+				WantStderr: "Branching argument must be one of [a d l]\n",
 				WantErr:    fmt.Errorf("Branching argument must be one of [a d l]"),
 			},
 		},
@@ -601,8 +620,8 @@ func TestRecursive(t *testing.T) {
 						ignoreFilePattern.Name(): []string{"*"},
 					},
 				},
-				WantStderr: []string{"validation failed: [IsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"},
-				WantErr:    fmt.Errorf("validation failed: [IsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"),
+				WantStderr: "validation for \"IGNORE_PATTERN\" failed: [IsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`\n",
+				WantErr:    fmt.Errorf("validation for \"IGNORE_PATTERN\" failed: [IsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"),
 			},
 		},
 		{
@@ -671,8 +690,8 @@ func TestRecursive(t *testing.T) {
 						ignoreFilePattern.Name(): []string{"*"},
 					},
 				},
-				WantStderr: []string{"validation failed: [IsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"},
-				WantErr:    fmt.Errorf("validation failed: [IsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"),
+				WantStderr: "validation for \"IGNORE_PATTERN\" failed: [IsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`\n",
+				WantErr:    fmt.Errorf("validation for \"IGNORE_PATTERN\" failed: [IsRegex] value \"*\" isn't a valid regex: error parsing regexp: missing argument to repetition operator: `*`"),
 			},
 		},
 		{
@@ -719,8 +738,12 @@ func TestRecursive(t *testing.T) {
 				"other": true,
 			},
 			etc: &command.ExecuteTestCase{
-				Args:       []string{"if", "l"},
-				WantStdout: []string{".bin", "other"},
+				Args: []string{"if", "l"},
+				WantStdout: strings.Join([]string{
+					".bin",
+					"other",
+					"",
+				}, "\n"),
 			},
 		},
 		/* Useful for commenting out tests. */

@@ -101,7 +101,7 @@ func (r *recursive) listIgnorePattern(output command.Output, data *command.Data)
 	}
 	sort.Strings(patterns)
 	for _, p := range patterns {
-		output.Stdout(p)
+		output.Stdoutln(p)
 	}
 }
 
@@ -157,7 +157,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 		f := data.String(fileArg.Name())
 		var err error
 		if fr, err = regexp.Compile(f); err != nil {
-			return output.Stderrf("invalid filename regex: %v", err)
+			return output.Stderrf("invalid filename regex: %v\n", err)
 		}
 	}
 
@@ -166,7 +166,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 		f := data.String(invertFileArg.Name())
 		var err error
 		if ifr, err = regexp.Compile(f); err != nil {
-			return output.Stderrf("invalid invert filename regex: %v", err)
+			return output.Stderrf("invalid invert filename regex: %v\n", err)
 		}
 	}
 
@@ -176,16 +176,16 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 		var ok bool
 		dir, ok = r.DirectoryAliases[da]
 		if !ok {
-			return output.Stderrf("unknown alias: %q", da)
+			return output.Stderrf("unknown alias: %q\n", da)
 		}
 	}
 
 	return filepath.WalkDir(dir, func(path string, de fs.DirEntry, err error) error {
 		if err != nil {
 			if os.IsNotExist(err) {
-				return output.Stderrf("file not found: %s", path)
+				return output.Stderrf("file not found: %s\n", path)
 			}
-			return output.Stderrf("failed to access path %q: %v", path, err)
+			return output.Stderrf("failed to access path %q: %v\n", path, err)
 		}
 
 		if de.IsDir() {
@@ -208,7 +208,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 
 		f, err := osOpen(path)
 		if err != nil {
-			return output.Stderrf("failed to open file %q: %v", path, err)
+			return output.Stderrf("failed to open file %q: %v\n", path, err)
 		}
 
 		scanner := bufio.NewScanner(f)
@@ -216,7 +216,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 		for formattedString, line, ok := list.getNext(); ok; formattedString, line, ok = list.getNext() {
 			formattedPath := fileColor.Format(path)
 			if data.Bool(fileOnlyFlag.Name()) {
-				output.Stdout(formattedPath)
+				output.Stdoutln(formattedPath)
 				break
 			}
 
@@ -228,7 +228,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 				parts = append(parts, colorLine(line))
 			}
 			parts = append(parts, formattedString)
-			output.Stdout(strings.Join(parts, ":"))
+			output.Stdoutln(strings.Join(parts, ":"))
 		}
 
 		return nil

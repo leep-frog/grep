@@ -3,6 +3,7 @@ package grep
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/leep-frog/command"
@@ -17,7 +18,7 @@ func TestFilename(t *testing.T) {
 		{
 			name: "returns all files",
 			etc: &command.ExecuteTestCase{
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					"testing",
 					filepath.Join("testing", "lots.txt"),
 					filepath.Join("testing", "numbered.txt"),
@@ -25,20 +26,22 @@ func TestFilename(t *testing.T) {
 					filepath.Join("testing", "other", "other.txt"),
 					filepath.Join("testing", "that.py"),
 					filepath.Join("testing", "this.txt"),
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
 			name: "returns only files",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"-f"},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					filepath.Join("testing", "lots.txt"),
 					filepath.Join("testing", "numbered.txt"),
 					filepath.Join("testing", "other", "other.txt"),
 					filepath.Join("testing", "that.py"),
 					filepath.Join("testing", "this.txt"),
-				},
+					"",
+				}, "\n"),
 				WantData: &command.Data{Values: map[string]interface{}{
 					filesOnlyFlag.Name(): true,
 				}},
@@ -48,10 +51,11 @@ func TestFilename(t *testing.T) {
 			name: "returns only dirs",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"-d"},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					"testing",
 					filepath.Join("testing", "other"),
-				},
+					"",
+				}, "\n"),
 				WantData: &command.Data{Values: map[string]interface{}{
 					dirsOnlyFlag.Name(): true,
 				}},
@@ -71,18 +75,16 @@ func TestFilename(t *testing.T) {
 			name:    "errors on walk error",
 			stubDir: "does-not-exist",
 			etc: &command.ExecuteTestCase{
-				WantStderr: []string{"file not found: does-not-exist"},
+				WantStderr: "file not found: does-not-exist\n",
 				WantErr:    fmt.Errorf("file not found: does-not-exist"),
 			},
 		},
 		{
 			name: "errors on invalid regex filter",
 			etc: &command.ExecuteTestCase{
-				Args: []string{":)"},
-				WantStderr: []string{
-					"validation failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`",
-				},
-				WantErr: fmt.Errorf("validation failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`"),
+				Args:       []string{":)"},
+				WantStderr: "validation for \"PATTERN\" failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`\n",
+				WantErr:    fmt.Errorf("validation for \"PATTERN\" failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`"),
 				WantData: &command.Data{Values: map[string]interface{}{
 					patternArgName: [][]string{{":)"}},
 				}},
@@ -92,12 +94,13 @@ func TestFilename(t *testing.T) {
 			name: "filters out files",
 			etc: &command.ExecuteTestCase{
 				Args: []string{".*.txt"},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					filepath.Join("testing", matchColor.Format("lots.txt")),
 					filepath.Join("testing", matchColor.Format("numbered.txt")),
 					filepath.Join("testing", "other", matchColor.Format("other.txt")),
 					filepath.Join("testing", matchColor.Format("this.txt")),
-				},
+					"",
+				}, "\n"),
 				WantData: &command.Data{Values: map[string]interface{}{
 					patternArgName: [][]string{{".*.txt"}},
 				}},
@@ -107,11 +110,12 @@ func TestFilename(t *testing.T) {
 			name: "works with OR operator",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"\\.txt$", ".*s\\.", "|", ".*\\.py$"},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					filepath.Join("testing", matchColor.Format("lots.txt")),
 					filepath.Join("testing", matchColor.Format("that.py")),
 					filepath.Join("testing", matchColor.Format("this.txt")),
-				},
+					"",
+				}, "\n"),
 				WantData: &command.Data{Values: map[string]interface{}{
 					patternArgName: [][]string{
 						{"\\.txt$", ".*s\\."},
@@ -124,10 +128,11 @@ func TestFilename(t *testing.T) {
 			name: "gets files and directories",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"oth.*"},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					filepath.Join("testing", matchColor.Format("other")),
 					filepath.Join("testing", "other", matchColor.Format("other.txt")),
-				},
+					"",
+				}, "\n"),
 				WantData: &command.Data{Values: map[string]interface{}{
 					patternArgName: [][]string{{"oth.*"}},
 				}},
@@ -137,9 +142,10 @@ func TestFilename(t *testing.T) {
 			name: "cats files but not directories",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"oth.*", "-c"},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					"alpha zero\necho bravo\n",
-				},
+					"",
+				}, "\n"),
 				WantData: &command.Data{
 					Values: map[string]interface{}{
 						visitFlag.Name(): true,
@@ -152,10 +158,11 @@ func TestFilename(t *testing.T) {
 			name: "cats multiple files",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^th", "-c"},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					"alpha\n",
 					"bravo\n",
-				},
+					"",
+				}, "\n"),
 				WantData: &command.Data{
 					Values: map[string]interface{}{
 						visitFlag.Name(): true,
@@ -168,7 +175,7 @@ func TestFilename(t *testing.T) {
 			name: "invert filter",
 			etc: &command.ExecuteTestCase{
 				Args: []string{"-v", ".*.go"},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					"testing",
 					filepath.Join("testing", "lots.txt"),
 					filepath.Join("testing", "numbered.txt"),
@@ -176,7 +183,8 @@ func TestFilename(t *testing.T) {
 					filepath.Join("testing", "other", "other.txt"),
 					filepath.Join("testing", "that.py"),
 					filepath.Join("testing", "this.txt"),
-				},
+					"",
+				}, "\n"),
 				WantData: &command.Data{Values: map[string]interface{}{
 					"invert": []string{".*.go"},
 				}},
@@ -185,11 +193,9 @@ func TestFilename(t *testing.T) {
 		{
 			name: "errors on invalid invert filter",
 			etc: &command.ExecuteTestCase{
-				Args: []string{"-v", ":)"},
-				WantStderr: []string{
-					"validation failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`",
-				},
-				WantErr: fmt.Errorf("validation failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`"),
+				Args:       []string{"-v", ":)"},
+				WantStderr: "validation for \"invert\" failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`\n",
+				WantErr:    fmt.Errorf("validation for \"invert\" failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`"),
 				WantData: &command.Data{Values: map[string]interface{}{
 					"invert": []string{":)"},
 				}},

@@ -40,9 +40,9 @@ func (*filename) Process(output command.Output, data *command.Data, f filter) er
 	return filepath.WalkDir(startDir, func(path string, de fs.DirEntry, err error) error {
 		if err != nil {
 			if os.IsNotExist(err) {
-				return output.Stderrf("file not found: %s", path)
+				return output.Stderrf("file not found: %s\n", path)
 			}
-			return output.Stderrf("failed to access path %q: %v", path, err)
+			return output.Stderrf("failed to access path %q: %v\n", path, err)
 		}
 
 		formattedString, ok := apply(f, de.Name(), data)
@@ -58,12 +58,12 @@ func (*filename) Process(output command.Output, data *command.Data, f filter) er
 			if !de.IsDir() {
 				contents, err := ioutil.ReadFile(path)
 				if err != nil {
-					return output.Stderrf("failed to read file: %v", err)
+					return output.Stderrf("failed to read file: %v\n", err)
 				}
-				output.Stdout(string(contents))
+				output.Stdoutln(string(contents))
 			}
 		} else {
-			output.Stdout(filepath.Join(filepath.Dir(path), formattedString))
+			output.Stdoutln(filepath.Join(filepath.Dir(path), formattedString))
 		}
 		return nil
 	})

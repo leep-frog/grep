@@ -27,11 +27,12 @@ func TestStdin(t *testing.T) {
 				"delta",
 			},
 			etc: &command.ExecuteTestCase{
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					"alpha",
 					"bravo",
 					"delta",
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		{
@@ -44,10 +45,11 @@ func TestStdin(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"a$"},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					fmt.Sprintf("alph%s", matchColor.Format("a")),
 					fmt.Sprintf("delt%s", matchColor.Format("a")),
-				},
+					"",
+				}, "\n"),
 				WantData: &command.Data{
 					Values: map[string]interface{}{
 						patternArgName: [][]string{{"a$"}},
@@ -72,7 +74,7 @@ func TestStdin(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^...$", "-b", "1"},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					"zero",
 					matchColor.Format("one"),
 					matchColor.Format("two"),
@@ -80,7 +82,8 @@ func TestStdin(t *testing.T) {
 					matchColor.Format("six"),
 					"nine",
 					matchColor.Format("ten"),
-				},
+					"",
+				}, "\n"),
 				WantData: &command.Data{
 					Values: map[string]interface{}{
 						patternArgName:    [][]string{{"^...$"}},
@@ -106,7 +109,7 @@ func TestStdin(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"^.....$", "-a", "2"},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					matchColor.Format("three"),
 					"four",
 					"five",
@@ -114,7 +117,8 @@ func TestStdin(t *testing.T) {
 					matchColor.Format("eight"),
 					"nine",
 					"ten",
-				},
+					"",
+				}, "\n"),
 				WantData: &command.Data{
 					Values: map[string]interface{}{
 						patternArgName:   [][]string{{"^.....$"}},
@@ -140,14 +144,15 @@ func TestStdin(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"five", "-a", "2", "-b", "3"},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					"two",
 					"three",
 					"four",
 					matchColor.Format("five"),
 					"six",
 					"seven",
-				},
+					"",
+				}, "\n"),
 				WantData: &command.Data{
 					Values: map[string]interface{}{
 						patternArgName:    [][]string{{"five"}},
