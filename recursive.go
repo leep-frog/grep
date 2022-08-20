@@ -28,7 +28,7 @@ var (
 	fileOnlyFlag      = command.BoolFlag("file-only", 'l', "Only show file names")
 	beforeFlag        = command.NewFlag[int]("before", 'b', "Show the matched line and the n lines before it")
 	afterFlag         = command.NewFlag[int]("after", 'a', "Show the matched line and the n lines after it")
-	dirFlag           = command.NewFlag[string]("directory", 'd', "Search through the provided directory instead of pwd", &command.FileCompletor[string]{IgnoreFiles: true})
+	dirFlag           = command.NewFlag[string]("directory", 'd', "Search through the provided directory instead of pwd", &command.FileCompleter[string]{IgnoreFiles: true})
 	hideLineFlag      = command.BoolFlag("hide-lines", 'n', "Don't include the line number in the output")
 	wholeFile         = command.BoolFlag("whole-file", 'w', "Whether or not to search the whole file (i.e. multi-wrap searching) in one regex")
 
@@ -106,7 +106,7 @@ func (r *recursive) listIgnorePattern(output command.Output, data *command.Data)
 }
 
 func (r *recursive) MakeNode(n *command.Node) *command.Node {
-	f := command.CompletorFromFunc(func(v []string, d *command.Data) (*command.Completion, error) {
+	f := command.CompleterFromFunc(func(v []string, d *command.Data) (*command.Completion, error) {
 		var s []string
 		for p := range r.IgnoreFilePatterns {
 			s = append(s, p)
