@@ -12,161 +12,164 @@ import (
 )
 
 func TestHistory(t *testing.T) {
-	for _, test := range []struct {
-		name      string
-		history   []string
-		osOpenErr error
-		etc       *command.ExecuteTestCase
-	}{
-		{
-			name: "returns history",
-			history: []string{
-				"alpha",
-				"beta",
-				"delta",
-			},
-			etc: &command.ExecuteTestCase{
-				WantStdout: strings.Join([]string{
+	for _, sc := range []bool{true, false} {
+		command.StubValue(t, &shouldColor, sc)
+		for _, test := range []struct {
+			name      string
+			history   []string
+			osOpenErr error
+			etc       *command.ExecuteTestCase
+		}{
+			{
+				name: "returns history",
+				history: []string{
 					"alpha",
 					"beta",
 					"delta",
-					"",
-				}, "\n"),
-			},
-		},
-		{
-			name: "filters history",
-			history: []string{
-				"alpha",
-				"beta",
-				"delta",
-			},
-			etc: &command.ExecuteTestCase{
-				Args: []string{"^.e"},
-				WantData: &command.Data{Values: map[string]interface{}{
-					patternArgName: [][]string{{"^.e"}},
-				}},
-				WantStdout: strings.Join([]string{
-					fmt.Sprintf("%s%s", matchColor.Format("be"), "ta"),
-					fmt.Sprintf("%s%s", matchColor.Format("de"), "lta"),
-					"",
-				}, "\n"),
-			},
-		},
-		{
-			name: "filters history considering case",
-			history: []string{
-				"alphA",
-				"beta",
-				"deltA",
-				"zero",
-			},
-			etc: &command.ExecuteTestCase{
-				Args: []string{"^.*A$", "-i"},
-				WantData: &command.Data{
-					Values: map[string]interface{}{
-						caseFlag.Name(): true,
-						patternArgName:  [][]string{{"^.*A$"}},
-					},
 				},
-				WantStdout: strings.Join([]string{
-					matchColor.Format("alphA"),
-					// matchColor.Format("beta"),
-					matchColor.Format("deltA"),
-					"",
-				}, "\n"),
-			},
-		},
-		{
-			name:      "errors on os.Open error",
-			osOpenErr: fmt.Errorf("darn"),
-			etc: &command.ExecuteTestCase{
-				WantStderr: "failed to open setup output file: darn\n",
-				WantErr:    fmt.Errorf("failed to open setup output file: darn"),
-			},
-		},
-		{
-			name: "works with match only",
-			history: []string{
-				"qwerTyuiop",
-				"asdTfghjTkl",
-				"TxcvbnmT",
-			},
-			etc: &command.ExecuteTestCase{
-				Args: []string{"T.*T", "-o"},
-				WantData: &command.Data{
-					Values: map[string]interface{}{
-						matchOnlyFlag.Name(): true,
-						patternArgName:       [][]string{{"T.*T"}},
-					},
+				etc: &command.ExecuteTestCase{
+					WantStdout: strings.Join([]string{
+						"alpha",
+						"beta",
+						"delta",
+						"",
+					}, "\n"),
 				},
-				WantStdout: strings.Join([]string{
-					"TfghjT",
+			},
+			{
+				name: "filters history",
+				history: []string{
+					"alpha",
+					"beta",
+					"delta",
+				},
+				etc: &command.ExecuteTestCase{
+					Args: []string{"^.e"},
+					WantData: &command.Data{Values: map[string]interface{}{
+						patternArgName: [][]string{{"^.e"}},
+					}},
+					WantStdout: strings.Join([]string{
+						fmt.Sprintf("%s%s", grepColor(matchColor, "be"), "ta"),
+						fmt.Sprintf("%s%s", grepColor(matchColor, "de"), "lta"),
+						"",
+					}, "\n"),
+				},
+			},
+			{
+				name: "filters history considering case",
+				history: []string{
+					"alphA",
+					"beta",
+					"deltA",
+					"zero",
+				},
+				etc: &command.ExecuteTestCase{
+					Args: []string{"^.*A$", "-i"},
+					WantData: &command.Data{
+						Values: map[string]interface{}{
+							caseFlag.Name(): true,
+							patternArgName:  [][]string{{"^.*A$"}},
+						},
+					},
+					WantStdout: strings.Join([]string{
+						grepColor(matchColor, "alphA"),
+						// grepColor(matchColor, "beta"),
+						grepColor(matchColor, "deltA"),
+						"",
+					}, "\n"),
+				},
+			},
+			{
+				name:      "errors on os.Open error",
+				osOpenErr: fmt.Errorf("darn"),
+				etc: &command.ExecuteTestCase{
+					WantStderr: "failed to open setup output file: darn\n",
+					WantErr:    fmt.Errorf("failed to open setup output file: darn"),
+				},
+			},
+			{
+				name: "works with match only",
+				history: []string{
+					"qwerTyuiop",
+					"asdTfghjTkl",
 					"TxcvbnmT",
-					"",
-				}, "\n"),
-			},
-		},
-		{
-			name: "works with match only and overlapping matches",
-			history: []string{
-				"qwerTyuiop",
-				"aSdTfghSjTkl",
-				"TxScvbSnmT",
-			},
-			etc: &command.ExecuteTestCase{
-				Args: []string{"T.*T", "S.*S", "-o"},
-				WantData: &command.Data{
-					Values: map[string]interface{}{
-						matchOnlyFlag.Name(): true,
-						patternArgName:       [][]string{{"T.*T", "S.*S"}},
-					},
 				},
-				WantStdout: strings.Join([]string{
-					"SdTfghSjT",
+				etc: &command.ExecuteTestCase{
+					Args: []string{"T.*T", "-o"},
+					WantData: &command.Data{
+						Values: map[string]interface{}{
+							matchOnlyFlag.Name(): true,
+							patternArgName:       [][]string{{"T.*T"}},
+						},
+					},
+					WantStdout: strings.Join([]string{
+						"TfghjT",
+						"TxcvbnmT",
+						"",
+					}, "\n"),
+				},
+			},
+			{
+				name: "works with match only and overlapping matches",
+				history: []string{
+					"qwerTyuiop",
+					"aSdTfghSjTkl",
 					"TxScvbSnmT",
-					"",
-				}, "\n"),
-			},
-		},
-		{
-			name: "works with match only and non-overlapping matches",
-			history: []string{
-				"qwerTyuiop",
-				"SaSdfTghjTkl",
-				"TzTxcvbSnmS",
-			},
-			etc: &command.ExecuteTestCase{
-				Args: []string{"T.*T", "S.*S", "-o"},
-				WantData: &command.Data{
-					Values: map[string]interface{}{
-						matchOnlyFlag.Name(): true,
-						patternArgName:       [][]string{{"T.*T", "S.*S"}},
-					},
 				},
-				WantStdout: strings.Join([]string{
-					"SaS...TghjT",
-					"TzT...SnmS",
-					"",
-				}, "\n"),
+				etc: &command.ExecuteTestCase{
+					Args: []string{"T.*T", "S.*S", "-o"},
+					WantData: &command.Data{
+						Values: map[string]interface{}{
+							matchOnlyFlag.Name(): true,
+							patternArgName:       [][]string{{"T.*T", "S.*S"}},
+						},
+					},
+					WantStdout: strings.Join([]string{
+						"SdTfghSjT",
+						"TxScvbSnmT",
+						"",
+					}, "\n"),
+				},
 			},
-		},
-		/* Useful for commenting out tests. */
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			// Stub os.Open if necessary
-			if test.osOpenErr != nil {
-				command.StubValue(t, &osOpen, func(s string) (io.Reader, error) { return nil, test.osOpenErr })
-			}
+			{
+				name: "works with match only and non-overlapping matches",
+				history: []string{
+					"qwerTyuiop",
+					"SaSdfTghjTkl",
+					"TzTxcvbSnmS",
+				},
+				etc: &command.ExecuteTestCase{
+					Args: []string{"T.*T", "S.*S", "-o"},
+					WantData: &command.Data{
+						Values: map[string]interface{}{
+							matchOnlyFlag.Name(): true,
+							patternArgName:       [][]string{{"T.*T", "S.*S"}},
+						},
+					},
+					WantStdout: strings.Join([]string{
+						"SaS...TghjT",
+						"TzT...SnmS",
+						"",
+					}, "\n"),
+				},
+			},
+			/* Useful for commenting out tests. */
+		} {
+			t.Run(testName(sc, test.name), func(t *testing.T) {
+				// Stub os.Open if necessary
+				if test.osOpenErr != nil {
+					command.StubValue(t, &osOpen, func(s string) (io.Reader, error) { return nil, test.osOpenErr })
+				}
 
-			// Run test
-			h := HistoryCLI()
-			test.etc.Node = h.Node()
-			test.etc.RequiresSetup = true
-			test.etc.SetupContents = test.history
-			command.ExecuteTest(t, test.etc)
-			command.ChangeTest(t, nil, h)
-		})
+				// Run test
+				h := HistoryCLI()
+				test.etc.Node = h.Node()
+				test.etc.RequiresSetup = true
+				test.etc.SetupContents = test.history
+				command.ExecuteTest(t, test.etc)
+				command.ChangeTest(t, nil, h)
+			})
+		}
 	}
 }
 

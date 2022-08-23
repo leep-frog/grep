@@ -2,6 +2,7 @@ package grep
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -22,6 +23,17 @@ var (
 		Thickness: color.Bold,
 	}
 )
+
+var (
+	shouldColor = len(os.Getenv("LEEP_FROG_RP_NO_COLOR")) == 0
+)
+
+func grepColor(c *color.Format, s string) string {
+	if shouldColor {
+		return c.Format(s)
+	}
+	return s
+}
 
 type filter interface {
 	filter(string) ([]*match, bool)
@@ -112,7 +124,7 @@ func apply(f filter, s string, data *command.Data) (string, bool) {
 			otherString = fmt.Sprintf(
 				"%s%s%s",
 				otherString[:(offset+m.start)],
-				matchColor.Format(otherString[(offset+m.start):(offset+m.end)]),
+				grepColor(matchColor, (otherString[(offset+m.start):(offset+m.end)])),
 				otherString[(offset+m.end):],
 			)
 			offset += len(otherString) - origLen

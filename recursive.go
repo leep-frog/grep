@@ -42,7 +42,7 @@ var (
 )
 
 func colorLine(n int) string {
-	return lineColor.Format(strconv.Itoa(n))
+	return grepColor(lineColor, (strconv.Itoa(n)))
 }
 
 func RecursiveCLI() *Grep {
@@ -214,7 +214,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 		scanner := bufio.NewScanner(f)
 		list := newLinkedList(fltr, data, scanner)
 		for formattedString, line, ok := list.getNext(); ok; formattedString, line, ok = list.getNext() {
-			formattedPath := fileColor.Format(path)
+			formattedPath := grepColor(fileColor, path)
 			if data.Bool(fileOnlyFlag.Name()) {
 				output.Stdoutln(formattedPath)
 				break
