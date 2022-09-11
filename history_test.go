@@ -153,6 +153,29 @@ func TestHistory(t *testing.T) {
 					}, "\n"),
 				},
 			},
+			{
+				name: "matches only whole word",
+				history: []string{
+					"1 alph",
+					"2 aalpha",
+					"3 alphaa",
+					"4 alp ha",
+					"5 alpha",
+				},
+				etc: &command.ExecuteTestCase{
+					Args: []string{"alpha", "-w"},
+					WantData: &command.Data{
+						Values: map[string]interface{}{
+							wholeWordFlag.Name(): true,
+							patternArgName:       [][]string{{"alpha"}},
+						},
+					},
+					WantStdout: strings.Join([]string{
+						fmt.Sprintf("5 %s", grepColor(matchColor, "alpha")),
+						"",
+					}, "\n"),
+				},
+			},
 			/* Useful for commenting out tests. */
 		} {
 			t.Run(testName(sc, test.name), func(t *testing.T) {

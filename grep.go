@@ -15,6 +15,7 @@ var (
 	patternArgName = "PATTERN"
 	patternArg     = command.StringListListNode(patternArgName, "Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes", "|", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
 	caseFlag       = command.BoolFlag("case", 'i', "Don't ignore character casing")
+	wholeWordFlag  = command.BoolFlag("whole-word", 'w', "Whether or not to search for exact match")
 	invertFlag     = command.NewListFlag[string]("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
 	matchOnlyFlag  = command.BoolFlag("match-only", 'o', "Only show the matching segment")
 
@@ -211,7 +212,8 @@ func (g *Grep) Complete(*command.Input, *command.Data) (*command.Completion, err
 }
 
 func (g *Grep) Execute(output command.Output, data *command.Data) error {
-	ignoreCase := !data.Bool(caseFlag.Name())
+	ignoreCase := !caseFlag.Get(data)
+	wholeWord := wholeWordFlag.Get(data)
 
 	var filters []filter
 	ps := data.Values[patternArgName]
@@ -222,6 +224,9 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 			for _, pattern := range patternGroup {
 				if ignoreCase {
 					pattern = fmt.Sprintf("(?i)%s", pattern)
+				}
+				if wholeWord {
+					pattern = fmt.Sprintf("\\b%s\\b", pattern)
 				}
 				// ListIsRegex ensures that only valid regexes reach this point.
 				af.filters = append(af.filters, colorMatch(regexp.MustCompile(pattern)))
@@ -243,7 +248,7 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 }
 
 func (g *Grep) Node() *command.Node {
-	flags := append(g.InputSource.Flags(), caseFlag, invertFlag, matchOnlyFlag)
+	flags := append(g.InputSource.Flags(), caseFlag, wholeWordFlag, invertFlag, matchOnlyFlag)
 	flagNode := command.NewFlagNode(flags...)
 
 	return g.InputSource.MakeNode(command.SerialNodes(flagNode, patternArg, command.ExecuteErrNode(g.Execute)))

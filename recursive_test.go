@@ -848,7 +848,7 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: RecursiveCLI().Node(),
 		WantString: []string{
-			"< { [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --directory|-d --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --ignore-ignore-files|-x --invert|-v --invert-file|-F --match-only|-o",
+			"< { [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --directory|-d --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --ignore-ignore-files|-x --invert|-v --invert-file|-F --match-only|-o --whole-word|-w",
 			"",
 			"  Commands around global ignore file patterns",
 			"  if <",
@@ -879,6 +879,7 @@ func TestUsage(t *testing.T) {
 			"  [v] invert: Pattern(s) required to be absent in each line",
 			"  [F] invert-file: Only select files that don't match this pattern",
 			"  [o] match-only: Only show the matching segment",
+			"  [w] whole-word: Whether or not to search for exact match",
 			"",
 			"Symbols:",
 			command.BranchDesc,
@@ -890,7 +891,7 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: HistoryCLI().Node(),
 		WantString: []string{
-			"{ [ PATTERN ... ] | } ... --case|-i --invert|-v --match-only|-o",
+			"{ [ PATTERN ... ] | } ... --case|-i --invert|-v --match-only|-o --whole-word|-w",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
@@ -899,6 +900,7 @@ func TestUsage(t *testing.T) {
 			"  [i] case: Don't ignore character casing",
 			"  [v] invert: Pattern(s) required to be absent in each line",
 			"  [o] match-only: Only show the matching segment",
+			"  [w] whole-word: Whether or not to search for exact match",
 			"",
 			"Symbols:",
 			"  |: List breaker",
@@ -909,7 +911,7 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: FilenameCLI().Node(),
 		WantString: []string{
-			"{ [ PATTERN ... ] | } ... --case|-i --cat|-c --dir-only|-d --file-only|-f --invert|-v --match-only|-o",
+			"{ [ PATTERN ... ] | } ... --case|-i --cat|-c --dir-only|-d --file-only|-f --invert|-v --match-only|-o --whole-word|-w",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
@@ -921,6 +923,7 @@ func TestUsage(t *testing.T) {
 			"  [f] file-only: Only check file names",
 			"  [v] invert: Pattern(s) required to be absent in each line",
 			"  [o] match-only: Only show the matching segment",
+			"  [w] whole-word: Whether or not to search for exact match",
 			"",
 			"Symbols:",
 			"  |: List breaker",
@@ -931,7 +934,7 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: StdinCLI().Node(),
 		WantString: []string{
-			"{ [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --invert|-v --match-only|-o",
+			"{ [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --invert|-v --match-only|-o --whole-word|-w",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
@@ -942,6 +945,7 @@ func TestUsage(t *testing.T) {
 			"  [i] case: Don't ignore character casing",
 			"  [v] invert: Pattern(s) required to be absent in each line",
 			"  [o] match-only: Only show the matching segment",
+			"  [w] whole-word: Whether or not to search for exact match",
 			"",
 			"Symbols:",
 			"  |: List breaker",
