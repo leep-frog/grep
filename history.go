@@ -19,8 +19,8 @@ func (*history) Setup() []string {
 	return []string{"history"}
 }
 
-func (*history) Flags() []command.Flag { return nil }
-func (*history) Changed() bool         { return false }
+func (*history) Flags() []command.FlagInterface { return nil }
+func (*history) Changed() bool                  { return false }
 
 func (*history) MakeNode(n *command.Node) *command.Node {
 	return n

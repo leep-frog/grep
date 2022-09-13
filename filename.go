@@ -26,8 +26,8 @@ type filename struct{}
 func (*filename) Name() string    { return "fp" }
 func (*filename) Changed() bool   { return false }
 func (*filename) Setup() []string { return nil }
-func (*filename) Flags() []command.Flag {
-	return []command.Flag{
+func (*filename) Flags() []command.FlagInterface {
+	return []command.FlagInterface{
 		visitFlag,
 		filesOnlyFlag,
 		dirsOnlyFlag,

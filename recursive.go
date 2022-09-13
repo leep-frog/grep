@@ -22,13 +22,13 @@ var (
 	ignoreFilePattern = command.ListArg[string]("IGNORE_PATTERN", "Files that match these will be ignored", 1, command.UnboundedList, command.ValidatorList(command.IsRegex()))
 
 	ignoreIgnoreFiles = command.BoolFlag("ignore-ignore-files", 'x', "Ignore the provided IGNORE_PATTERNS")
-	fileArg           = command.NewFlag[string]("file", 'f', "Only select files that match this pattern")
-	invertFileArg     = command.NewFlag[string]("invert-file", 'F', "Only select files that don't match this pattern")
+	fileArg           = command.Flag[string]("file", 'f', "Only select files that match this pattern")
+	invertFileArg     = command.Flag[string]("invert-file", 'F', "Only select files that don't match this pattern")
 	hideFileFlag      = command.BoolFlag("hide-file", 'h', "Don't show file names")
 	fileOnlyFlag      = command.BoolFlag("file-only", 'l', "Only show file names")
-	beforeFlag        = command.NewFlag[int]("before", 'b', "Show the matched line and the n lines before it")
-	afterFlag         = command.NewFlag[int]("after", 'a', "Show the matched line and the n lines after it")
-	dirFlag           = command.NewFlag[string]("directory", 'd', "Search through the provided directory instead of pwd", &command.FileCompleter[string]{IgnoreFiles: true})
+	beforeFlag        = command.Flag[int]("before", 'b', "Show the matched line and the n lines before it")
+	afterFlag         = command.Flag[int]("after", 'a', "Show the matched line and the n lines after it")
+	dirFlag           = command.Flag[string]("directory", 'd', "Search through the provided directory instead of pwd", &command.FileCompleter[string]{IgnoreFiles: true})
 	hideLineFlag      = command.BoolFlag("hide-lines", 'n', "Don't include the line number in the output")
 	wholeFile         = command.BoolFlag("whole-file", 'w', "Whether or not to search the whole file (i.e. multi-wrap searching) in one regex")
 
@@ -60,8 +60,8 @@ type recursive struct {
 
 func (*recursive) Name() string    { return "rp" }
 func (*recursive) Setup() []string { return nil }
-func (*recursive) Flags() []command.Flag {
-	return []command.Flag{
+func (*recursive) Flags() []command.FlagInterface {
+	return []command.FlagInterface{
 		fileArg,
 		invertFileArg,
 		hideFileFlag,
@@ -74,7 +74,7 @@ func (*recursive) Flags() []command.Flag {
 	}
 }
 
-func (r *recursive) addIgnorePattern(output command.Output, data *command.Data) {
+func (r *recursive) addIgnorePattern(output command.Output, data *command.Data) error {
 	if r.IgnoreFilePatterns == nil {
 		r.IgnoreFilePatterns = map[string]bool{}
 	}
@@ -82,19 +82,21 @@ func (r *recursive) addIgnorePattern(output command.Output, data *command.Data) 
 		r.IgnoreFilePatterns[pattern] = true
 	}
 	r.changed = true
+	return nil
 }
 
-func (r *recursive) deleteIgnorePattern(output command.Output, data *command.Data) {
+func (r *recursive) deleteIgnorePattern(output command.Output, data *command.Data) error {
 	if r.IgnoreFilePatterns == nil {
-		return
+		return nil
 	}
 	for _, pattern := range data.StringList(ignoreFilePattern.Name()) {
 		delete(r.IgnoreFilePatterns, pattern)
 	}
 	r.changed = true
+	return nil
 }
 
-func (r *recursive) listIgnorePattern(output command.Output, data *command.Data) {
+func (r *recursive) listIgnorePattern(output command.Output, data *command.Data) error {
 	var patterns []string
 	for p := range r.IgnoreFilePatterns {
 		patterns = append(patterns, p)
@@ -103,6 +105,7 @@ func (r *recursive) listIgnorePattern(output command.Output, data *command.Data)
 	for _, p := range patterns {
 		output.Stdoutln(p)
 	}
+	return nil
 }
 
 func (r *recursive) MakeNode(n *command.Node) *command.Node {
@@ -115,27 +118,32 @@ func (r *recursive) MakeNode(n *command.Node) *command.Node {
 			Suggestions: s,
 		}, nil
 	})
-	return command.BranchNode(map[string]*command.Node{
-		"if": command.SerialNodes(
-			command.Description("Commands around global ignore file patterns"),
-			command.BranchNode(map[string]*command.Node{
-				"a": command.SerialNodes(
-					command.Description("Add a global file ignore pattern"),
-					ignoreFilePattern,
-					command.ExecutorNode(r.addIgnorePattern),
-				),
-				"d": command.SerialNodes(
-					command.Description("Deletes a global file ignore pattern"),
-					ignoreFilePattern.AddOptions(f),
-					command.ExecutorNode(r.deleteIgnorePattern),
-				),
-				"l": command.SerialNodes(
-					command.Description("List global file ignore patterns"),
-					command.ExecutorNode(r.listIgnorePattern),
-				),
-			}, nil),
-		),
-	}, n)
+	return command.AsNode(&command.BranchNode{
+		Branches: map[string]*command.Node{
+			"if": command.SerialNodes(
+				command.Description("Commands around global ignore file patterns"),
+				command.AsNode(&command.BranchNode{
+					Branches: map[string]*command.Node{
+						"a": command.SerialNodes(
+							command.Description("Add a global file ignore pattern"),
+							ignoreFilePattern,
+							&command.ExecutorProcessor{F: r.addIgnorePattern},
+						),
+						"d": command.SerialNodes(
+							command.Description("Deletes a global file ignore pattern"),
+							ignoreFilePattern.AddOptions(f),
+							&command.ExecutorProcessor{F: r.deleteIgnorePattern},
+						),
+						"l": command.SerialNodes(
+							command.Description("List global file ignore patterns"),
+							&command.ExecutorProcessor{F: r.listIgnorePattern},
+						),
+					},
+				}),
+			),
+		},
+		Default: n,
+	})
 }
 
 func (r *recursive) Changed() bool {

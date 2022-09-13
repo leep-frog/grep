@@ -22,8 +22,8 @@ type stdin struct {
 func (*stdin) Name() string    { return "ip" }
 func (*stdin) Setup() []string { return nil }
 func (*stdin) Changed() bool   { return false }
-func (*stdin) Flags() []command.Flag {
-	return []command.Flag{
+func (*stdin) Flags() []command.FlagInterface {
+	return []command.FlagInterface{
 		beforeFlag,
 		afterFlag,
 	}
