@@ -108,7 +108,7 @@ func (r *recursive) listIgnorePattern(output command.Output, data *command.Data)
 	return nil
 }
 
-func (r *recursive) MakeNode(n *command.Node) *command.Node {
+func (r *recursive) MakeNode(n command.Node) command.Node {
 	f := command.CompleterFromFunc(func(v []string, d *command.Data) (*command.Completion, error) {
 		var s []string
 		for p := range r.IgnoreFilePatterns {
@@ -118,12 +118,12 @@ func (r *recursive) MakeNode(n *command.Node) *command.Node {
 			Suggestions: s,
 		}, nil
 	})
-	return command.AsNode(&command.BranchNode{
-		Branches: map[string]*command.Node{
+	return &command.BranchNode{
+		Branches: map[string]command.Node{
 			"if": command.SerialNodes(
 				command.Description("Commands around global ignore file patterns"),
-				command.AsNode(&command.BranchNode{
-					Branches: map[string]*command.Node{
+				&command.BranchNode{
+					Branches: map[string]command.Node{
 						"a": command.SerialNodes(
 							command.Description("Add a global file ignore pattern"),
 							ignoreFilePattern,
@@ -139,11 +139,11 @@ func (r *recursive) MakeNode(n *command.Node) *command.Node {
 							&command.ExecutorProcessor{F: r.listIgnorePattern},
 						),
 					},
-				}),
+				},
 			),
 		},
 		Default: n,
-	})
+	}
 }
 
 func (r *recursive) Changed() bool {

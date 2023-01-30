@@ -33,7 +33,7 @@ func (*filename) Flags() []command.FlagInterface {
 		dirsOnlyFlag,
 	}
 }
-func (*filename) MakeNode(n *command.Node) *command.Node { return n }
+func (*filename) MakeNode(n command.Node) command.Node { return n }
 
 func (*filename) Process(output command.Output, data *command.Data, f filter) error {
 	cat := data.Bool(visitFlag.Name())

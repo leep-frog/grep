@@ -29,7 +29,7 @@ func (*stdin) Flags() []command.FlagInterface {
 	}
 }
 
-func (*stdin) MakeNode(n *command.Node) *command.Node { return n }
+func (*stdin) MakeNode(n command.Node) command.Node { return n }
 
 func (si *stdin) Process(output command.Output, data *command.Data, f filter) error {
 	list := newLinkedList(f, data, si.scanner)

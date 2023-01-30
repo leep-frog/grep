@@ -142,7 +142,7 @@ type inputSource interface {
 	Name() string
 	Process(command.Output, *command.Data, filter) error
 	Flags() []command.FlagInterface
-	MakeNode(*command.Node) *command.Node
+	MakeNode(command.Node) command.Node
 	Setup() []string
 	Changed() bool
 }
@@ -247,7 +247,7 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 	return g.InputSource.Process(output, data, &andFilter{filters})
 }
 
-func (g *Grep) Node() *command.Node {
+func (g *Grep) Node() command.Node {
 	flags := append(g.InputSource.Flags(), caseFlag, wholeWordFlag, invertFlag, matchOnlyFlag)
 	flagNode := command.FlagNode(flags...)
 
