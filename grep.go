@@ -13,7 +13,7 @@ import (
 
 var (
 	patternArgName = "PATTERN"
-	patternArg     = command.StringListListNode(patternArgName, "Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes", "|", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
+	patternArg     = command.StringListListProcessor(patternArgName, "Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes", "|", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
 	caseFlag       = command.BoolFlag("case", 'i', "Don't ignore character casing")
 	wholeWordFlag  = command.BoolFlag("whole-word", 'w', "Whether or not to search for exact match")
 	invertFlag     = command.ListFlag[string]("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
@@ -249,7 +249,7 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 
 func (g *Grep) Node() command.Node {
 	flags := append(g.InputSource.Flags(), caseFlag, wholeWordFlag, invertFlag, matchOnlyFlag)
-	flagNode := command.FlagNode(flags...)
+	flagProcessor := command.FlagProcessor(flags...)
 
-	return g.InputSource.MakeNode(command.SerialNodes(flagNode, patternArg, &command.ExecutorProcessor{F: g.Execute}))
+	return g.InputSource.MakeNode(command.SerialNodes(flagProcessor, patternArg, &command.ExecutorProcessor{F: g.Execute}))
 }

@@ -155,7 +155,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 
 	if !ignoreIgnoreFiles.Get(data) {
 		for ifp := range r.IgnoreFilePatterns {
-			// ListIsRegex ArgOption ensures that these regexes are valid, so it's okay to use MustCompile here.
+			// ListIsRegex ArgumentOption ensures that these regexes are valid, so it's okay to use MustCompile here.
 			nameRegexes = append(nameRegexes, regexp.MustCompile(ifp))
 		}
 	}
