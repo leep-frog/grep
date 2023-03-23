@@ -34,7 +34,8 @@ func (*stdin) MakeNode(n command.Node) command.Node { return n }
 func (si *stdin) Process(output command.Output, data *command.Data, f filter) error {
 	list := newLinkedList(f, data, si.scanner)
 	for formattedString, _, ok := list.getNext(); ok; formattedString, _, ok = list.getNext() {
-		output.Stdoutln(formattedString)
+		applyFormat(output, formattedString)
+		output.Stdoutln()
 	}
 
 	return nil

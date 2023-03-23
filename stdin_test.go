@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/leep-frog/command"
+	"github.com/leep-frog/command/color/colortest"
 )
 
 func TestStdin(t *testing.T) {
@@ -48,8 +49,8 @@ func TestStdin(t *testing.T) {
 				etc: &command.ExecuteTestCase{
 					Args: []string{"a$"},
 					WantStdout: strings.Join([]string{
-						fmt.Sprintf("alph%s", grepColor(matchColor, "a")),
-						fmt.Sprintf("delt%s", grepColor(matchColor, "a")),
+						fmt.Sprintf("alph%s", fakeColor(matchColor, "a")),
+						fmt.Sprintf("delt%s", fakeColor(matchColor, "a")),
 						"",
 					}, "\n"),
 					WantData: &command.Data{
@@ -78,12 +79,12 @@ func TestStdin(t *testing.T) {
 					Args: []string{"^...$", "-b", "1"},
 					WantStdout: strings.Join([]string{
 						"zero",
-						grepColor(matchColor, "one"),
-						grepColor(matchColor, "two"),
+						fakeColor(matchColor, "one"),
+						fakeColor(matchColor, "two"),
 						"five",
-						grepColor(matchColor, "six"),
+						fakeColor(matchColor, "six"),
 						"nine",
-						grepColor(matchColor, "ten"),
+						fakeColor(matchColor, "ten"),
 						"",
 					}, "\n"),
 					WantData: &command.Data{
@@ -112,11 +113,11 @@ func TestStdin(t *testing.T) {
 				etc: &command.ExecuteTestCase{
 					Args: []string{"^.....$", "-a", "2"},
 					WantStdout: strings.Join([]string{
-						grepColor(matchColor, "three"),
+						fakeColor(matchColor, "three"),
 						"four",
 						"five",
-						grepColor(matchColor, "seven"),
-						grepColor(matchColor, "eight"),
+						fakeColor(matchColor, "seven"),
+						fakeColor(matchColor, "eight"),
 						"nine",
 						"ten",
 						"",
@@ -150,7 +151,7 @@ func TestStdin(t *testing.T) {
 						"two",
 						"three",
 						"four",
-						grepColor(matchColor, "five"),
+						fakeColor(matchColor, "five"),
 						"six",
 						"seven",
 						"",
@@ -166,6 +167,7 @@ func TestStdin(t *testing.T) {
 			},
 		} {
 			t.Run(testName(sc, test.name), func(t *testing.T) {
+				colortest.StubTput(t)
 				si := &Grep{
 					InputSource: &stdin{
 						scanner: bufio.NewScanner(strings.NewReader(strings.Join(test.input, "\n"))),

@@ -2,14 +2,13 @@ package grep
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
-	"strconv"
-	"strings"
 
 	"github.com/leep-frog/command"
 	"github.com/leep-frog/command/color"
@@ -32,18 +31,10 @@ var (
 	hideLineFlag      = command.BoolFlag("hide-lines", 'n', "Don't include the line number in the output")
 	wholeFile         = command.BoolFlag("whole-file", 'w', "Whether or not to search the whole file (i.e. multi-wrap searching) in one regex")
 
-	fileColor = &color.Format{
-		Color: color.Yellow,
-	}
+	fileColor = color.Text(color.Yellow)
 
-	lineColor = &color.Format{
-		Color: color.Cyan,
-	}
+	lineColor = color.Text(color.Cyan)
 )
-
-func colorLine(n int) string {
-	return grepColor(lineColor, (strconv.Itoa(n)))
-}
 
 func RecursiveCLI() *Grep {
 	return &Grep{
@@ -222,21 +213,30 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 		scanner := bufio.NewScanner(f)
 		list := newLinkedList(fltr, data, scanner)
 		for formattedString, line, ok := list.getNext(); ok; formattedString, line, ok = list.getNext() {
-			formattedPath := grepColor(fileColor, path)
 			if data.Bool(fileOnlyFlag.Name()) {
-				output.Stdoutln(formattedPath)
+				applyFormatWithColor(output, fileColor, []string{"", path})
+				output.Stdoutln()
 				break
 			}
 
-			var parts []string
+			var needSemi bool
 			if !data.Bool(hideFileFlag.Name()) {
-				parts = append(parts, formattedPath)
+				applyFormatWithColor(output, fileColor, []string{"", path})
+				needSemi = true
 			}
 			if !data.Bool(hideLineFlag.Name()) {
-				parts = append(parts, colorLine(line))
+				if needSemi {
+					output.Stdout(":")
+				} else {
+					needSemi = true
+				}
+				applyFormatWithColor(output, lineColor, []string{"", fmt.Sprintf("%d", line)})
 			}
-			parts = append(parts, formattedString)
-			output.Stdoutln(strings.Join(parts, ":"))
+			if needSemi {
+				output.Stdout(":")
+			}
+			applyFormat(output, formattedString)
+			output.Stdoutln()
 		}
 
 		return nil
@@ -244,7 +244,7 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 }
 
 type element struct {
-	value string
+	value []string
 	n     int
 	next  *element
 }
@@ -282,7 +282,7 @@ func newLinkedList(fltr filter, data *command.Data, scanner *bufio.Scanner) *lin
 	}
 }
 
-func (ll *linkedList) getNext() (string, int, bool) {
+func (ll *linkedList) getNext() ([]string, int, bool) {
 	for {
 		// If we have lines to print, then just return the lines.
 		if ll.clearBefores {
@@ -296,7 +296,7 @@ func (ll *linkedList) getNext() (string, int, bool) {
 		// Otherwise, look for lines to return.
 		ll.lineCount++
 		if !ll.scanner.Scan() {
-			return "", 0, false
+			return nil, 0, false
 		}
 		s := ll.scanner.Text()
 
@@ -314,21 +314,21 @@ func (ll *linkedList) getNext() (string, int, bool) {
 		// If we are still in the "after" window from our last match,
 		// then we want to print out this line.
 		if ll.lastMatch <= ll.after {
-			return s, ll.lineCount, true
+			return []string{s}, ll.lineCount, true
 		}
 
 		// Otherwise, we store the string in our behind list incase
 		// we get a match later.
-		ll.pushBack(s, ll.lineCount)
+		ll.pushBack([]string{s}, ll.lineCount)
 		if ll.length > ll.before {
 			ll.pop()
 		}
 	}
 }
 
-func (ll *linkedList) pushBack(s string, i int) {
+func (ll *linkedList) pushBack(ss []string, i int) {
 	newEl := &element{
-		value: s,
+		value: ss,
 		n:     i,
 	}
 	if ll.length == 0 {
@@ -341,7 +341,7 @@ func (ll *linkedList) pushBack(s string, i int) {
 	ll.length++
 }
 
-func (ll *linkedList) pop() (string, int) {
+func (ll *linkedList) pop() ([]string, int) {
 	r := ll.front.value
 	i := ll.front.n
 	if ll.length == 1 {

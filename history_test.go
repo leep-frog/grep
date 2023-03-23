@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/leep-frog/command"
+	"github.com/leep-frog/command/color/colortest"
 )
 
 func TestHistory(t *testing.T) {
@@ -49,8 +50,8 @@ func TestHistory(t *testing.T) {
 						patternArgName: [][]string{{"^.e"}},
 					}},
 					WantStdout: strings.Join([]string{
-						fmt.Sprintf("%s%s", grepColor(matchColor, "be"), "ta"),
-						fmt.Sprintf("%s%s", grepColor(matchColor, "de"), "lta"),
+						fmt.Sprintf("%s%s", fakeColor(matchColor, "be"), "ta"),
+						fmt.Sprintf("%s%s", fakeColor(matchColor, "de"), "lta"),
 						"",
 					}, "\n"),
 				},
@@ -72,9 +73,9 @@ func TestHistory(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						grepColor(matchColor, "alphA"),
-						// grepColor(matchColor, "beta"),
-						grepColor(matchColor, "deltA"),
+						fakeColor(matchColor, "alphA"),
+						// fakeColor(matchColor, "beta"),
+						fakeColor(matchColor, "deltA"),
 						"",
 					}, "\n"),
 				},
@@ -171,7 +172,7 @@ func TestHistory(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						fmt.Sprintf("5 %s", grepColor(matchColor, "alpha")),
+						fmt.Sprintf("5 %s", fakeColor(matchColor, "alpha")),
 						"",
 					}, "\n"),
 				},
@@ -183,6 +184,7 @@ func TestHistory(t *testing.T) {
 				if test.osOpenErr != nil {
 					command.StubValue(t, &osOpen, func(s string) (io.Reader, error) { return nil, test.osOpenErr })
 				}
+				colortest.StubTput(t)
 
 				// Run test
 				h := HistoryCLI()

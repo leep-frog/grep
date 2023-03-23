@@ -63,7 +63,12 @@ func (*filename) Process(output command.Output, data *command.Data, f filter) er
 				output.Stdoutln(string(contents))
 			}
 		} else {
-			output.Stdoutln(filepath.Join(filepath.Dir(path), formattedString))
+			dir := filepath.Dir(path)
+			if dir != "." {
+				output.Stdoutf("%s%c", dir, filepath.Separator)
+			}
+			applyFormat(output, formattedString)
+			output.Stdoutln()
 		}
 		return nil
 	})

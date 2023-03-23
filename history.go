@@ -39,7 +39,8 @@ func (*history) Process(output command.Output, data *command.Data, f filter) err
 		if !ok {
 			continue
 		}
-		output.Stdoutln(formattedString)
+		applyFormat(output, formattedString)
+		output.Stdoutln()
 	}
 
 	return nil

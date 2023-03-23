@@ -7,7 +7,25 @@ import (
 	"testing"
 
 	"github.com/leep-frog/command"
+	"github.com/leep-frog/command/color"
+	"github.com/leep-frog/command/color/colortest"
 )
+
+// fakeColor allows us to see where the colors were applied
+func fakeColor(f *color.Format, s string) string {
+	if !shouldColor {
+		return s
+	}
+
+	preSl := []string(*f)
+	prefix := fmt.Sprintf("__tput_%s__", strings.Join(preSl, "_"))
+
+	r := color.Reset()
+	sufSl := []string(*r)
+	suffix := fmt.Sprintf("__tput_%s__", strings.Join(sufSl, "_"))
+
+	return fmt.Sprintf("%s%s%s", prefix, s, suffix)
+}
 
 func TestFilename(t *testing.T) {
 	for _, sc := range []bool{true, false} {
@@ -97,10 +115,10 @@ func TestFilename(t *testing.T) {
 				etc: &command.ExecuteTestCase{
 					Args: []string{".*.txt"},
 					WantStdout: strings.Join([]string{
-						filepath.Join("testing", grepColor(matchColor, "lots.txt")),
-						filepath.Join("testing", grepColor(matchColor, "numbered.txt")),
-						filepath.Join("testing", "other", grepColor(matchColor, "other.txt")),
-						filepath.Join("testing", grepColor(matchColor, "this.txt")),
+						filepath.Join("testing", fakeColor(matchColor, "lots.txt")),
+						filepath.Join("testing", fakeColor(matchColor, "numbered.txt")),
+						filepath.Join("testing", "other", fakeColor(matchColor, "other.txt")),
+						filepath.Join("testing", fakeColor(matchColor, "this.txt")),
 						"",
 					}, "\n"),
 					WantData: &command.Data{Values: map[string]interface{}{
@@ -113,9 +131,9 @@ func TestFilename(t *testing.T) {
 				etc: &command.ExecuteTestCase{
 					Args: []string{"\\.txt$", ".*s\\.", "|", ".*\\.py$"},
 					WantStdout: strings.Join([]string{
-						filepath.Join("testing", grepColor(matchColor, "lots.txt")),
-						filepath.Join("testing", grepColor(matchColor, "that.py")),
-						filepath.Join("testing", grepColor(matchColor, "this.txt")),
+						filepath.Join("testing", fakeColor(matchColor, "lots.txt")),
+						filepath.Join("testing", fakeColor(matchColor, "that.py")),
+						filepath.Join("testing", fakeColor(matchColor, "this.txt")),
 						"",
 					}, "\n"),
 					WantData: &command.Data{Values: map[string]interface{}{
@@ -131,8 +149,8 @@ func TestFilename(t *testing.T) {
 				etc: &command.ExecuteTestCase{
 					Args: []string{"oth.*"},
 					WantStdout: strings.Join([]string{
-						filepath.Join("testing", grepColor(matchColor, "other")),
-						filepath.Join("testing", "other", grepColor(matchColor, "other.txt")),
+						filepath.Join("testing", fakeColor(matchColor, "other")),
+						filepath.Join("testing", "other", fakeColor(matchColor, "other.txt")),
 						"",
 					}, "\n"),
 					WantData: &command.Data{Values: map[string]interface{}{
@@ -203,6 +221,7 @@ func TestFilename(t *testing.T) {
 					}},
 				},
 			},
+			/* Useful for commenting out tests. */
 		} {
 			t.Run(testName(sc, test.name), func(t *testing.T) {
 				// Change starting directory
@@ -211,6 +230,7 @@ func TestFilename(t *testing.T) {
 					tmpStart = test.stubDir
 				}
 				command.StubValue(t, &startDir, tmpStart)
+				colortest.StubTput(t)
 
 				// Run the test.
 				f := FilenameCLI()

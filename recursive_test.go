@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/leep-frog/command"
+	"github.com/leep-frog/command/color/colortest"
 )
 
 func testName(sc bool, name string) string {
@@ -54,10 +55,10 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						withFile(withLine(1, fmt.Sprintf("%s%s", grepColor(matchColor, "alpha"), " bravo delta")), "testing", "lots.txt"),
-						withFile(withLine(3, fmt.Sprintf("%s%s", grepColor(matchColor, "alpha"), " hello there")), "testing", "lots.txt"),
-						withFile(withLine(1, fmt.Sprintf("%s%s", grepColor(matchColor, "alpha"), " zero")), "testing", "other", "other.txt"),
-						withFile(withLine(1, grepColor(matchColor, "alpha")), "testing", "that.py"),
+						withFile(withLine(1, fmt.Sprintf("%s%s", fakeColor(matchColor, "alpha"), " bravo delta")), "testing", "lots.txt"),
+						withFile(withLine(3, fmt.Sprintf("%s%s", fakeColor(matchColor, "alpha"), " hello there")), "testing", "lots.txt"),
+						withFile(withLine(1, fmt.Sprintf("%s%s", fakeColor(matchColor, "alpha"), " zero")), "testing", "other", "other.txt"),
+						withFile(withLine(1, fakeColor(matchColor, "alpha")), "testing", "that.py"),
 						"",
 					}, "\n"),
 				},
@@ -74,7 +75,7 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						grepColor(matchColor, "XYZ %s heyo"),
+						fakeColor(matchColor, "XYZ %s heyo"),
 						"",
 					}, "\n"),
 				},
@@ -91,7 +92,7 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						withFile(grepColor(matchColor, "alpha"), "testing", "that.py"),
+						withFile(fakeColor(matchColor, "alpha"), "testing", "that.py"),
 						"",
 					}, "\n"),
 				},
@@ -108,9 +109,9 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						withFile(fmt.Sprintf("%s %s", grepColor(matchColor, "alpha"), "bravo delta"), "testing", "lots.txt"),
-						withFile(fmt.Sprintf("%s %s", grepColor(matchColor, "alpha"), "hello there"), "testing", "lots.txt"),
-						withFile(fmt.Sprintf("%s %s", grepColor(matchColor, "alpha"), "zero"), "testing", "other", "other.txt"),
+						withFile(fmt.Sprintf("%s %s", fakeColor(matchColor, "alpha"), "bravo delta"), "testing", "lots.txt"),
+						withFile(fmt.Sprintf("%s %s", fakeColor(matchColor, "alpha"), "hello there"), "testing", "lots.txt"),
+						withFile(fmt.Sprintf("%s %s", fakeColor(matchColor, "alpha"), "zero"), "testing", "other", "other.txt"),
 						"",
 					}, "\n"),
 				},
@@ -141,11 +142,11 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						fmt.Sprintf("%s%s%s", "al", grepColor(matchColor, "pha bravo d"), "elta"), // testing/lots.txt
-						fmt.Sprintf("%s%s", "bravo delta al", grepColor(matchColor, "pha")),       // testing/lots.txt
-						fmt.Sprintf("%s%s%s", "al", grepColor(matchColor, "pha h"), "ello there"), // testing/lots.txt
-						fmt.Sprintf("%s%s%s", "al", grepColor(matchColor, "pha z"), "ero"),        // testing/other/other.txt
-						fmt.Sprintf("%s%s", "al", grepColor(matchColor, "pha")),                   //testing/that.py
+						fmt.Sprintf("%s%s%s", "al", fakeColor(matchColor, "pha bravo d"), "elta"), // testing/lots.txt
+						fmt.Sprintf("%s%s", "bravo delta al", fakeColor(matchColor, "pha")),       // testing/lots.txt
+						fmt.Sprintf("%s%s%s", "al", fakeColor(matchColor, "pha h"), "ello there"), // testing/lots.txt
+						fmt.Sprintf("%s%s%s", "al", fakeColor(matchColor, "pha z"), "ero"),        // testing/other/other.txt
+						fmt.Sprintf("%s%s", "al", fakeColor(matchColor, "pha")),                   //testing/that.py
 						"",
 					}, "\n"),
 				},
@@ -162,8 +163,8 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						strings.Join([]string{grepColor(matchColor, "alpha"), grepColor(matchColor, "bravo"), "delta"}, " "),
-						strings.Join([]string{grepColor(matchColor, "bravo"), "delta", grepColor(matchColor, "alpha")}, " "),
+						strings.Join([]string{fakeColor(matchColor, "alpha"), fakeColor(matchColor, "bravo"), "delta"}, " "),
+						strings.Join([]string{fakeColor(matchColor, "bravo"), "delta", fakeColor(matchColor, "alpha")}, " "),
 						"",
 					}, "\n"),
 				},
@@ -179,7 +180,7 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						fmt.Sprintf("%s:%s%s", colorLine(7), grepColor(matchColor, "qwertyu"), "iop"),
+						fmt.Sprintf("%s:%s%s", colorLine(7), fakeColor(matchColor, "qwertyu"), "iop"),
 						"",
 					}, "\n"),
 				},
@@ -267,9 +268,9 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						grepColor(fileColor, filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
-						grepColor(fileColor, filepath.Join("testing", "other", "other.txt")), // "alpha zero"
-						grepColor(fileColor, filepath.Join("testing", "that.py")),            // "alpha"
+						fakeColor(fileColor, filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
+						fakeColor(fileColor, filepath.Join("testing", "other", "other.txt")), // "alpha zero"
+						fakeColor(fileColor, filepath.Join("testing", "that.py")),            // "alpha"
 						"",
 					}, "\n"),
 				},
@@ -288,8 +289,8 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						grepColor(fileColor, filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
-						grepColor(fileColor, filepath.Join("testing", "other", "other.txt")), // "alpha zero"
+						fakeColor(fileColor, filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
+						fakeColor(fileColor, filepath.Join("testing", "other", "other.txt")), // "alpha zero"
 						"",
 					}, "\n"),
 				},
@@ -309,9 +310,9 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						grepColor(fileColor, filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
-						grepColor(fileColor, filepath.Join("testing", "other", "other.txt")), // "alpha zero"
-						grepColor(fileColor, filepath.Join("testing", "that.py")),            // "alpha"
+						fakeColor(fileColor, filepath.Join("testing", "lots.txt")),           // "alpha bravo delta"
+						fakeColor(fileColor, filepath.Join("testing", "other", "other.txt")), // "alpha zero"
+						fakeColor(fileColor, filepath.Join("testing", "that.py")),            // "alpha"
 						"",
 					}, "\n"),
 				},
@@ -342,7 +343,7 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						withFile(withLine(6, grepColor(matchColor, "five")), "testing", "numbered.txt"),
+						withFile(withLine(6, fakeColor(matchColor, "five")), "testing", "numbered.txt"),
 						withFile(withLine(7, "six"), "testing", "numbered.txt"),
 						withFile(withLine(8, "seven"), "testing", "numbered.txt"),
 						withFile(withLine(9, "eight"), "testing", "numbered.txt"),
@@ -363,7 +364,7 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						grepColor(matchColor, "five"),
+						fakeColor(matchColor, "five"),
 						"six",
 						"seven",
 						"eight",
@@ -384,14 +385,14 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						withFile(grepColor(matchColor, "zero"), "testing", "numbered.txt"),
+						withFile(fakeColor(matchColor, "zero"), "testing", "numbered.txt"),
 						withFile("one", "testing", "numbered.txt"),
 						withFile("two", "testing", "numbered.txt"),
-						withFile(grepColor(matchColor, "four"), "testing", "numbered.txt"),
-						withFile(grepColor(matchColor, "five"), "testing", "numbered.txt"),
+						withFile(fakeColor(matchColor, "four"), "testing", "numbered.txt"),
+						withFile(fakeColor(matchColor, "five"), "testing", "numbered.txt"),
 						withFile("six", "testing", "numbered.txt"),
 						withFile("seven", "testing", "numbered.txt"),
-						withFile(grepColor(matchColor, "nine"), "testing", "numbered.txt"),
+						withFile(fakeColor(matchColor, "nine"), "testing", "numbered.txt"),
 						"",
 					}, "\n"),
 				},
@@ -410,14 +411,14 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						grepColor(matchColor, "zero"),
+						fakeColor(matchColor, "zero"),
 						"one",
 						"two",
-						grepColor(matchColor, "four"),
-						grepColor(matchColor, "five"),
+						fakeColor(matchColor, "four"),
+						fakeColor(matchColor, "five"),
 						"six",
 						"seven",
-						grepColor(matchColor, "nine"),
+						fakeColor(matchColor, "nine"),
 						"",
 					}, "\n"),
 				},
@@ -438,7 +439,7 @@ func TestRecursive(t *testing.T) {
 						withFile("two", "testing", "numbered.txt"),
 						withFile("three", "testing", "numbered.txt"),
 						withFile("four", "testing", "numbered.txt"),
-						withFile(grepColor(matchColor, "five"), "testing", "numbered.txt"),
+						withFile(fakeColor(matchColor, "five"), "testing", "numbered.txt"),
 						"",
 					}, "\n"),
 				},
@@ -458,7 +459,7 @@ func TestRecursive(t *testing.T) {
 						withLine(3, "two"),
 						withLine(4, "three"),
 						withLine(5, "four"),
-						withLine(6, grepColor(matchColor, "five")),
+						withLine(6, fakeColor(matchColor, "five")),
 						"",
 					}, "\n"),
 				},
@@ -476,14 +477,14 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						withFile(grepColor(matchColor, "zero"), "testing", "numbered.txt"),
+						withFile(fakeColor(matchColor, "zero"), "testing", "numbered.txt"),
 						withFile("two", "testing", "numbered.txt"),
 						withFile("three", "testing", "numbered.txt"),
-						withFile(grepColor(matchColor, "four"), "testing", "numbered.txt"),
-						withFile(grepColor(matchColor, "five"), "testing", "numbered.txt"),
+						withFile(fakeColor(matchColor, "four"), "testing", "numbered.txt"),
+						withFile(fakeColor(matchColor, "five"), "testing", "numbered.txt"),
 						withFile("seven", "testing", "numbered.txt"),
 						withFile("eight", "testing", "numbered.txt"),
-						withFile(grepColor(matchColor, "nine"), "testing", "numbered.txt"),
+						withFile(fakeColor(matchColor, "nine"), "testing", "numbered.txt"),
 						"",
 					}, "\n"),
 				},
@@ -501,14 +502,14 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						withLine(1, grepColor(matchColor, "zero")),
+						withLine(1, fakeColor(matchColor, "zero")),
 						withLine(3, "two"),
 						withLine(4, "three"),
-						withLine(5, grepColor(matchColor, "four")),
-						withLine(6, grepColor(matchColor, "five")),
+						withLine(5, fakeColor(matchColor, "four")),
+						withLine(6, fakeColor(matchColor, "five")),
 						withLine(8, "seven"),
 						withLine(9, "eight"),
-						withLine(10, grepColor(matchColor, "nine")),
+						withLine(10, fakeColor(matchColor, "nine")),
 						"",
 					}, "\n"),
 				},
@@ -528,12 +529,12 @@ func TestRecursive(t *testing.T) {
 					},
 					WantStdout: strings.Join([]string{
 						withFile(withLine(1, "zero"), "testing", "numbered.txt"),
-						withFile(withLine(2, grepColor(matchColor, "one")), "testing", "numbered.txt"),
-						withFile(withLine(3, grepColor(matchColor, "two")), "testing", "numbered.txt"),
+						withFile(withLine(2, fakeColor(matchColor, "one")), "testing", "numbered.txt"),
+						withFile(withLine(3, fakeColor(matchColor, "two")), "testing", "numbered.txt"),
 						withFile(withLine(4, "three"), "testing", "numbered.txt"),
 						withFile(withLine(5, "four"), "testing", "numbered.txt"),
 						withFile(withLine(6, "five"), "testing", "numbered.txt"),
-						withFile(withLine(7, grepColor(matchColor, "six")), "testing", "numbered.txt"),
+						withFile(withLine(7, fakeColor(matchColor, "six")), "testing", "numbered.txt"),
 						withFile(withLine(8, "seven"), "testing", "numbered.txt"),
 						withFile(withLine(9, "eight"), "testing", "numbered.txt"),
 						"",
@@ -555,12 +556,12 @@ func TestRecursive(t *testing.T) {
 					},
 					WantStdout: strings.Join([]string{
 						withLine(1, "zero"),
-						withLine(2, grepColor(matchColor, "one")),
-						withLine(3, grepColor(matchColor, "two")),
+						withLine(2, fakeColor(matchColor, "one")),
+						withLine(3, fakeColor(matchColor, "two")),
 						withLine(4, "three"),
 						withLine(5, "four"),
 						withLine(6, "five"),
-						withLine(7, grepColor(matchColor, "six")),
+						withLine(7, fakeColor(matchColor, "six")),
 						withLine(8, "seven"),
 						withLine(9, "eight"),
 						"",
@@ -596,7 +597,7 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						fmt.Sprintf("%s:%s:%s zero", grepColor(fileColor, filepath.Join("testing", "other", "other.txt")), colorLine(1), grepColor(matchColor, "alpha")),
+						fmt.Sprintf("%s:%s:%s zero", fakeColor(fileColor, filepath.Join("testing", "other", "other.txt")), colorLine(1), fakeColor(matchColor, "alpha")),
 						"",
 					}, "\n"),
 				},
@@ -762,6 +763,7 @@ func TestRecursive(t *testing.T) {
 					tmpStart = test.stubDir
 				}
 				command.StubValue(t, &startDir, tmpStart)
+				colortest.StubTput(t)
 
 				// Stub os.Open if necessary
 				if test.osOpenErr != nil {
@@ -836,7 +838,11 @@ func TestRecusriveMetadata(t *testing.T) {
 }
 
 func withFile(s string, fileParts ...string) string {
-	return fmt.Sprintf("%s:%s", grepColor(fileColor, filepath.Join(fileParts...)), s)
+	return fmt.Sprintf("%s:%s", fakeColor(fileColor, filepath.Join(fileParts...)), s)
+}
+
+func colorLine(n int) string {
+	return fakeColor(lineColor, fmt.Sprintf("%d", n))
 }
 
 func withLine(n int, s string) string {

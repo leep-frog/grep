@@ -19,22 +19,12 @@ var (
 	invertFlag     = command.ListFlag[string]("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
 	matchOnlyFlag  = command.BoolFlag("match-only", 'o', "Only show the matching segment")
 
-	matchColor = &color.Format{
-		Color:     color.Green,
-		Thickness: color.Bold,
-	}
+	matchColor = color.MultiFormat(color.Text(color.Green), color.Bold())
 )
 
 var (
 	shouldColor = len(os.Getenv("LEEP_FROG_RP_NO_COLOR")) == 0
 )
-
-func grepColor(c *color.Format, s string) string {
-	if shouldColor {
-		return c.Format(s)
-	}
-	return s
-}
 
 type filter interface {
 	filter(string) ([]*match, bool)
@@ -105,37 +95,73 @@ func disjointMatches(ms []*match) []*match {
 	return ums
 }
 
-func apply(f filter, s string, data *command.Data) (string, bool) {
+// applyFormat should be called on the response returned from the `apply` method
+func applyFormat(o command.Output, ss []string) {
+	applyFormatWithColor(o, matchColor, ss)
+}
+
+func applyFormatWithColor(o command.Output, f *color.Format, ss []string) {
+	if !shouldColor {
+		o.Stdout(strings.Join(ss, ""))
+		return
+	}
+
+	for i, s := range ss {
+		if i%2 == 1 {
+			f.Apply(o)
+		}
+		o.Stdout(s)
+		if i%2 == 1 {
+			color.Reset().Apply(o)
+		}
+	}
+}
+
+// Returns a string slice of [Not-match, match, not-match, match, ..., not-match]
+func apply(f filter, s string, data *command.Data) ([]string, bool) {
 	matchOnly := data.Bool(matchOnlyFlag.Name())
-	otherString := s
 
 	matches, ok := f.filter(s)
 	if !ok {
-		return "", false
+		return nil, false
+	}
+
+	// Check if it's a full line match.
+	if len(matches) == 0 {
+		// If it's a full line match, then no need to provide formatting.
+		return []string{s}, true
 	}
 	matches = disjointMatches(matches)
 
-	var offset int
 	var mo []string
-	for _, m := range matches {
+
+	if matchOnly {
+		mo = append(mo, "")
+	} else {
+		mo = append(mo, s[:matches[0].start])
+	}
+
+	for idx, m := range matches {
 		if matchOnly {
-			mo = append(mo, otherString[m.start:m.end])
+			mo = append(mo, s[m.start:m.end])
+			if idx != len(matches)-1 {
+				mo = append(mo, "...")
+			}
 		} else {
-			origLen := len(otherString)
-			otherString = fmt.Sprintf(
-				"%s%s%s",
-				otherString[:(offset+m.start)],
-				grepColor(matchColor, (otherString[(offset+m.start):(offset+m.end)])),
-				otherString[(offset+m.end):],
-			)
-			offset += len(otherString) - origLen
+			mo = append(mo, s[m.start:m.end])
+			if idx == len(matches)-1 {
+				mo = append(mo, s[m.end:])
+			} else {
+				mo = append(mo, s[m.end:matches[idx+1].start])
+			}
 		}
 	}
 
 	if matchOnly {
-		return strings.Join(mo, "..."), true
+		return []string{strings.Join(mo, "")}, true
 	}
-	return otherString, true
+
+	return mo, true
 }
 
 type inputSource interface {
@@ -191,18 +217,20 @@ func (im *invertMatcher) filter(s string) ([]*match, bool) {
 	return nil, !im.r.MatchString(s)
 }
 
-/*func colorMatch(r *regexp.Regexp) func(string) (*match, bool) {
-	return func(s string) (*match, bool) {
-		indices := r.FindStringIndex(s)
-		if indices == nil {
-			return nil, false
+/*
+	func colorMatch(r *regexp.Regexp) func(string) (*match, bool) {
+		return func(s string) (*match, bool) {
+			indices := r.FindStringIndex(s)
+			if indices == nil {
+				return nil, false
+			}
+			return &match{
+				start: indices[0],
+				end:   indices[1],
+			}, true
 		}
-		return &match{
-			start: indices[0],
-			end:   indices[1],
-		}, true
 	}
-}*/
+*/
 func colorMatch(r *regexp.Regexp) filter {
 	return &colorMatcher{r}
 }
