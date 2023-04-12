@@ -20,7 +20,7 @@ func fakeColor(f *color.Format, s string) string {
 	preSl := []string(*f)
 	prefix := fmt.Sprintf("__tput_%s__", strings.Join(preSl, "_"))
 
-	r := color.Reset()
+	r := color.Init()
 	sufSl := []string(*r)
 	suffix := fmt.Sprintf("__tput_%s__", strings.Join(sufSl, "_"))
 

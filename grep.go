@@ -112,7 +112,7 @@ func applyFormatWithColor(o command.Output, f *color.Format, ss []string) {
 		}
 		o.Stdout(s)
 		if i%2 == 1 {
-			color.Reset().Apply(o)
+			color.Init().Apply(o)
 		}
 	}
 }
