@@ -8,10 +8,10 @@ import (
 )
 
 func main() {
-	os.Exit(sourcerer.Source(
+	os.Exit(sourcerer.Source([]sourcerer.CLI{
 		grep.HistoryCLI(),
 		grep.FilenameCLI(),
 		grep.RecursiveCLI(),
 		grep.StdinCLI(),
-	))
+	}))
 }
