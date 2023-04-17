@@ -2,6 +2,7 @@ package grep
 
 import (
 	"bufio"
+	"strings"
 
 	"github.com/leep-frog/command"
 )
@@ -35,7 +36,9 @@ func (*history) Process(output command.Output, data *command.Data, f filter) err
 	scanner := bufio.NewScanner(s)
 	scanner.Split(bufio.ScanLines)
 	for scanner.Scan() {
-		formattedString, ok := apply(f, scanner.Text(), data)
+		// We need to replace all null characters because (for windows)
+		// null characters creep into the history output file for some reason.
+		formattedString, ok := apply(f, strings.ReplaceAll(scanner.Text(), "\x00", ""), data)
 		if !ok {
 			continue
 		}

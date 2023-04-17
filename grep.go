@@ -28,10 +28,19 @@ var (
 
 type filter interface {
 	filter(string) ([]*match, bool)
+	fmt.Stringer
 }
 
 type andFilter struct {
 	filters []filter
+}
+
+func (af *andFilter) String() string {
+	var r []string
+	for _, f := range af.filters {
+		r = append(r, fmt.Sprintf("(%s)", f.String()))
+	}
+	return strings.Join(r, " && ")
 }
 
 func (af *andFilter) filter(s string) ([]*match, bool) {
@@ -48,6 +57,14 @@ func (af *andFilter) filter(s string) ([]*match, bool) {
 
 type orFilter struct {
 	filters []filter
+}
+
+func (of *orFilter) String() string {
+	var r []string
+	for _, f := range of.filters {
+		r = append(r, fmt.Sprintf("(%s)", f.String()))
+	}
+	return strings.Join(r, " || ")
 }
 
 func (of *orFilter) filter(s string) ([]*match, bool) {
@@ -198,6 +215,10 @@ type colorMatcher struct {
 	r *regexp.Regexp
 }
 
+func (cm *colorMatcher) String() string {
+	return fmt.Sprintf("COLOR{%s}", cm.r.String())
+}
+
 func (cm *colorMatcher) filter(s string) ([]*match, bool) {
 	indices := cm.r.FindStringIndex(s)
 	if indices == nil {
@@ -215,6 +236,10 @@ type invertMatcher struct {
 
 func (im *invertMatcher) filter(s string) ([]*match, bool) {
 	return nil, !im.r.MatchString(s)
+}
+
+func (im *invertMatcher) String() string {
+	return fmt.Sprintf("![%s]", im.r.String())
 }
 
 /*
