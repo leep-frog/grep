@@ -12,6 +12,7 @@ import (
 
 	"github.com/leep-frog/command"
 	"github.com/leep-frog/command/color"
+	"github.com/leep-frog/command/sourcerer"
 )
 
 var (
@@ -49,7 +50,13 @@ type recursive struct {
 	changed            bool
 }
 
-func (*recursive) Name() string    { return "rp" }
+func (*recursive) Name() string {
+	if sourcerer.CurrentOS.Name() == "windows" {
+		return "p"
+	}
+	return "rp"
+}
+
 func (*recursive) Setup() []string { return nil }
 func (*recursive) Flags() []command.FlagInterface {
 	return []command.FlagInterface{
