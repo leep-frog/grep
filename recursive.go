@@ -52,7 +52,7 @@ type recursive struct {
 
 func (*recursive) Name() string {
 	if sourcerer.CurrentOS.Name() == "windows" {
-		return "p"
+		return "wrp"
 	}
 	return "rp"
 }
