@@ -12,7 +12,6 @@ import (
 
 	"github.com/leep-frog/command"
 	"github.com/leep-frog/command/color"
-	"github.com/leep-frog/command/sourcerer"
 )
 
 var (
@@ -51,9 +50,6 @@ type recursive struct {
 }
 
 func (*recursive) Name() string {
-	if sourcerer.CurrentOS.Name() == "windows" {
-		return "wrp"
-	}
 	return "rp"
 }
 
