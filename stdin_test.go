@@ -12,7 +12,8 @@ import (
 
 func TestStdin(t *testing.T) {
 	for _, sc := range []bool{true, false} {
-		command.StubValue(t, &shouldColor, sc)
+		command.StubValue(t, &defaultColorValue, sc)
+		fakeColor := fakeColorFn(sc)
 		for _, test := range []struct {
 			name  string
 			input []string

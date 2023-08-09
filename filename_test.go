@@ -11,25 +11,28 @@ import (
 	"github.com/leep-frog/command/color/colortest"
 )
 
-// fakeColor allows us to see where the colors were applied
-func fakeColor(f *color.Format, s string) string {
-	if !shouldColor {
-		return s
+// fakeColorFn returns a function that colors the string if sc is set to true.
+func fakeColorFn(sc bool) func(f *color.Format, s string) string {
+	return func(f *color.Format, s string) string {
+		if !sc {
+			return s
+		}
+
+		preSl := []string(*f)
+		prefix := fmt.Sprintf("__tput_%s__", strings.Join(preSl, "_"))
+
+		r := color.Init()
+		sufSl := []string(*r)
+		suffix := fmt.Sprintf("__tput_%s__", strings.Join(sufSl, "_"))
+
+		return fmt.Sprintf("%s%s%s", prefix, s, suffix)
 	}
-
-	preSl := []string(*f)
-	prefix := fmt.Sprintf("__tput_%s__", strings.Join(preSl, "_"))
-
-	r := color.Init()
-	sufSl := []string(*r)
-	suffix := fmt.Sprintf("__tput_%s__", strings.Join(sufSl, "_"))
-
-	return fmt.Sprintf("%s%s%s", prefix, s, suffix)
 }
 
 func TestFilename(t *testing.T) {
 	for _, sc := range []bool{true, false} {
-		command.StubValue(t, &shouldColor, sc)
+		command.StubValue(t, &defaultColorValue, sc)
+		fakeColor := fakeColorFn(sc)
 		for _, test := range []struct {
 			name    string
 			etc     *command.ExecuteTestCase

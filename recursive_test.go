@@ -18,7 +18,17 @@ func testName(sc bool, name string) string {
 
 func TestRecursive(t *testing.T) {
 	for _, sc := range []bool{true, false} {
-		command.StubValue(t, &shouldColor, sc)
+		command.StubValue(t, &defaultColorValue, sc)
+		fakeColor := fakeColorFn(sc)
+		fakeColorLine := func(n int) string {
+			return fakeColor(lineColor, fmt.Sprintf("%d", n))
+		}
+		withLine := func(n int, s string) string {
+			return fmt.Sprintf("%s:%s", fakeColorLine(n), s)
+		}
+		withFile := func(s string, fileParts ...string) string {
+			return fmt.Sprintf("%s:%s", fakeColor(fileColor, filepath.Join(fileParts...)), s)
+		}
 		for _, test := range []struct {
 			name           string
 			aliases        map[string]string
@@ -180,7 +190,7 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						fmt.Sprintf("%s:%s%s", colorLine(7), fakeColor(matchColor, "qwertyu"), "iop"),
+						fmt.Sprintf("%s:%s%s", fakeColorLine(7), fakeColor(matchColor, "qwertyu"), "iop"),
 						"",
 					}, "\n"),
 				},
@@ -597,7 +607,7 @@ func TestRecursive(t *testing.T) {
 						},
 					},
 					WantStdout: strings.Join([]string{
-						fmt.Sprintf("%s:%s:%s zero", fakeColor(fileColor, filepath.Join("testing", "other", "other.txt")), colorLine(1), fakeColor(matchColor, "alpha")),
+						fmt.Sprintf("%s:%s:%s zero", fakeColor(fileColor, filepath.Join("testing", "other", "other.txt")), fakeColorLine(1), fakeColor(matchColor, "alpha")),
 						"",
 					}, "\n"),
 				},
@@ -837,24 +847,12 @@ func TestRecusriveMetadata(t *testing.T) {
 	}
 }
 
-func withFile(s string, fileParts ...string) string {
-	return fmt.Sprintf("%s:%s", fakeColor(fileColor, filepath.Join(fileParts...)), s)
-}
-
-func colorLine(n int) string {
-	return fakeColor(lineColor, fmt.Sprintf("%d", n))
-}
-
-func withLine(n int, s string) string {
-	return fmt.Sprintf("%s:%s", colorLine(n), s)
-}
-
 func TestUsage(t *testing.T) {
 	// Recursive grep
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: RecursiveCLI().Node(),
 		WantString: []string{
-			"< { [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --directory|-d --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --ignore-ignore-files|-x --invert|-v --invert-file|-F --match-only|-o --whole-word|-w",
+			"< { [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --color|-C --directory|-d --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --ignore-ignore-files|-x --invert|-v --invert-file|-F --match-only|-o --whole-word|-w",
 			"",
 			"  Commands around global ignore file patterns",
 			"  if <",
@@ -878,6 +876,7 @@ func TestUsage(t *testing.T) {
 			"  [a] after: Show the matched line and the n lines after it",
 			"  [b] before: Show the matched line and the n lines before it",
 			"  [i] case: Don't ignore character casing",
+			"  [C] color: Force (or unforce) the grep output to include color",
 			"  [d] directory: Search through the provided directory instead of pwd",
 			"  [f] file: Only select files that match this pattern",
 			"  [l] file-only: Only show file names",
@@ -899,7 +898,7 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: HistoryCLI().Node(),
 		WantString: []string{
-			"{ [ PATTERN ... ] | } ... --case|-i --invert|-v --match-only|-o --whole-word|-w",
+			"{ [ PATTERN ... ] | } ... --case|-i --color|-C --invert|-v --match-only|-o --whole-word|-w",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
@@ -907,6 +906,7 @@ func TestUsage(t *testing.T) {
 			"",
 			"Flags:",
 			"  [i] case: Don't ignore character casing",
+			"  [C] color: Force (or unforce) the grep output to include color",
 			"  [v] invert: Pattern(s) required to be absent in each line",
 			"  [o] match-only: Only show the matching segment",
 			"  [w] whole-word: Whether or not to search for exact match",
@@ -920,7 +920,7 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: FilenameCLI().Node(),
 		WantString: []string{
-			"{ [ PATTERN ... ] | } ... --case|-i --cat|-c --dir-only|-d --file-only|-f --invert|-v --match-only|-o --whole-word|-w",
+			"{ [ PATTERN ... ] | } ... --case|-i --cat|-c --color|-C --dir-only|-d --file-only|-f --invert|-v --match-only|-o --whole-word|-w",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
@@ -929,6 +929,7 @@ func TestUsage(t *testing.T) {
 			"Flags:",
 			"  [i] case: Don't ignore character casing",
 			"  [c] cat: Run cat command on all files that match",
+			"  [C] color: Force (or unforce) the grep output to include color",
 			"  [d] dir-only: Only check directory names",
 			"  [f] file-only: Only check file names",
 			"  [v] invert: Pattern(s) required to be absent in each line",
@@ -944,7 +945,7 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: StdinCLI().Node(),
 		WantString: []string{
-			"{ [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --invert|-v --match-only|-o --whole-word|-w",
+			"{ [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --color|-C --invert|-v --match-only|-o --whole-word|-w",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
@@ -954,6 +955,7 @@ func TestUsage(t *testing.T) {
 			"  [a] after: Show the matched line and the n lines after it",
 			"  [b] before: Show the matched line and the n lines before it",
 			"  [i] case: Don't ignore character casing",
+			"  [C] color: Force (or unforce) the grep output to include color",
 			"  [v] invert: Pattern(s) required to be absent in each line",
 			"  [o] match-only: Only show the matching segment",
 			"  [w] whole-word: Whether or not to search for exact match",

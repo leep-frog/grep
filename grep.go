@@ -12,19 +12,24 @@ import (
 )
 
 var (
-	patternArgName = "PATTERN"
-	patternArg     = command.StringListListProcessor(patternArgName, "Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes", "|", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
-	caseFlag       = command.BoolFlag("case", 'i', "Don't ignore character casing")
-	wholeWordFlag  = command.BoolFlag("whole-word", 'w', "Whether or not to search for exact match")
-	invertFlag     = command.ListFlag[string]("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
-	matchOnlyFlag  = command.BoolFlag("match-only", 'o', "Only show the matching segment")
+	defaultColorValue = len(os.Getenv("LEEP_FROG_RP_NO_COLOR")) == 0
+	patternArgName    = "PATTERN"
+	patternArg        = command.StringListListProcessor(patternArgName, "Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes", "|", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
+	caseFlag          = command.BoolFlag("case", 'i', "Don't ignore character casing")
+	wholeWordFlag     = command.BoolFlag("whole-word", 'w', "Whether or not to search for exact match")
+	invertFlag        = command.ListFlag[string]("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
+	matchOnlyFlag     = command.BoolFlag("match-only", 'o', "Only show the matching segment")
+	colorFlag         = command.BoolFlag("color", 'C', "Force (or unforce) the grep output to include color")
 
 	matchColor = color.MultiFormat(color.Text(color.Green), color.Bold())
 )
 
-var (
-	shouldColor = len(os.Getenv("LEEP_FROG_RP_NO_COLOR")) == 0
-)
+func shouldColor(data *command.Data) bool {
+	if data.Has(colorFlag.Name()) && colorFlag.Get(data) {
+		return !defaultColorValue
+	}
+	return defaultColorValue
+}
 
 type filter interface {
 	filter(string) ([]*match, bool)
@@ -113,12 +118,12 @@ func disjointMatches(ms []*match) []*match {
 }
 
 // applyFormat should be called on the response returned from the `apply` method
-func applyFormat(o command.Output, ss []string) {
-	applyFormatWithColor(o, matchColor, ss)
+func applyFormat(o command.Output, d *command.Data, ss []string) {
+	applyFormatWithColor(o, d, matchColor, ss)
 }
 
-func applyFormatWithColor(o command.Output, f *color.Format, ss []string) {
-	if !shouldColor {
+func applyFormatWithColor(o command.Output, d *command.Data, f *color.Format, ss []string) {
+	if !shouldColor(d) {
 		o.Stdout(strings.Join(ss, ""))
 		return
 	}
@@ -242,20 +247,6 @@ func (im *invertMatcher) String() string {
 	return fmt.Sprintf("![%s]", im.r.String())
 }
 
-/*
-	func colorMatch(r *regexp.Regexp) func(string) (*match, bool) {
-		return func(s string) (*match, bool) {
-			indices := r.FindStringIndex(s)
-			if indices == nil {
-				return nil, false
-			}
-			return &match{
-				start: indices[0],
-				end:   indices[1],
-			}, true
-		}
-	}
-*/
 func colorMatch(r *regexp.Regexp) filter {
 	return &colorMatcher{r}
 }
@@ -301,7 +292,13 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 }
 
 func (g *Grep) Node() command.Node {
-	flags := append(g.InputSource.Flags(), caseFlag, wholeWordFlag, invertFlag, matchOnlyFlag)
+	flags := append(g.InputSource.Flags(),
+		caseFlag,
+		colorFlag,
+		invertFlag,
+		matchOnlyFlag,
+		wholeWordFlag,
+	)
 	flagProcessor := command.FlagProcessor(flags...)
 
 	return g.InputSource.MakeNode(command.SerialNodes(flagProcessor, patternArg, &command.ExecutorProcessor{F: g.Execute}))

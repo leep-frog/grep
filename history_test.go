@@ -14,7 +14,9 @@ import (
 
 func TestHistory(t *testing.T) {
 	for _, sc := range []bool{true, false} {
-		command.StubValue(t, &shouldColor, sc)
+		command.StubValue(t, &defaultColorValue, sc)
+		fakeColor := fakeColorFn(sc)
+		fakeInvertedColor := fakeColorFn(!sc)
 		for _, test := range []struct {
 			name      string
 			history   []string
@@ -52,6 +54,26 @@ func TestHistory(t *testing.T) {
 					WantStdout: strings.Join([]string{
 						fmt.Sprintf("%s%s", fakeColor(matchColor, "be"), "ta"),
 						fmt.Sprintf("%s%s", fakeColor(matchColor, "de"), "lta"),
+						"",
+					}, "\n"),
+				},
+			},
+			{
+				name: "filters history with inverted coloring",
+				history: []string{
+					"alpha",
+					"beta",
+					"delta",
+				},
+				etc: &command.ExecuteTestCase{
+					Args: []string{"^.e", "-C"},
+					WantData: &command.Data{Values: map[string]interface{}{
+						patternArgName:   [][]string{{"^.e"}},
+						colorFlag.Name(): true,
+					}},
+					WantStdout: strings.Join([]string{
+						fmt.Sprintf("%s%s", fakeInvertedColor(matchColor, "be"), "ta"),
+						fmt.Sprintf("%s%s", fakeInvertedColor(matchColor, "de"), "lta"),
 						"",
 					}, "\n"),
 				},

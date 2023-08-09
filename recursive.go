@@ -217,14 +217,14 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 		list := newLinkedList(fltr, data, scanner)
 		for formattedString, line, ok := list.getNext(); ok; formattedString, line, ok = list.getNext() {
 			if data.Bool(fileOnlyFlag.Name()) {
-				applyFormatWithColor(output, fileColor, []string{"", path})
+				applyFormatWithColor(output, data, fileColor, []string{"", path})
 				output.Stdoutln()
 				break
 			}
 
 			var needSemi bool
 			if !data.Bool(hideFileFlag.Name()) {
-				applyFormatWithColor(output, fileColor, []string{"", path})
+				applyFormatWithColor(output, data, fileColor, []string{"", path})
 				needSemi = true
 			}
 			if !data.Bool(hideLineFlag.Name()) {
@@ -233,12 +233,12 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 				} else {
 					needSemi = true
 				}
-				applyFormatWithColor(output, lineColor, []string{"", fmt.Sprintf("%d", line)})
+				applyFormatWithColor(output, data, lineColor, []string{"", fmt.Sprintf("%d", line)})
 			}
 			if needSemi {
 				output.Stdout(":")
 			}
-			applyFormat(output, formattedString)
+			applyFormat(output, data, formattedString)
 			output.Stdoutln()
 		}
 

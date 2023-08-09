@@ -42,7 +42,7 @@ func (*history) Process(output command.Output, data *command.Data, f filter) err
 		if !ok {
 			continue
 		}
-		applyFormat(output, formattedString)
+		applyFormat(output, data, formattedString)
 		output.Stdoutln()
 	}
 
