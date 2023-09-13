@@ -341,6 +341,66 @@ func TestRecursive(t *testing.T) {
 					WantErr:    fmt.Errorf("invalid filename regex: error parsing regexp: unexpected ): `:)`"),
 				},
 			},
+			// -d flag
+			{
+				name: "returns matches for depth of 2",
+				etc: &command.ExecuteTestCase{
+					Args: []string{"alpha", "-D", "2"},
+					WantData: &command.Data{
+						Values: map[string]interface{}{
+							patternArgName:   [][]string{{"alpha"}},
+							depthFlag.Name(): 2,
+						},
+					},
+					WantStdout: strings.Join([]string{
+						withFile(withLine(1, fmt.Sprintf("%s bravo delta", fakeColor(matchColor, "alpha"))), "testing", "lots.txt"),
+						withFile(withLine(2, fmt.Sprintf("bravo delta %s", fakeColor(matchColor, "alpha"))), "testing", "lots.txt"),
+						withFile(withLine(3, fmt.Sprintf("%s hello there", fakeColor(matchColor, "alpha"))), "testing", "lots.txt"),
+						withFile(withLine(1, fmt.Sprintf("%s zero", fakeColor(matchColor, "alpha"))), "testing", "other", "other.txt"),
+						withFile(withLine(1, fakeColor(matchColor, "alpha")), "testing", "that.py"),
+						"",
+					}, "\n"),
+				},
+			},
+			{
+				name: "returns all matches for depth of 0",
+				etc: &command.ExecuteTestCase{
+					Args: []string{"alpha", "-D", "0"},
+					WantData: &command.Data{
+						Values: map[string]interface{}{
+							patternArgName:   [][]string{{"alpha"}},
+							depthFlag.Name(): 0,
+						},
+					},
+					WantStdout: strings.Join([]string{
+						withFile(withLine(1, fmt.Sprintf("%s bravo delta", fakeColor(matchColor, "alpha"))), "testing", "lots.txt"),
+						withFile(withLine(2, fmt.Sprintf("bravo delta %s", fakeColor(matchColor, "alpha"))), "testing", "lots.txt"),
+						withFile(withLine(3, fmt.Sprintf("%s hello there", fakeColor(matchColor, "alpha"))), "testing", "lots.txt"),
+						withFile(withLine(1, fmt.Sprintf("%s zero", fakeColor(matchColor, "alpha"))), "testing", "other", "other.txt"),
+						withFile(withLine(1, fakeColor(matchColor, "alpha")), "testing", "that.py"),
+						"",
+					}, "\n"),
+				},
+			},
+			{
+				name: "returns matches for depth of 1",
+				etc: &command.ExecuteTestCase{
+					Args: []string{"alpha", "-D", "1"},
+					WantData: &command.Data{
+						Values: map[string]interface{}{
+							patternArgName:   [][]string{{"alpha"}},
+							depthFlag.Name(): 1,
+						},
+					},
+					WantStdout: strings.Join([]string{
+						withFile(withLine(1, fmt.Sprintf("%s bravo delta", fakeColor(matchColor, "alpha"))), "testing", "lots.txt"),
+						withFile(withLine(2, fmt.Sprintf("bravo delta %s", fakeColor(matchColor, "alpha"))), "testing", "lots.txt"),
+						withFile(withLine(3, fmt.Sprintf("%s hello there", fakeColor(matchColor, "alpha"))), "testing", "lots.txt"),
+						withFile(withLine(1, fakeColor(matchColor, "alpha")), "testing", "that.py"),
+						"",
+					}, "\n"),
+				},
+			},
 			// -a flag
 			{
 				name: "returns lines after",
@@ -852,7 +912,7 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: RecursiveCLI().Node(),
 		WantString: []string{
-			"< { [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --color|-C --directory|-d --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --ignore-ignore-files|-x --invert|-v --invert-file|-F --match-only|-o --whole-word|-w",
+			"< { [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --color|-C --depth|-D --directory|-d --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --ignore-ignore-files|-x --invert|-v --invert-file|-F --match-only|-o --whole-word|-w",
 			"",
 			"  Commands around global ignore file patterns",
 			"  if <",
@@ -877,6 +937,7 @@ func TestUsage(t *testing.T) {
 			"  [b] before: Show the matched line and the n lines before it",
 			"  [i] case: Don't ignore character casing",
 			"  [C] color: Force (or unforce) the grep output to include color",
+			"  [D] depth: The depth of files to search",
 			"  [d] directory: Search through the provided directory instead of pwd",
 			"  [f] file: Only select files that match this pattern",
 			"  [l] file-only: Only show file names",
