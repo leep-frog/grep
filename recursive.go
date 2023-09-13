@@ -28,8 +28,8 @@ var (
 	fileOnlyFlag      = command.BoolFlag("file-only", 'l', "Only show file names")
 	beforeFlag        = command.Flag[int]("before", 'b', "Show the matched line and the n lines before it")
 	afterFlag         = command.Flag[int]("after", 'a', "Show the matched line and the n lines after it")
-	depthFlag         = command.Flag[int]("depth", 'D', "The depth of files to search", command.NonNegative[int]())
-	dirFlag           = command.Flag[string]("directory", 'd', "Search through the provided directory instead of pwd", &command.FileCompleter[string]{IgnoreFiles: true})
+	depthFlag         = command.Flag[int]("depth", 'd', "The depth of files to search", command.NonNegative[int]())
+	dirFlag           = command.Flag[string]("directory", 'D', "Search through the provided directory instead of pwd", &command.FileCompleter[string]{IgnoreFiles: true})
 	hideLineFlag      = command.BoolFlag("hide-lines", 'n', "Don't include the line number in the output")
 	wholeFile         = command.BoolFlag("whole-file", 'w', "Whether or not to search the whole file (i.e. multi-wrap searching) in one regex")
 

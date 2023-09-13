@@ -345,7 +345,7 @@ func TestRecursive(t *testing.T) {
 			{
 				name: "returns matches for depth of 2",
 				etc: &command.ExecuteTestCase{
-					Args: []string{"alpha", "-D", "2"},
+					Args: []string{"alpha", "-d", "2"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
 							patternArgName:   [][]string{{"alpha"}},
@@ -365,7 +365,7 @@ func TestRecursive(t *testing.T) {
 			{
 				name: "returns all matches for depth of 0",
 				etc: &command.ExecuteTestCase{
-					Args: []string{"alpha", "-D", "0"},
+					Args: []string{"alpha", "-d", "0"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
 							patternArgName:   [][]string{{"alpha"}},
@@ -385,7 +385,7 @@ func TestRecursive(t *testing.T) {
 			{
 				name: "returns matches for depth of 1",
 				etc: &command.ExecuteTestCase{
-					Args: []string{"alpha", "-D", "1"},
+					Args: []string{"alpha", "-d", "1"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
 							patternArgName:   [][]string{{"alpha"}},
@@ -638,11 +638,11 @@ func TestRecursive(t *testing.T) {
 					}, "\n"),
 				},
 			},
-			// Directory flag (-d).
+			// Directory flag (-D).
 			{
 				name: "fails if unknown directory flag",
 				etc: &command.ExecuteTestCase{
-					Args: []string{"un", "-d", "dev-null"},
+					Args: []string{"un", "-D", "dev-null"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
 							patternArgName: [][]string{{"un"}},
@@ -659,7 +659,7 @@ func TestRecursive(t *testing.T) {
 					"ooo": "testing/other",
 				},
 				etc: &command.ExecuteTestCase{
-					Args: []string{"alpha", "-d", "ooo"},
+					Args: []string{"alpha", "-D", "ooo"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
 							patternArgName: [][]string{{"alpha"}},
@@ -912,7 +912,7 @@ func TestUsage(t *testing.T) {
 	command.UsageTest(t, &command.UsageTestCase{
 		Node: RecursiveCLI().Node(),
 		WantString: []string{
-			"< { [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --color|-C --depth|-D --directory|-d --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --ignore-ignore-files|-x --invert|-v --invert-file|-F --match-only|-o --whole-word|-w",
+			"< { [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --color|-C --depth|-d --directory|-D --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --ignore-ignore-files|-x --invert|-v --invert-file|-F --match-only|-o --whole-word|-w",
 			"",
 			"  Commands around global ignore file patterns",
 			"  if <",
@@ -937,8 +937,8 @@ func TestUsage(t *testing.T) {
 			"  [b] before: Show the matched line and the n lines before it",
 			"  [i] case: Don't ignore character casing",
 			"  [C] color: Force (or unforce) the grep output to include color",
-			"  [D] depth: The depth of files to search",
-			"  [d] directory: Search through the provided directory instead of pwd",
+			"  [d] depth: The depth of files to search",
+			"  [D] directory: Search through the provided directory instead of pwd",
 			"  [f] file: Only select files that match this pattern",
 			"  [l] file-only: Only show file names",
 			"  [h] hide-file: Don't show file names",
