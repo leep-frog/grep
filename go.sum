@@ -4,6 +4,10 @@ github.com/codeskyblue/go-sh v0.0.0-20200712050446-30169cf553fe h1:69JI97HlzP+PH
 github.com/codeskyblue/go-sh v0.0.0-20200712050446-30169cf553fe/go.mod h1:VQx0hjo2oUeQkQUET7wRwradO6f+fN5jzXgB/zROxxE=
 github.com/google/go-cmp v0.5.5 h1:Khx7svrCpmxxtHBq5j2mp/xVjsi8hQMfNLvJFAlrGgU=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
+github.com/google/go-cmp v0.5.8 h1:e6P7q2lk1O+qJJb4BtCQXlK8vWEO8V1ZeuEdJNOqZyg=
+github.com/google/go-cmp v0.5.8/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
+github.com/google/uuid v1.4.0 h1:MtMxsa51/r9yyhkyLsVeVt0B+BGQZzpQiTQ4eHZ8bc4=
+github.com/google/uuid v1.4.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/leep-frog/command v0.0.0-20220526151014-aa1ee03979ad h1:NdC90jFXcYGV2m9u54P9lG6at8USY3/3RfhDd1xa3ac=
 github.com/leep-frog/command v0.0.0-20220526151014-aa1ee03979ad/go.mod h1:fENOaVkhnQ/AKhBy7Pbkpd2l65h9R5ZQEspLn6bjNIE=
 github.com/leep-frog/command v0.0.0-20220529184927-b1b2ed676f3a h1:OHpOh6VIjl3xF66M1yVFVlwcFf3fIcx8mUG+Q8yGWkA=
@@ -60,8 +64,12 @@ github.com/leep-frog/command v0.0.0-20230417021257-72488343bb86 h1:Qt/KBDTvMRa6y
 github.com/leep-frog/command v0.0.0-20230417021257-72488343bb86/go.mod h1:nnUXeUudB6nssW6tQa3R64YK2ybnnRA11Wd0Gc2a5iA=
 github.com/leep-frog/command v0.0.0-20230417144055-357781ec02ba h1:M667iUYDB+jFfMngHGXTRhM761gWDleTtC9UExrmG7M=
 github.com/leep-frog/command v0.0.0-20230417144055-357781ec02ba/go.mod h1:nnUXeUudB6nssW6tQa3R64YK2ybnnRA11Wd0Gc2a5iA=
+github.com/leep-frog/command v0.0.0-20231114183500-a3d2ef85df58 h1:zgPOiM+vW7zimVc8sjcJyFllQLM2aYq8Pu2VXIiAg+w=
+github.com/leep-frog/command v0.0.0-20231114183500-a3d2ef85df58/go.mod h1:uOueA4MNFozqwP04FIPFE4kw866MyPWyneSMjSut4aA=
 golang.org/x/exp v0.0.0-20220321124402-2d6d886f8a82 h1:P3h2IfqHFILVjDaCKXyuKMprdEyIbrbKevbf2EB6lQI=
 golang.org/x/exp v0.0.0-20220321124402-2d6d886f8a82/go.mod h1:lgLbSvA5ygNOMpwM/9anMpWVlVJ7Z+cHWq/eFuinpGE=
+golang.org/x/exp v0.0.0-20231006140011-7918f672742d h1:jtJma62tbqLibJ5sFQz8bKtEM8rJBtfilJ2qTU199MI=
+golang.org/x/exp v0.0.0-20231006140011-7918f672742d/go.mod h1:ldy0pHrwJyGW56pPQzzkH36rKxoZW1tw7ZJpeKx+hdo=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 h1:go1bK/D/BFZV2I8cIQd1NKEZ+0owSTG1fDTci4IqFcE=
 golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
