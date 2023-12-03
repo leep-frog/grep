@@ -6,22 +6,24 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/leep-frog/command"
 	"github.com/leep-frog/command/color/colortest"
+	"github.com/leep-frog/command/command"
+	"github.com/leep-frog/command/commandertest"
+	"github.com/leep-frog/command/commandtest"
 )
 
 func TestStdin(t *testing.T) {
 	for _, sc := range []bool{true, false} {
-		command.StubValue(t, &defaultColorValue, sc)
+		commandtest.StubValue(t, &defaultColorValue, sc)
 		fakeColor := fakeColorFn(sc)
 		for _, test := range []struct {
 			name  string
 			input []string
-			etc   *command.ExecuteTestCase
+			etc   *commandtest.ExecuteTestCase
 		}{
 			{
 				name: "works if no stdin",
-				etc:  &command.ExecuteTestCase{},
+				etc:  &commandtest.ExecuteTestCase{},
 			},
 			{
 				name: "prints all lines if no args",
@@ -30,7 +32,7 @@ func TestStdin(t *testing.T) {
 					"bravo",
 					"delta",
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					WantStdout: strings.Join([]string{
 						"alpha",
 						"bravo",
@@ -47,7 +49,7 @@ func TestStdin(t *testing.T) {
 					"charlie",
 					"delta",
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"a$"},
 					WantStdout: strings.Join([]string{
 						fmt.Sprintf("alph%s", fakeColor(matchColor, "a")),
@@ -76,7 +78,7 @@ func TestStdin(t *testing.T) {
 					"nine",
 					"ten",
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^...$", "-b", "1"},
 					WantStdout: strings.Join([]string{
 						"zero",
@@ -111,7 +113,7 @@ func TestStdin(t *testing.T) {
 					"nine",
 					"ten",
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^.....$", "-a", "2"},
 					WantStdout: strings.Join([]string{
 						fakeColor(matchColor, "three"),
@@ -146,7 +148,7 @@ func TestStdin(t *testing.T) {
 					"nine",
 					"ten",
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"five", "-a", "2", "-b", "3"},
 					WantStdout: strings.Join([]string{
 						"two",
@@ -175,8 +177,8 @@ func TestStdin(t *testing.T) {
 					},
 				}
 				test.etc.Node = si.Node()
-				command.ExecuteTest(t, test.etc)
-				command.ChangeTest(t, nil, si)
+				commandertest.ExecuteTest(t, test.etc)
+				commandertest.ChangeTest(t, nil, si)
 			})
 		}
 	}

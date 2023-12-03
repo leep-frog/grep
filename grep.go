@@ -7,19 +7,20 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/leep-frog/command"
 	"github.com/leep-frog/command/color"
+	"github.com/leep-frog/command/command"
+	"github.com/leep-frog/command/commander"
 )
 
 var (
 	defaultColorValue = len(os.Getenv("LEEP_FROG_RP_NO_COLOR")) == 0
 	patternArgName    = "PATTERN"
-	patternArg        = command.StringListListProcessor(patternArgName, "Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes", "|", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
-	caseFlag          = command.BoolFlag("case", 'i', "Don't ignore character casing")
-	wholeWordFlag     = command.BoolFlag("whole-word", 'w', "Whether or not to search for exact match")
-	invertFlag        = command.ListFlag[string]("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList, command.ValidatorList(command.IsRegex()))
-	matchOnlyFlag     = command.BoolFlag("match-only", 'o', "Only show the matching segment")
-	colorFlag         = command.BoolFlag("color", 'C', "Force (or unforce) the grep output to include color")
+	patternArg        = commander.StringListListProcessor(patternArgName, "Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes", "|", 0, command.UnboundedList, commander.ListifyValidatorOption(commander.IsRegex()))
+	caseFlag          = commander.BoolFlag("case", 'i', "Don't ignore character casing")
+	wholeWordFlag     = commander.BoolFlag("whole-word", 'w', "Whether or not to search for exact match")
+	invertFlag        = commander.ListFlag[string]("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList, commander.ListifyValidatorOption(commander.IsRegex()))
+	matchOnlyFlag     = commander.BoolFlag("match-only", 'o', "Only show the matching segment")
+	colorFlag         = commander.BoolFlag("color", 'C', "Force (or unforce) the grep output to include color")
 
 	matchColor = color.MultiFormat(color.Text(color.Green), color.Bold())
 )
@@ -189,7 +190,7 @@ func apply(f filter, s string, data *command.Data) ([]string, bool) {
 type inputSource interface {
 	Name() string
 	Process(command.Output, *command.Data, filter) error
-	Flags() []command.FlagInterface
+	Flags() []commander.FlagInterface
 	MakeNode(command.Node) command.Node
 	Setup() []string
 	Changed() bool
@@ -299,7 +300,7 @@ func (g *Grep) Node() command.Node {
 		matchOnlyFlag,
 		wholeWordFlag,
 	)
-	flagProcessor := command.FlagProcessor(flags...)
+	flagProcessor := commander.FlagProcessor(flags...)
 
-	return g.InputSource.MakeNode(command.SerialNodes(flagProcessor, patternArg, &command.ExecutorProcessor{F: g.Execute}))
+	return g.InputSource.MakeNode(commander.SerialNodes(flagProcessor, patternArg, &commander.ExecutorProcessor{F: g.Execute}))
 }

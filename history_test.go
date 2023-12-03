@@ -8,20 +8,22 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/leep-frog/command"
 	"github.com/leep-frog/command/color/colortest"
+	"github.com/leep-frog/command/command"
+	"github.com/leep-frog/command/commandertest"
+	"github.com/leep-frog/command/commandtest"
 )
 
 func TestHistory(t *testing.T) {
 	for _, sc := range []bool{true, false} {
-		command.StubValue(t, &defaultColorValue, sc)
+		commandtest.StubValue(t, &defaultColorValue, sc)
 		fakeColor := fakeColorFn(sc)
 		fakeInvertedColor := fakeColorFn(!sc)
 		for _, test := range []struct {
 			name      string
 			history   []string
 			osOpenErr error
-			etc       *command.ExecuteTestCase
+			etc       *commandtest.ExecuteTestCase
 		}{
 			{
 				name: "returns history",
@@ -30,7 +32,7 @@ func TestHistory(t *testing.T) {
 					"beta",
 					"delta",
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					WantStdout: strings.Join([]string{
 						"alpha",
 						"beta",
@@ -46,7 +48,7 @@ func TestHistory(t *testing.T) {
 					"beta",
 					"delta",
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^.e"},
 					WantData: &command.Data{Values: map[string]interface{}{
 						patternArgName: [][]string{{"^.e"}},
@@ -65,7 +67,7 @@ func TestHistory(t *testing.T) {
 					"beta",
 					"delta",
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^.e", "-C"},
 					WantData: &command.Data{Values: map[string]interface{}{
 						patternArgName:   [][]string{{"^.e"}},
@@ -86,7 +88,7 @@ func TestHistory(t *testing.T) {
 					"deltA",
 					"zero",
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^.*A$", "-i"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -105,7 +107,7 @@ func TestHistory(t *testing.T) {
 			{
 				name:      "errors on os.Open error",
 				osOpenErr: fmt.Errorf("darn"),
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					WantStderr: "failed to open setup output file: darn\n",
 					WantErr:    fmt.Errorf("failed to open setup output file: darn"),
 				},
@@ -117,7 +119,7 @@ func TestHistory(t *testing.T) {
 					"asdTfghjTkl",
 					"TxcvbnmT",
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"T.*T", "-o"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -139,7 +141,7 @@ func TestHistory(t *testing.T) {
 					"aSdTfghSjTkl",
 					"TxScvbSnmT",
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"T.*T", "S.*S", "-o"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -161,7 +163,7 @@ func TestHistory(t *testing.T) {
 					"SaSdfTghjTkl",
 					"TzTxcvbSnmS",
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"T.*T", "S.*S", "-o"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -185,7 +187,7 @@ func TestHistory(t *testing.T) {
 					"4 alp ha",
 					"5 alpha",
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"alpha", "-w"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -204,7 +206,7 @@ func TestHistory(t *testing.T) {
 			t.Run(testName(sc, test.name), func(t *testing.T) {
 				// Stub os.Open if necessary
 				if test.osOpenErr != nil {
-					command.StubValue(t, &osOpen, func(s string) (io.Reader, error) { return nil, test.osOpenErr })
+					commandtest.StubValue(t, &osOpen, func(s string) (io.Reader, error) { return nil, test.osOpenErr })
 				}
 				colortest.StubTput(t)
 
@@ -213,8 +215,8 @@ func TestHistory(t *testing.T) {
 				test.etc.Node = h.Node()
 				test.etc.RequiresSetup = true
 				test.etc.SetupContents = test.history
-				command.ExecuteTest(t, test.etc)
-				command.ChangeTest(t, nil, h)
+				commandertest.ExecuteTest(t, test.etc)
+				commandertest.ChangeTest(t, nil, h)
 			})
 		}
 	}

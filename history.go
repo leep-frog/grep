@@ -4,7 +4,8 @@ import (
 	"bufio"
 	"strings"
 
-	"github.com/leep-frog/command"
+	"github.com/leep-frog/command/command"
+	"github.com/leep-frog/command/commander"
 )
 
 func HistoryCLI() *Grep {
@@ -20,15 +21,15 @@ func (*history) Setup() []string {
 	return []string{"history"}
 }
 
-func (*history) Flags() []command.FlagInterface { return nil }
-func (*history) Changed() bool                  { return false }
+func (*history) Flags() []commander.FlagInterface { return nil }
+func (*history) Changed() bool                    { return false }
 
 func (*history) MakeNode(n command.Node) command.Node {
 	return n
 }
 
 func (*history) Process(output command.Output, data *command.Data, f filter) error {
-	s, err := osOpen(data.SetupOutputFile())
+	s, err := osOpen(commander.SetupOutputFile(data))
 	if err != nil {
 		return output.Stderrf("failed to open setup output file: %v\n", err)
 	}

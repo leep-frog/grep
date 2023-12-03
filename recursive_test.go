@@ -8,8 +8,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/leep-frog/command"
 	"github.com/leep-frog/command/color/colortest"
+	"github.com/leep-frog/command/command"
+	"github.com/leep-frog/command/commandertest"
+	"github.com/leep-frog/command/commandtest"
 )
 
 func testName(sc bool, name string) string {
@@ -18,7 +20,7 @@ func testName(sc bool, name string) string {
 
 func TestRecursive(t *testing.T) {
 	for _, sc := range []bool{true, false} {
-		command.StubValue(t, &defaultColorValue, sc)
+		commandtest.StubValue(t, &defaultColorValue, sc)
 		fakeColor := fakeColorFn(sc)
 		fakeColorLine := func(n int) string {
 			return fakeColor(lineColor, fmt.Sprintf("%d", n))
@@ -35,14 +37,14 @@ func TestRecursive(t *testing.T) {
 			ignorePatterns map[string]bool
 			stubDir        string
 			osOpenErr      error
-			etc            *command.ExecuteTestCase
+			etc            *commandtest.ExecuteTestCase
 			want           *recursive
 			dontColor      bool
 		}{
 			{
 				name:    "errors on walk error",
 				stubDir: "does-not-exist",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					WantStderr: "file not found: does-not-exist\n",
 					WantErr:    fmt.Errorf(`file not found: does-not-exist`),
 				},
@@ -50,14 +52,14 @@ func TestRecursive(t *testing.T) {
 			{
 				name:      "errors on open error",
 				osOpenErr: fmt.Errorf("oops"),
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					WantStderr: fmt.Sprintf("failed to open file %q: oops\n", filepath.Join("testing", "lots.txt")),
 					WantErr:    fmt.Errorf(`failed to open file %q: oops`, filepath.Join("testing", "lots.txt")),
 				},
 			},
 			{
 				name: "finds matches",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^alpha"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -75,7 +77,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "finds matches with percentages",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^XYZ.*", "-n", "-h"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -92,7 +94,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "file flag filter works",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^alpha", "-n", "-f", ".*.py"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -109,7 +111,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "inverted file flag filter works",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^alpha", "-n", "-F", ".*.py"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -128,7 +130,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "failure if invalid invert file flag",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^alpha", "-F", ":)"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -142,7 +144,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "hide file flag works",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"pha[^e]*", "-h", "-n"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -163,7 +165,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "colors multiple matches properly",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"alpha", "bravo", "-h", "-n"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -181,7 +183,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "colors overlapping matches properly",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"q.*t", "e.*u", "-h"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -197,7 +199,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "match only flag works",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^alp", "-o"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -216,7 +218,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "match only flag and no file flag works",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^alp", "-o", "-h"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -236,7 +238,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "match only flag works with overlapping",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"qwerty", "rtyui", "-n", "-o"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -253,7 +255,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "match only flag works with non-overlapping",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"qw", "op", "ty", "-o"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -269,7 +271,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "file only flag works",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^alp", "-l"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -290,7 +292,7 @@ func TestRecursive(t *testing.T) {
 				ignorePatterns: map[string]bool{
 					`\.py$`: true,
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^alp", "-l"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -310,7 +312,7 @@ func TestRecursive(t *testing.T) {
 				ignorePatterns: map[string]bool{
 					`\.py$`: true,
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^alp", "-l", "-x"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -329,7 +331,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "errors on invalid regex in file flag",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^alpha", "-f", ":)"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -344,7 +346,7 @@ func TestRecursive(t *testing.T) {
 			// -d flag
 			{
 				name: "returns matches for depth of 2",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"alpha", "-d", "2"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -364,7 +366,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "returns all matches for depth of 0",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"alpha", "-d", "0"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -384,7 +386,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "returns matches for depth of 1",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"alpha", "-d", "1"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -404,7 +406,7 @@ func TestRecursive(t *testing.T) {
 			// -a flag
 			{
 				name: "returns lines after",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"five", "-a", "3"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -423,7 +425,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "returns lines after when file is hidden",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"five", "-h", "-a", "3", "-n"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -444,7 +446,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "resets after lines if multiple matches",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^....$", "-f", "numbered.txt", "-a", "2", "-n"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -469,7 +471,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "resets after lines if multiple matches when file is hidden",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^....$", "-f", "numbered.txt", "-h", "-a", "2", "-n"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -496,7 +498,7 @@ func TestRecursive(t *testing.T) {
 			// -b flag
 			{
 				name: "returns lines before",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"five", "-n", "-b", "3"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -516,7 +518,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "returns lines before when file is hidden",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"five", "-h", "-b", "3"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -536,7 +538,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "returns lines before with overlaps",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^....$", "-n", "-f", "numbered.txt", "-b", "2"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -561,7 +563,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "returns lines before with overlaps when file is hidden",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^....$", "-f", "numbered.txt", "-h", "-b", "2"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -587,7 +589,7 @@ func TestRecursive(t *testing.T) {
 			// -a and -b together
 			{
 				name: "after and before line flags work together",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^...$", "-f", "numbered.txt", "-a", "2", "-b", "3"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -613,7 +615,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "after and before line flags work together when file is hidden",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^...$", "-f", "numbered.txt", "-h", "-a", "2", "-b", "3"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -641,7 +643,7 @@ func TestRecursive(t *testing.T) {
 			// Directory flag (-D).
 			{
 				name: "fails if unknown directory flag",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"un", "-D", "dev-null"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -658,7 +660,7 @@ func TestRecursive(t *testing.T) {
 				aliases: map[string]string{
 					"ooo": "testing/other",
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"alpha", "-D", "ooo"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -675,7 +677,7 @@ func TestRecursive(t *testing.T) {
 			// Ignore file patterns
 			{
 				name: "ignore file pattern requires argument",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args:       []string{"if"},
 					WantStderr: "Branching argument must be one of [a d l]\n",
 					WantErr:    fmt.Errorf("Branching argument must be one of [a d l]"),
@@ -683,7 +685,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "ignore file pattern requires valid argument",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args:       []string{"if", "uh"},
 					WantStderr: "Branching argument must be one of [a d l]\n",
 					WantErr:    fmt.Errorf("Branching argument must be one of [a d l]"),
@@ -691,7 +693,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "add ignore file requires valid regex",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"if", "a", "*"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -704,7 +706,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "add ignore file pattern to empty map",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"if", "a", ".binary$"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -723,7 +725,7 @@ func TestRecursive(t *testing.T) {
 				ignorePatterns: map[string]bool{
 					"other": true,
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"if", "a", ".binary$"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -743,7 +745,7 @@ func TestRecursive(t *testing.T) {
 				ignorePatterns: map[string]bool{
 					"other": true,
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"if", "a", ".bin", "ary$"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -761,7 +763,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "delete ignore file requires valid regex",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"if", "d", "*"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -774,7 +776,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "deletes ignore file patterns from empty map",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"if", "d", ".bin", "ary$"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -789,7 +791,7 @@ func TestRecursive(t *testing.T) {
 					".bin":  true,
 					"other": true,
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"if", "d", ".bin", "ary$"},
 					WantData: &command.Data{
 						Values: map[string]interface{}{
@@ -805,7 +807,7 @@ func TestRecursive(t *testing.T) {
 			},
 			{
 				name: "lists ignore file patterns from empty map",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"if", "l"},
 				},
 			},
@@ -815,7 +817,7 @@ func TestRecursive(t *testing.T) {
 					".bin":  true,
 					"other": true,
 				},
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"if", "l"},
 					WantStdout: strings.Join([]string{
 						".bin",
@@ -832,12 +834,12 @@ func TestRecursive(t *testing.T) {
 				if test.stubDir != "" {
 					tmpStart = test.stubDir
 				}
-				command.StubValue(t, &startDir, tmpStart)
+				commandtest.StubValue(t, &startDir, tmpStart)
 				colortest.StubTput(t)
 
 				// Stub os.Open if necessary
 				if test.osOpenErr != nil {
-					command.StubValue(t, &osOpen, func(s string) (io.Reader, error) { return nil, test.osOpenErr })
+					commandtest.StubValue(t, &osOpen, func(s string) (io.Reader, error) { return nil, test.osOpenErr })
 				}
 
 				r := &Grep{
@@ -853,8 +855,8 @@ func TestRecursive(t *testing.T) {
 					}
 				}
 				test.etc.Node = r.Node()
-				command.ExecuteTest(t, test.etc)
-				command.ChangeTest(t, g, r, cmpopts.IgnoreUnexported(recursive{}))
+				commandertest.ExecuteTest(t, test.etc)
+				commandertest.ChangeTest(t, g, r, cmpopts.IgnoreUnexported(recursive{}))
 			})
 		}
 	}
@@ -864,7 +866,7 @@ func TestAutocomplete(t *testing.T) {
 	for _, test := range []struct {
 		name string
 		r    *recursive
-		ctc  *command.CompleteTestCase
+		ctc  *commandtest.CompleteTestCase
 	}{
 		{
 			name: "delete completes ignore file patterns",
@@ -875,7 +877,7 @@ func TestAutocomplete(t *testing.T) {
 					"ghi": true,
 				},
 			},
-			ctc: &command.CompleteTestCase{
+			ctc: &commandtest.CompleteTestCase{
 				Args: "cmd if d ",
 				Want: &command.Autocompletion{
 					Suggestions: []string{"abc", "def", "ghi"},
@@ -891,7 +893,7 @@ func TestAutocomplete(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			g := &Grep{test.r}
 			test.ctc.Node = g.Node()
-			command.CompleteTest(t, test.ctc)
+			commandertest.AutocompleteTest(t, test.ctc)
 		})
 	}
 }
@@ -911,14 +913,16 @@ func TestRecusriveMetadata(t *testing.T) {
 
 func TestUsage(t *testing.T) {
 	// Recursive grep
-	command.UsageTest(t, &command.UsageTestCase{
+	commandertest.ExecuteTest(t, &commandtest.ExecuteTestCase{
 		Node: RecursiveCLI().Node(),
-		WantString: []string{
+		Args: []string{"--help"},
+		WantStdout: strings.Join([]string{
 			`┳ { [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --color|-C --depth|-d --directory|-D --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --ignore-ignore-files|-x --invert|-v --invert-file|-F --match-only|-o --whole-word|-w`,
 			`┃`,
 			`┃   Commands around global ignore file patterns`,
 			`┗━━ if ┓`,
 			`    ┏━━┛`,
+			`    ┃`,
 			`    ┃   Add a global file ignore pattern`,
 			`    ┣━━ a IGNORE_PATTERN [ IGNORE_PATTERN ... ]`,
 			`    ┃`,
@@ -953,15 +957,15 @@ func TestUsage(t *testing.T) {
 			``,
 			`Symbols:`,
 			`  |: List breaker`,
-			command.BranchDescWithoutDefault,
-			command.BranchDescWithDefault,
-		},
+			``,
+		}, "\n"),
 	})
 
 	// History grep
-	command.UsageTest(t, &command.UsageTestCase{
+	commandertest.ExecuteTest(t, &commandtest.ExecuteTestCase{
 		Node: HistoryCLI().Node(),
-		WantString: []string{
+		Args: []string{"--help"},
+		WantStdout: strings.Join([]string{
 			"{ [ PATTERN ... ] | } ... --case|-i --color|-C --invert|-v --match-only|-o --whole-word|-w",
 			"",
 			"Arguments:",
@@ -977,13 +981,15 @@ func TestUsage(t *testing.T) {
 			"",
 			"Symbols:",
 			"  |: List breaker",
-		},
+			"",
+		}, "\n"),
 	})
 
 	// Filename grep
-	command.UsageTest(t, &command.UsageTestCase{
+	commandertest.ExecuteTest(t, &commandtest.ExecuteTestCase{
 		Node: FilenameCLI().Node(),
-		WantString: []string{
+		Args: []string{"--help"},
+		WantStdout: strings.Join([]string{
 			"{ [ PATTERN ... ] | } ... --case|-i --cat|-c --color|-C --dir-only|-d --file-only|-f --invert|-v --match-only|-o --whole-word|-w",
 			"",
 			"Arguments:",
@@ -1002,13 +1008,15 @@ func TestUsage(t *testing.T) {
 			"",
 			"Symbols:",
 			"  |: List breaker",
-		},
+			"",
+		}, "\n"),
 	})
 
 	// Stdin grep
-	command.UsageTest(t, &command.UsageTestCase{
+	commandertest.ExecuteTest(t, &commandtest.ExecuteTestCase{
 		Node: StdinCLI().Node(),
-		WantString: []string{
+		Args: []string{"--help"},
+		WantStdout: strings.Join([]string{
 			"{ [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --color|-C --invert|-v --match-only|-o --whole-word|-w",
 			"",
 			"Arguments:",
@@ -1026,6 +1034,7 @@ func TestUsage(t *testing.T) {
 			"",
 			"Symbols:",
 			"  |: List breaker",
-		},
+			"",
+		}, "\n"),
 	})
 }

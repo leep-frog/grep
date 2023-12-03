@@ -6,9 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/leep-frog/command"
 	"github.com/leep-frog/command/color"
 	"github.com/leep-frog/command/color/colortest"
+	"github.com/leep-frog/command/command"
+	"github.com/leep-frog/command/commandertest"
+	"github.com/leep-frog/command/commandtest"
 )
 
 // fakeColorFn returns a function that colors the string if sc is set to true.
@@ -31,16 +33,16 @@ func fakeColorFn(sc bool) func(f *color.Format, s string) string {
 
 func TestFilename(t *testing.T) {
 	for _, sc := range []bool{true, false} {
-		command.StubValue(t, &defaultColorValue, sc)
+		commandtest.StubValue(t, &defaultColorValue, sc)
 		fakeColor := fakeColorFn(sc)
 		for _, test := range []struct {
 			name    string
-			etc     *command.ExecuteTestCase
+			etc     *commandtest.ExecuteTestCase
 			stubDir string
 		}{
 			{
 				name: "returns all files",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					WantStdout: strings.Join([]string{
 						"testing",
 						filepath.Join("testing", "lots.txt"),
@@ -55,7 +57,7 @@ func TestFilename(t *testing.T) {
 			},
 			{
 				name: "returns only files",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"-f"},
 					WantStdout: strings.Join([]string{
 						filepath.Join("testing", "lots.txt"),
@@ -72,7 +74,7 @@ func TestFilename(t *testing.T) {
 			},
 			{
 				name: "returns only dirs",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"-d"},
 					WantStdout: strings.Join([]string{
 						"testing",
@@ -86,7 +88,7 @@ func TestFilename(t *testing.T) {
 			},
 			{
 				name: "returns nothing if only files and only dirs",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"-d", "-f"},
 					WantData: &command.Data{Values: map[string]interface{}{
 						filesOnlyFlag.Name(): true,
@@ -97,14 +99,14 @@ func TestFilename(t *testing.T) {
 			{
 				name:    "errors on walk error",
 				stubDir: "does-not-exist",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					WantStderr: "file not found: does-not-exist\n",
 					WantErr:    fmt.Errorf("file not found: does-not-exist"),
 				},
 			},
 			{
 				name: "errors on invalid regex filter",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args:       []string{":)"},
 					WantStderr: "validation for \"PATTERN\" failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`\n",
 					WantErr:    fmt.Errorf("validation for \"PATTERN\" failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`"),
@@ -115,7 +117,7 @@ func TestFilename(t *testing.T) {
 			},
 			{
 				name: "filters out files",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{".*.txt"},
 					WantStdout: strings.Join([]string{
 						filepath.Join("testing", fakeColor(matchColor, "lots.txt")),
@@ -131,7 +133,7 @@ func TestFilename(t *testing.T) {
 			},
 			{
 				name: "works with OR operator",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"\\.txt$", ".*s\\.", "|", ".*\\.py$"},
 					WantStdout: strings.Join([]string{
 						filepath.Join("testing", fakeColor(matchColor, "lots.txt")),
@@ -149,7 +151,7 @@ func TestFilename(t *testing.T) {
 			},
 			{
 				name: "gets files and directories",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"oth.*"},
 					WantStdout: strings.Join([]string{
 						filepath.Join("testing", fakeColor(matchColor, "other")),
@@ -163,7 +165,7 @@ func TestFilename(t *testing.T) {
 			},
 			{
 				name: "cats files but not directories",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"oth.*", "-c"},
 					WantStdout: strings.Join([]string{
 						"alpha zero\necho bravo\n",
@@ -179,7 +181,7 @@ func TestFilename(t *testing.T) {
 			},
 			{
 				name: "cats multiple files",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"^th", "-c"},
 					WantStdout: strings.Join([]string{
 						"alpha\n",
@@ -196,7 +198,7 @@ func TestFilename(t *testing.T) {
 			},
 			{
 				name: "invert filter",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args: []string{"-v", ".*.go"},
 					WantStdout: strings.Join([]string{
 						"testing",
@@ -215,7 +217,7 @@ func TestFilename(t *testing.T) {
 			},
 			{
 				name: "errors on invalid invert filter",
-				etc: &command.ExecuteTestCase{
+				etc: &commandtest.ExecuteTestCase{
 					Args:       []string{"-v", ":)"},
 					WantStderr: "validation for \"invert\" failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`\n",
 					WantErr:    fmt.Errorf("validation for \"invert\" failed: [IsRegex] value \":)\" isn't a valid regex: error parsing regexp: unexpected ): `:)`"),
@@ -232,14 +234,14 @@ func TestFilename(t *testing.T) {
 				if test.stubDir != "" {
 					tmpStart = test.stubDir
 				}
-				command.StubValue(t, &startDir, tmpStart)
+				commandtest.StubValue(t, &startDir, tmpStart)
 				colortest.StubTput(t)
 
 				// Run the test.
 				f := FilenameCLI()
 				test.etc.Node = f.Node()
-				command.ExecuteTest(t, test.etc)
-				command.ChangeTest(t, nil, f)
+				commandertest.ExecuteTest(t, test.etc)
+				commandertest.ChangeTest(t, nil, f)
 			})
 		}
 	}

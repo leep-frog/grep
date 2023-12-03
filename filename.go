@@ -6,13 +6,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/leep-frog/command"
+	"github.com/leep-frog/command/command"
+	"github.com/leep-frog/command/commander"
 )
 
 var (
-	visitFlag     = command.BoolFlag("cat", 'c', "Run cat command on all files that match")
-	filesOnlyFlag = command.BoolFlag("file-only", 'f', "Only check file names")
-	dirsOnlyFlag  = command.BoolFlag("dir-only", 'd', "Only check directory names")
+	visitFlag     = commander.BoolFlag("cat", 'c', "Run cat command on all files that match")
+	filesOnlyFlag = commander.BoolFlag("file-only", 'f', "Only check file names")
+	dirsOnlyFlag  = commander.BoolFlag("dir-only", 'd', "Only check directory names")
 )
 
 func FilenameCLI() *Grep {
@@ -26,8 +27,8 @@ type filename struct{}
 func (*filename) Name() string    { return "fp" }
 func (*filename) Changed() bool   { return false }
 func (*filename) Setup() []string { return nil }
-func (*filename) Flags() []command.FlagInterface {
-	return []command.FlagInterface{
+func (*filename) Flags() []commander.FlagInterface {
+	return []commander.FlagInterface{
 		visitFlag,
 		filesOnlyFlag,
 		dirsOnlyFlag,

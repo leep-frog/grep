@@ -4,7 +4,8 @@ import (
 	"bufio"
 	"os"
 
-	"github.com/leep-frog/command"
+	"github.com/leep-frog/command/command"
+	"github.com/leep-frog/command/commander"
 )
 
 func StdinCLI() *Grep {
@@ -22,8 +23,8 @@ type stdin struct {
 func (*stdin) Name() string    { return "ip" }
 func (*stdin) Setup() []string { return nil }
 func (*stdin) Changed() bool   { return false }
-func (*stdin) Flags() []command.FlagInterface {
-	return []command.FlagInterface{
+func (*stdin) Flags() []commander.FlagInterface {
+	return []commander.FlagInterface{
 		beforeFlag,
 		afterFlag,
 	}

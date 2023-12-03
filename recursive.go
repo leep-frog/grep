@@ -11,27 +11,28 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/leep-frog/command"
 	"github.com/leep-frog/command/color"
+	"github.com/leep-frog/command/command"
+	"github.com/leep-frog/command/commander"
 )
 
 var (
 	startDir = "."
 	osOpen   = func(s string) (io.Reader, error) { return os.Open(s) }
 
-	ignoreFilePattern = command.ListArg[string]("IGNORE_PATTERN", "Files that match these will be ignored", 1, command.UnboundedList, command.ValidatorList(command.IsRegex()))
+	ignoreFilePattern = commander.ListArg[string]("IGNORE_PATTERN", "Files that match these will be ignored", 1, command.UnboundedList, commander.ListifyValidatorOption(commander.IsRegex()))
 
-	ignoreIgnoreFiles = command.BoolFlag("ignore-ignore-files", 'x', "Ignore the provided IGNORE_PATTERNS")
-	fileArg           = command.Flag[string]("file", 'f', "Only select files that match this pattern")
-	invertFileArg     = command.Flag[string]("invert-file", 'F', "Only select files that don't match this pattern")
-	hideFileFlag      = command.BoolFlag("hide-file", 'h', "Don't show file names")
-	fileOnlyFlag      = command.BoolFlag("file-only", 'l', "Only show file names")
-	beforeFlag        = command.Flag[int]("before", 'b', "Show the matched line and the n lines before it")
-	afterFlag         = command.Flag[int]("after", 'a', "Show the matched line and the n lines after it")
-	depthFlag         = command.Flag[int]("depth", 'd', "The depth of files to search", command.NonNegative[int]())
-	dirFlag           = command.Flag[string]("directory", 'D', "Search through the provided directory instead of pwd", &command.FileCompleter[string]{IgnoreFiles: true})
-	hideLineFlag      = command.BoolFlag("hide-lines", 'n', "Don't include the line number in the output")
-	wholeFile         = command.BoolFlag("whole-file", 'w', "Whether or not to search the whole file (i.e. multi-wrap searching) in one regex")
+	ignoreIgnoreFiles = commander.BoolFlag("ignore-ignore-files", 'x', "Ignore the provided IGNORE_PATTERNS")
+	fileArg           = commander.Flag[string]("file", 'f', "Only select files that match this pattern")
+	invertFileArg     = commander.Flag[string]("invert-file", 'F', "Only select files that don't match this pattern")
+	hideFileFlag      = commander.BoolFlag("hide-file", 'h', "Don't show file names")
+	fileOnlyFlag      = commander.BoolFlag("file-only", 'l', "Only show file names")
+	beforeFlag        = commander.Flag[int]("before", 'b', "Show the matched line and the n lines before it")
+	afterFlag         = commander.Flag[int]("after", 'a', "Show the matched line and the n lines after it")
+	depthFlag         = commander.Flag[int]("depth", 'd', "The depth of files to search", commander.NonNegative[int]())
+	dirFlag           = commander.Flag[string]("directory", 'D', "Search through the provided directory instead of pwd", &commander.FileCompleter[string]{IgnoreFiles: true})
+	hideLineFlag      = commander.BoolFlag("hide-lines", 'n', "Don't include the line number in the output")
+	wholeFile         = commander.BoolFlag("whole-file", 'w', "Whether or not to search the whole file (i.e. multi-wrap searching) in one regex")
 
 	fileColor = color.Text(color.Yellow)
 
@@ -56,8 +57,8 @@ func (*recursive) Name() string {
 }
 
 func (*recursive) Setup() []string { return nil }
-func (*recursive) Flags() []command.FlagInterface {
-	return []command.FlagInterface{
+func (*recursive) Flags() []commander.FlagInterface {
+	return []commander.FlagInterface{
 		fileArg,
 		invertFileArg,
 		hideFileFlag,
@@ -106,7 +107,7 @@ func (r *recursive) listIgnorePattern(output command.Output, data *command.Data)
 }
 
 func (r *recursive) MakeNode(n command.Node) command.Node {
-	f := command.CompleterFromFunc(func(v []string, d *command.Data) (*command.Completion, error) {
+	f := commander.CompleterFromFunc(func(v []string, d *command.Data) (*command.Completion, error) {
 		var s []string
 		for p := range r.IgnoreFilePatterns {
 			s = append(s, p)
@@ -115,25 +116,25 @@ func (r *recursive) MakeNode(n command.Node) command.Node {
 			Suggestions: s,
 		}, nil
 	})
-	return &command.BranchNode{
+	return &commander.BranchNode{
 		Branches: map[string]command.Node{
-			"if": command.SerialNodes(
-				command.Description("Commands around global ignore file patterns"),
-				&command.BranchNode{
+			"if": commander.SerialNodes(
+				commander.Description("Commands around global ignore file patterns"),
+				&commander.BranchNode{
 					Branches: map[string]command.Node{
-						"a": command.SerialNodes(
-							command.Description("Add a global file ignore pattern"),
+						"a": commander.SerialNodes(
+							commander.Description("Add a global file ignore pattern"),
 							ignoreFilePattern,
-							&command.ExecutorProcessor{F: r.addIgnorePattern},
+							&commander.ExecutorProcessor{F: r.addIgnorePattern},
 						),
-						"d": command.SerialNodes(
-							command.Description("Deletes a global file ignore pattern"),
+						"d": commander.SerialNodes(
+							commander.Description("Deletes a global file ignore pattern"),
 							ignoreFilePattern.AddOptions(f),
-							&command.ExecutorProcessor{F: r.deleteIgnorePattern},
+							&commander.ExecutorProcessor{F: r.deleteIgnorePattern},
 						),
-						"l": command.SerialNodes(
-							command.Description("List global file ignore patterns"),
-							&command.ExecutorProcessor{F: r.listIgnorePattern},
+						"l": commander.SerialNodes(
+							commander.Description("List global file ignore patterns"),
+							&commander.ExecutorProcessor{F: r.listIgnorePattern},
 						),
 					},
 				},
