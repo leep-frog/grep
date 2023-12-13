@@ -22,7 +22,7 @@ var (
 	matchOnlyFlag     = commander.BoolFlag("match-only", 'o', "Only show the matching segment")
 	colorFlag         = commander.BoolFlag("color", 'C', "Force (or unforce) the grep output to include color")
 
-	matchColor = color.MultiFormat(color.Text(color.Green), color.Bold())
+	matchColor = color.MultiFormat(color.Green, color.Bold)
 )
 
 func shouldColor(data *command.Data) bool {
@@ -123,7 +123,7 @@ func applyFormat(o command.Output, d *command.Data, ss []string) {
 	applyFormatWithColor(o, d, matchColor, ss)
 }
 
-func applyFormatWithColor(o command.Output, d *command.Data, f *color.Format, ss []string) {
+func applyFormatWithColor(o command.Output, d *command.Data, f color.Format, ss []string) {
 	if !shouldColor(d) {
 		o.Stdout(strings.Join(ss, ""))
 		return
@@ -131,11 +131,11 @@ func applyFormatWithColor(o command.Output, d *command.Data, f *color.Format, ss
 
 	for i, s := range ss {
 		if i%2 == 1 {
-			f.Apply(o)
+			o.Color(f)
 		}
 		o.Stdout(s)
 		if i%2 == 1 {
-			color.Init().Apply(o)
+			o.Color(color.Reset)
 		}
 	}
 }

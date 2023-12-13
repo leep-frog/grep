@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/leep-frog/command/color/colortest"
 	"github.com/leep-frog/command/command"
 	"github.com/leep-frog/command/commandertest"
 	"github.com/leep-frog/command/commandtest"
@@ -835,7 +834,6 @@ func TestRecursive(t *testing.T) {
 					tmpStart = test.stubDir
 				}
 				commandtest.StubValue(t, &startDir, tmpStart)
-				colortest.StubTput(t)
 
 				// Stub os.Open if necessary
 				if test.osOpenErr != nil {
@@ -917,7 +915,7 @@ func TestUsage(t *testing.T) {
 		Node: RecursiveCLI().Node(),
 		Args: []string{"--help"},
 		WantStdout: strings.Join([]string{
-			`┳ { [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --color|-C --depth|-d --directory|-D --file|-f --file-only|-l --hide-file|-h --hide-lines|-n --ignore-ignore-files|-x --invert|-v --invert-file|-F --match-only|-o --whole-word|-w`,
+			`┳ { [ PATTERN ... ] | } ... --file|-f FILE --invert-file|-F INVERT_FILE --hide-file|-h --file-only|-l --before|-b BEFORE --after|-a AFTER --depth|-d DEPTH --directory|-D DIRECTORY --hide-lines|-n --ignore-ignore-files|-x --case|-i --color|-C --invert|-v [ INVERT ... ] --match-only|-o --whole-word|-w`,
 			`┃`,
 			`┃   Commands around global ignore file patterns`,
 			`┗━━ if ┓`,
@@ -944,6 +942,7 @@ func TestUsage(t *testing.T) {
 			`  [i] case: Don't ignore character casing`,
 			`  [C] color: Force (or unforce) the grep output to include color`,
 			`  [d] depth: The depth of files to search`,
+			`    NonNegative()`,
 			`  [D] directory: Search through the provided directory instead of pwd`,
 			`  [f] file: Only select files that match this pattern`,
 			`  [l] file-only: Only show file names`,
@@ -951,6 +950,7 @@ func TestUsage(t *testing.T) {
 			`  [n] hide-lines: Don't include the line number in the output`,
 			`  [x] ignore-ignore-files: Ignore the provided IGNORE_PATTERNS`,
 			`  [v] invert: Pattern(s) required to be absent in each line`,
+			`    IsRegex()`,
 			`  [F] invert-file: Only select files that don't match this pattern`,
 			`  [o] match-only: Only show the matching segment`,
 			`  [w] whole-word: Whether or not to search for exact match`,
@@ -966,7 +966,7 @@ func TestUsage(t *testing.T) {
 		Node: HistoryCLI().Node(),
 		Args: []string{"--help"},
 		WantStdout: strings.Join([]string{
-			"{ [ PATTERN ... ] | } ... --case|-i --color|-C --invert|-v --match-only|-o --whole-word|-w",
+			"{ [ PATTERN ... ] | } ... --case|-i --color|-C --invert|-v [ INVERT ... ] --match-only|-o --whole-word|-w",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
@@ -976,6 +976,7 @@ func TestUsage(t *testing.T) {
 			"  [i] case: Don't ignore character casing",
 			"  [C] color: Force (or unforce) the grep output to include color",
 			"  [v] invert: Pattern(s) required to be absent in each line",
+			"    IsRegex()",
 			"  [o] match-only: Only show the matching segment",
 			"  [w] whole-word: Whether or not to search for exact match",
 			"",
@@ -990,7 +991,7 @@ func TestUsage(t *testing.T) {
 		Node: FilenameCLI().Node(),
 		Args: []string{"--help"},
 		WantStdout: strings.Join([]string{
-			"{ [ PATTERN ... ] | } ... --case|-i --cat|-c --color|-C --dir-only|-d --file-only|-f --invert|-v --match-only|-o --whole-word|-w",
+			"{ [ PATTERN ... ] | } ... --cat|-c --file-only|-f --dir-only|-d --case|-i --color|-C --invert|-v [ INVERT ... ] --match-only|-o --whole-word|-w",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
@@ -1003,6 +1004,7 @@ func TestUsage(t *testing.T) {
 			"  [d] dir-only: Only check directory names",
 			"  [f] file-only: Only check file names",
 			"  [v] invert: Pattern(s) required to be absent in each line",
+			"    IsRegex()",
 			"  [o] match-only: Only show the matching segment",
 			"  [w] whole-word: Whether or not to search for exact match",
 			"",
@@ -1017,7 +1019,7 @@ func TestUsage(t *testing.T) {
 		Node: StdinCLI().Node(),
 		Args: []string{"--help"},
 		WantStdout: strings.Join([]string{
-			"{ [ PATTERN ... ] | } ... --after|-a --before|-b --case|-i --color|-C --invert|-v --match-only|-o --whole-word|-w",
+			"{ [ PATTERN ... ] | } ... --before|-b BEFORE --after|-a AFTER --case|-i --color|-C --invert|-v [ INVERT ... ] --match-only|-o --whole-word|-w",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
@@ -1029,6 +1031,7 @@ func TestUsage(t *testing.T) {
 			"  [i] case: Don't ignore character casing",
 			"  [C] color: Force (or unforce) the grep output to include color",
 			"  [v] invert: Pattern(s) required to be absent in each line",
+			"    IsRegex()",
 			"  [o] match-only: Only show the matching segment",
 			"  [w] whole-word: Whether or not to search for exact match",
 			"",

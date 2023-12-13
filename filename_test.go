@@ -7,27 +7,19 @@ import (
 	"testing"
 
 	"github.com/leep-frog/command/color"
-	"github.com/leep-frog/command/color/colortest"
 	"github.com/leep-frog/command/command"
 	"github.com/leep-frog/command/commandertest"
 	"github.com/leep-frog/command/commandtest"
 )
 
 // fakeColorFn returns a function that colors the string if sc is set to true.
-func fakeColorFn(sc bool) func(f *color.Format, s string) string {
-	return func(f *color.Format, s string) string {
+func fakeColorFn(sc bool) func(f color.Format, s string) string {
+	return func(f color.Format, s string) string {
 		if !sc {
 			return s
 		}
 
-		preSl := []string(*f)
-		prefix := fmt.Sprintf("__tput_%s__", strings.Join(preSl, "_"))
-
-		r := color.Init()
-		sufSl := []string(*r)
-		suffix := fmt.Sprintf("__tput_%s__", strings.Join(sufSl, "_"))
-
-		return fmt.Sprintf("%s%s%s", prefix, s, suffix)
+		return fmt.Sprintf("%s%s%s", color.OutputCode(f), s, color.OutputCode(color.Reset))
 	}
 }
 
@@ -235,7 +227,6 @@ func TestFilename(t *testing.T) {
 					tmpStart = test.stubDir
 				}
 				commandtest.StubValue(t, &startDir, tmpStart)
-				colortest.StubTput(t)
 
 				// Run the test.
 				f := FilenameCLI()

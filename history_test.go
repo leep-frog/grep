@@ -8,7 +8,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/leep-frog/command/color/colortest"
 	"github.com/leep-frog/command/command"
 	"github.com/leep-frog/command/commandertest"
 	"github.com/leep-frog/command/commandtest"
@@ -208,7 +207,6 @@ func TestHistory(t *testing.T) {
 				if test.osOpenErr != nil {
 					commandtest.StubValue(t, &osOpen, func(s string) (io.Reader, error) { return nil, test.osOpenErr })
 				}
-				colortest.StubTput(t)
 
 				// Run test
 				h := HistoryCLI()

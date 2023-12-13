@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/leep-frog/command/color/colortest"
 	"github.com/leep-frog/command/command"
 	"github.com/leep-frog/command/commandertest"
 	"github.com/leep-frog/command/commandtest"
@@ -170,7 +169,6 @@ func TestStdin(t *testing.T) {
 			},
 		} {
 			t.Run(testName(sc, test.name), func(t *testing.T) {
-				colortest.StubTput(t)
 				si := &Grep{
 					InputSource: &stdin{
 						scanner: bufio.NewScanner(strings.NewReader(strings.Join(test.input, "\n"))),

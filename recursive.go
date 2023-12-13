@@ -34,9 +34,9 @@ var (
 	hideLineFlag      = commander.BoolFlag("hide-lines", 'n', "Don't include the line number in the output")
 	wholeFile         = commander.BoolFlag("whole-file", 'w', "Whether or not to search the whole file (i.e. multi-wrap searching) in one regex")
 
-	fileColor = color.Text(color.Yellow)
+	fileColor = color.Yellow
 
-	lineColor = color.Text(color.Cyan)
+	lineColor = color.Cyan
 )
 
 func RecursiveCLI() *Grep {
