@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/leep-frog/command/color"
 	"github.com/leep-frog/command/command"
 	"github.com/leep-frog/command/commander"
@@ -17,6 +19,7 @@ var (
 	patternArgName    = "PATTERN"
 	patternArg        = commander.StringListListProcessor(patternArgName, "Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes", "|", 0, command.UnboundedList, commander.ListifyValidatorOption(commander.IsRegex()))
 	caseFlag          = commander.BoolFlag("case", 'i', "Don't ignore character casing")
+	uniqueFlag        = commander.BoolFlag("unique", 'u', "Only display unique values (this only considers actual file lines, not file or line number decorations)")
 	wholeWordFlag     = commander.BoolFlag("whole-word", 'w', "Whether or not to search for exact match")
 	invertFlag        = commander.ListFlag[string]("invert", 'v', "Pattern(s) required to be absent in each line", 0, command.UnboundedList, commander.ListifyValidatorOption(commander.IsRegex()))
 	matchOnlyFlag     = commander.BoolFlag("match-only", 'o', "Only show the matching segment")
@@ -140,8 +143,51 @@ func applyFormatWithColor(o command.Output, d *command.Data, f color.Format, ss 
 	}
 }
 
+type sliceSet struct {
+	hashMap map[string][][]string
+}
+
+func (*sliceSet) hash(arr []string) string {
+	return strings.Join(arr, ",")
+}
+
+func (ss *sliceSet) Contains(arr []string) bool {
+	key := ss.hash(arr)
+	for _, otherArr := range ss.hashMap[key] {
+		if slices.Equal(arr, otherArr) {
+			return true
+		}
+	}
+	return false
+}
+
+// Put adds the value to the slice if it does not already exist. Returns true if the value was added.
+func (ss *sliceSet) Put(arr []string) bool {
+	key := ss.hash(arr)
+	if ss.Contains(arr) {
+		return false
+	}
+	ss.hashMap[key] = append(ss.hashMap[key], arr)
+	return true
+}
+
 // Returns a string slice of [Not-match, match, not-match, match, ..., not-match]
-func apply(f filter, s string, data *command.Data) ([]string, bool) {
+func apply(f filter, s string, data *command.Data, ss *sliceSet) ([]string, bool) {
+	arr, ok := applyNoUnique(f, s, data)
+	if !ok {
+		return nil, false
+	}
+
+	if uniqueFlag.Get(data) {
+		if !ss.Put(arr) {
+			return nil, false
+		}
+	}
+
+	return arr, true
+}
+
+func applyNoUnique(f filter, s string, data *command.Data) ([]string, bool) {
 	matchOnly := data.Bool(matchOnlyFlag.Name())
 
 	matches, ok := f.filter(s)
@@ -189,7 +235,7 @@ func apply(f filter, s string, data *command.Data) ([]string, bool) {
 
 type inputSource interface {
 	Name() string
-	Process(command.Output, *command.Data, filter) error
+	Process(command.Output, *command.Data, filter, *sliceSet) error
 	Flags() []commander.FlagInterface
 	MakeNode(command.Node) command.Node
 	Setup() []string
@@ -289,7 +335,7 @@ func (g *Grep) Execute(output command.Output, data *command.Data) error {
 		filters = append(filters, &invertMatcher{r})
 	}
 
-	return g.InputSource.Process(output, data, &andFilter{filters})
+	return g.InputSource.Process(output, data, &andFilter{filters}, &sliceSet{map[string][][]string{}})
 }
 
 func (g *Grep) Node() command.Node {
@@ -298,6 +344,7 @@ func (g *Grep) Node() command.Node {
 		colorFlag,
 		invertFlag,
 		matchOnlyFlag,
+		uniqueFlag,
 		wholeWordFlag,
 	)
 	flagProcessor := commander.FlagProcessor(flags...)

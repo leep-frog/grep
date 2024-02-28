@@ -208,9 +208,65 @@ func TestRecursive(t *testing.T) {
 					},
 					WantStdout: strings.Join([]string{
 						withFile(withLine(1, "alp"), "testing", "lots.txt"),           // "alpha bravo delta"
-						withFile(withLine(3, "alp"), "testing", "lots.txt"),           // "alpha bravo delta"
+						withFile(withLine(3, "alp"), "testing", "lots.txt"),           // "alpha hello there"
 						withFile(withLine(1, "alp"), "testing", "other", "other.txt"), // "alpha zero"
 						withFile(withLine(1, "alp"), "testing", "that.py"),            // "alpha"
+						"",
+					}, "\n"),
+				},
+			},
+			{
+				name: "all unique values are shown with proper colors",
+				etc: &commandtest.ExecuteTestCase{
+					Args: []string{"ZZZUnique", "-u"},
+					WantData: &command.Data{
+						Values: map[string]interface{}{
+							patternArgName:    [][]string{{"ZZZUnique"}},
+							uniqueFlag.Name(): true,
+						},
+					},
+					WantStdout: strings.Join([]string{
+						withFile(withLine(9, fakeColor(matchColor, "ZZZUnique")), "testing", "lots.txt"),
+						withFile(withLine(3, fakeColor(matchColor, "ZZZUnique")+" 2"), "testing", "this.txt"),
+						"",
+					}, "\n"),
+				},
+			},
+			{
+				name: "all unique values are shown",
+				etc: &commandtest.ExecuteTestCase{
+					Args: []string{"ZZZUnique", "-uhn"},
+					WantData: &command.Data{
+						Values: map[string]interface{}{
+							patternArgName:      [][]string{{"ZZZUnique"}},
+							uniqueFlag.Name():   true,
+							hideFileFlag.Name(): true,
+							hideLineFlag.Name(): true,
+						},
+					},
+					WantStdout: strings.Join([]string{
+						fakeColor(matchColor, "ZZZUnique"),
+						fakeColor(matchColor, "ZZZUnique") + " 2",
+						"",
+					}, "\n"),
+				},
+			},
+			{
+				name: "only unique matches sets are shown when match only",
+				etc: &commandtest.ExecuteTestCase{
+					Args: []string{"ZZZUnique", "-uhno"},
+					WantData: &command.Data{
+						Values: map[string]interface{}{
+							patternArgName:       [][]string{{"ZZZUnique"}},
+							uniqueFlag.Name():    true,
+							hideFileFlag.Name():  true,
+							hideLineFlag.Name():  true,
+							matchOnlyFlag.Name(): true,
+						},
+					},
+					WantStdout: strings.Join([]string{
+						"ZZZUnique",
+						// Note: no `ZZZUnique 2`
 						"",
 					}, "\n"),
 				},
@@ -915,7 +971,7 @@ func TestUsage(t *testing.T) {
 		Node: RecursiveCLI().Node(),
 		Args: []string{"--help"},
 		WantStdout: strings.Join([]string{
-			`┳ { [ PATTERN ... ] | } ... --file|-f FILE --invert-file|-F INVERT_FILE --hide-file|-h --file-only|-l --before|-b BEFORE --after|-a AFTER --depth|-d DEPTH --directory|-D DIRECTORY --hide-lines|-n --ignore-ignore-files|-x --case|-i --color|-C --invert|-v [ INVERT ... ] --match-only|-o --whole-word|-w`,
+			`┳ { [ PATTERN ... ] | } ... --file|-f FILE --invert-file|-F INVERT_FILE --hide-file|-h --file-only|-l --before|-b BEFORE --after|-a AFTER --depth|-d DEPTH --directory|-D DIRECTORY --hide-lines|-n --ignore-ignore-files|-x --case|-i --color|-C --invert|-v [ INVERT ... ] --match-only|-o --unique|-u --whole-word|-w`,
 			`┃`,
 			`┃   Commands around global ignore file patterns`,
 			`┗━━ if ┓`,
@@ -953,6 +1009,7 @@ func TestUsage(t *testing.T) {
 			`    IsRegex()`,
 			`  [F] invert-file: Only select files that don't match this pattern`,
 			`  [o] match-only: Only show the matching segment`,
+			`  [u] unique: Only display unique values (this only considers actual file lines, not file or line number decorations)`,
 			`  [w] whole-word: Whether or not to search for exact match`,
 			``,
 			`Symbols:`,
@@ -966,7 +1023,7 @@ func TestUsage(t *testing.T) {
 		Node: HistoryCLI().Node(),
 		Args: []string{"--help"},
 		WantStdout: strings.Join([]string{
-			"{ [ PATTERN ... ] | } ... --case|-i --color|-C --invert|-v [ INVERT ... ] --match-only|-o --whole-word|-w",
+			"{ [ PATTERN ... ] | } ... --case|-i --color|-C --invert|-v [ INVERT ... ] --match-only|-o --unique|-u --whole-word|-w",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
@@ -978,6 +1035,7 @@ func TestUsage(t *testing.T) {
 			"  [v] invert: Pattern(s) required to be absent in each line",
 			"    IsRegex()",
 			"  [o] match-only: Only show the matching segment",
+			"  [u] unique: Only display unique values (this only considers actual file lines, not file or line number decorations)",
 			"  [w] whole-word: Whether or not to search for exact match",
 			"",
 			"Symbols:",
@@ -991,7 +1049,7 @@ func TestUsage(t *testing.T) {
 		Node: FilenameCLI().Node(),
 		Args: []string{"--help"},
 		WantStdout: strings.Join([]string{
-			"{ [ PATTERN ... ] | } ... --cat|-c --file-only|-f --dir-only|-d --case|-i --color|-C --invert|-v [ INVERT ... ] --match-only|-o --whole-word|-w",
+			"{ [ PATTERN ... ] | } ... --cat|-c --file-only|-f --dir-only|-d --case|-i --color|-C --invert|-v [ INVERT ... ] --match-only|-o --unique|-u --whole-word|-w",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
@@ -1006,6 +1064,7 @@ func TestUsage(t *testing.T) {
 			"  [v] invert: Pattern(s) required to be absent in each line",
 			"    IsRegex()",
 			"  [o] match-only: Only show the matching segment",
+			"  [u] unique: Only display unique values (this only considers actual file lines, not file or line number decorations)",
 			"  [w] whole-word: Whether or not to search for exact match",
 			"",
 			"Symbols:",
@@ -1019,7 +1078,7 @@ func TestUsage(t *testing.T) {
 		Node: StdinCLI().Node(),
 		Args: []string{"--help"},
 		WantStdout: strings.Join([]string{
-			"{ [ PATTERN ... ] | } ... --before|-b BEFORE --after|-a AFTER --case|-i --color|-C --invert|-v [ INVERT ... ] --match-only|-o --whole-word|-w",
+			"{ [ PATTERN ... ] | } ... --before|-b BEFORE --after|-a AFTER --case|-i --color|-C --invert|-v [ INVERT ... ] --match-only|-o --unique|-u --whole-word|-w",
 			"",
 			"Arguments:",
 			"  PATTERN: Pattern(s) required to be present in each line. The list breaker acts as an OR operator for groups of regexes",
@@ -1033,6 +1092,7 @@ func TestUsage(t *testing.T) {
 			"  [v] invert: Pattern(s) required to be absent in each line",
 			"    IsRegex()",
 			"  [o] match-only: Only show the matching segment",
+			"  [u] unique: Only display unique values (this only considers actual file lines, not file or line number decorations)",
 			"  [w] whole-word: Whether or not to search for exact match",
 			"",
 			"Symbols:",

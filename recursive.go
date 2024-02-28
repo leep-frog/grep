@@ -148,7 +148,7 @@ func (r *recursive) Changed() bool {
 	return r.changed
 }
 
-func (r *recursive) Process(output command.Output, data *command.Data, fltr filter) error {
+func (r *recursive) Process(output command.Output, data *command.Data, fltr filter, ss *sliceSet) error {
 	var nameRegexes []*regexp.Regexp
 
 	if !ignoreIgnoreFiles.Get(data) {
@@ -224,27 +224,27 @@ func (r *recursive) Process(output command.Output, data *command.Data, fltr filt
 
 		scanner := bufio.NewScanner(f)
 		list := newLinkedList(fltr, data, scanner)
-		for formattedString, line, ok := list.getNext(); ok; formattedString, line, ok = list.getNext() {
+		for formattedString, line, ok := list.getNext(ss); ok; formattedString, line, ok = list.getNext(ss) {
 			if data.Bool(fileOnlyFlag.Name()) {
 				applyFormatWithColor(output, data, fileColor, []string{"", path})
 				output.Stdoutln()
 				break
 			}
 
-			var needSemi bool
+			var needColon bool
 			if !data.Bool(hideFileFlag.Name()) {
 				applyFormatWithColor(output, data, fileColor, []string{"", path})
-				needSemi = true
+				needColon = true
 			}
 			if !data.Bool(hideLineFlag.Name()) {
-				if needSemi {
+				if needColon {
 					output.Stdout(":")
 				} else {
-					needSemi = true
+					needColon = true
 				}
 				applyFormatWithColor(output, data, lineColor, []string{"", fmt.Sprintf("%d", line)})
 			}
-			if needSemi {
+			if needColon {
 				output.Stdout(":")
 			}
 			applyFormat(output, data, formattedString)
@@ -294,7 +294,7 @@ func newLinkedList(fltr filter, data *command.Data, scanner *bufio.Scanner) *lin
 	}
 }
 
-func (ll *linkedList) getNext() ([]string, int, bool) {
+func (ll *linkedList) getNext(ss *sliceSet) ([]string, int, bool) {
 	for {
 		// If we have lines to print, then just return the lines.
 		if ll.clearBefores {
@@ -313,7 +313,7 @@ func (ll *linkedList) getNext() ([]string, int, bool) {
 		s := ll.scanner.Text()
 
 		// If we got a match, then update lastMatch and print this line and any previous ones.
-		if formattedString, ok := apply(ll.filter, s, ll.data); ok {
+		if formattedString, ok := apply(ll.filter, s, ll.data, ss); ok {
 			ll.lastMatch = 0
 			ll.pushBack(formattedString, ll.lineCount)
 			ll.clearBefores = true

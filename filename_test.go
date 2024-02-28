@@ -177,7 +177,9 @@ func TestFilename(t *testing.T) {
 					Args: []string{"^th", "-c"},
 					WantStdout: strings.Join([]string{
 						"alpha\n",
-						"bravo\n",
+						"bravo",
+						"ZZZUnique",
+						"ZZZUnique 2\n",
 						"",
 					}, "\n"),
 					WantData: &command.Data{
