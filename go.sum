@@ -4,5 +4,7 @@ github.com/google/uuid v1.4.0 h1:MtMxsa51/r9yyhkyLsVeVt0B+BGQZzpQiTQ4eHZ8bc4=
 github.com/google/uuid v1.4.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/leep-frog/command v0.0.0-20241026181131-202fd0e5dbc0 h1:xWpB31VZpgFent2IulBVI0joEGncWdhuJrFpBA7EOBI=
 github.com/leep-frog/command v0.0.0-20241026181131-202fd0e5dbc0/go.mod h1:8A0syaeqGn1XYRbIqIS0ythKToduiClOQKc1r1V6mJ0=
+github.com/leep-frog/command v0.0.0-20241112011913-d3a427859376 h1:2ecM2CVoNZTCv6soVrsnePszWula/9mVJQ7lmPAAUKc=
+github.com/leep-frog/command v0.0.0-20241112011913-d3a427859376/go.mod h1:8A0syaeqGn1XYRbIqIS0ythKToduiClOQKc1r1V6mJ0=
 golang.org/x/exp v0.0.0-20231006140011-7918f672742d h1:jtJma62tbqLibJ5sFQz8bKtEM8rJBtfilJ2qTU199MI=
 golang.org/x/exp v0.0.0-20231006140011-7918f672742d/go.mod h1:ldy0pHrwJyGW56pPQzzkH36rKxoZW1tw7ZJpeKx+hdo=

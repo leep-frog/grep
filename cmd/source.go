@@ -18,7 +18,7 @@ func main() {
 		fmt.Println("NOPE:", err)
 	}
 	return
-	os.Exit(sourcerer.Source([]sourcerer.CLI{
+	os.Exit(sourcerer.Source("grepCLI", []sourcerer.CLI{
 		grep.HistoryCLI(),
 		grep.FilenameCLI(),
 		grep.RecursiveCLI(),
